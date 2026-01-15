@@ -1,0 +1,5255 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "0",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 10,
+                "county": "Oneida",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "Westernville",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T02:10:00Z",
+                "lon": -75.38,
+                "lat": 43.32,
+                "qualifier": "E",
+                "product_id": "202512220210-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "10"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.38,
+                    43.32
+                ]
+            }
+        },
+        {
+            "id": "1",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "O",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "Tree down on Bennett Valley Road at Enterprise Road.",
+                "city": "3 NW Glen Ellen",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:46:00Z",
+                "lon": -122.58,
+                "lat": 38.39,
+                "qualifier": null,
+                "product_id": "202512221350-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.58,
+                    38.39
+                ]
+            }
+        },
+        {
+            "id": "2",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Vehicle stuck in water on onramp from 7th Street to southbound Interstate 880.",
+                "city": "4 S Berkeley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T12:59:00Z",
+                "lon": -122.31,
+                "lat": 37.81,
+                "qualifier": null,
+                "product_id": "202512221306-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.31,
+                    37.81
+                ]
+            }
+        },
+        {
+            "id": "3",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Nevada",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a mud/ large rock slide at Wet Hill Road and Highway 49.",
+                "city": "1 N Nevada City",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T18:33:00Z",
+                "lon": -121.02,
+                "lat": 39.27,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.02,
+                    39.27
+                ]
+            }
+        },
+        {
+            "id": "4",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "S",
+                "magf": 4,
+                "county": "Placer",
+                "typetext": "SNOW",
+                "state": "CA",
+                "remark": "Palisades Tahoe Ski Base reported 4 inches of new snowfall in the last 24 hours.",
+                "city": "Palisades Tahoe Ski Bas",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T14:37:00Z",
+                "lon": -120.24,
+                "lat": 39.19,
+                "qualifier": "E",
+                "product_id": "202512230524-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": "4"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -120.24,
+                    39.19
+                ]
+            }
+        },
+        {
+            "id": "5",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Flooding on California Highway 12 between Watmaugh Road and California Highway 121 forcing the closure of all lanes.",
+                "city": "2 S Sonoma",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:04:00Z",
+                "lon": -122.45,
+                "lat": 38.25,
+                "qualifier": null,
+                "product_id": "202512221313-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.45,
+                    38.25
+                ]
+            }
+        },
+        {
+            "id": "6",
+            "type": "Feature",
+            "properties": {
+                "wfo": "RIW",
+                "type": "N",
+                "magf": 107,
+                "county": "Fremont",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KREC WY28 Red Canyon (DOT).",
+                "city": "10 NE Atlantic City",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T01:16:00Z",
+                "lon": -108.61,
+                "lat": 42.62,
+                "qualifier": "M",
+                "product_id": "202512220327-KRIW-NWUS55-LSRRIW",
+                "st": "WY",
+                "magnitude": "107"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -108.61,
+                    42.62
+                ]
+            }
+        },
+        {
+            "id": "7",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Flooding was reported on the offramp from eastbound Interstate 580 to MacArthur Boulevard east of Broadway.",
+                "city": "2 W Piedmont",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T14:19:00Z",
+                "lon": -122.26,
+                "lat": 37.82,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.26,
+                    37.82
+                ]
+            }
+        },
+        {
+            "id": "8",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T11:50:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512221202-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "9",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T11:12:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512221202-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "10",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Four to six inches of water were reported on eastbound Interstate 580 at Harrison Street.",
+                "city": "1 W Piedmont",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T16:55:00Z",
+                "lon": -122.25,
+                "lat": 37.82,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.25,
+                    37.82
+                ]
+            }
+        },
+        {
+            "id": "11",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 65,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T07:52:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512220821-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "65"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "12",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 69,
+                "county": "Douglas",
+                "typetext": "NON-TSTM WND GST",
+                "state": "NV",
+                "remark": "Mesonet station NV061 Wild Oat Mountain.",
+                "city": "1 SSE Holbrook Junction",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T02:50:00Z",
+                "lon": -119.54,
+                "lat": 38.71,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "69"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.54,
+                    38.71
+                ]
+            }
+        },
+        {
+            "id": "13",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY17 8.9 S Hanna (WYDOT).",
+                "city": "9 WNW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:16:00Z",
+                "lon": -106.57,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.57,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "14",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY17 8.9 S Hanna (WYDOT).",
+                "city": "9 WNW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T16:32:00Z",
+                "lon": -106.57,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.57,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "15",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MFR",
+                "type": "R",
+                "magf": 2.1,
+                "county": "Josephine",
+                "typetext": "RAIN",
+                "state": "OR",
+                "remark": "24 hour amount. Station Elevation: 1126 ft.",
+                "city": "1 SSE Murphy",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T00:30:00Z",
+                "lon": -123.33,
+                "lat": 42.34,
+                "qualifier": "M",
+                "product_id": "202512220051-KMFR-NWUS56-LSRMFR",
+                "st": "OR",
+                "magnitude": "2.1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -123.33,
+                    42.34
+                ]
+            }
+        },
+        {
+            "id": "16",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "E",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported roadway flooding at State Route 299.",
+                "city": "5 W Round Mountain",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T03:06:00Z",
+                "lon": -122.04,
+                "lat": 40.78,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.04,
+                    40.78
+                ]
+            }
+        },
+        {
+            "id": "17",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T07:52:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512220821-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "18",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY20 2.5 SE Elk Mountain (WYDOT).",
+                "city": "3 ESE Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T19:02:00Z",
+                "lon": -106.37,
+                "lat": 41.67,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.37,
+                    41.67
+                ]
+            }
+        },
+        {
+            "id": "19",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Around 4 inches of water reported on the ramp from northbound Interstate 880 to eastbound Interstate 980.",
+                "city": "3 WSW Piedmont",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:30:00Z",
+                "lon": -122.28,
+                "lat": 37.8,
+                "qualifier": null,
+                "product_id": "202512221337-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.28,
+                    37.8
+                ]
+            }
+        },
+        {
+            "id": "20",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T06:56:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512220821-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "21",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 64,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY18 Halleck Ridge (WYDOT).",
+                "city": "7 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T11:16:00Z",
+                "lon": -106.51,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512221202-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "64"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.51,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "22",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 1.5,
+                "county": "Madison",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "Oneida",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T14:15:00Z",
+                "lon": -75.66,
+                "lat": 43.08,
+                "qualifier": "M",
+                "product_id": "202512221529-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "1.5"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.66,
+                    43.08
+                ]
+            }
+        },
+        {
+            "id": "23",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 3.4,
+                "county": "Oswego",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "2 SW Mexico",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2025-12-22T12:00:00Z",
+                "lon": -76.27,
+                "lat": 43.44,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "3.4"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -76.27,
+                    43.44
+                ]
+            }
+        },
+        {
+            "id": "24",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY24 6.9 E Arlington (WYDOT).",
+                "city": "7 ESE Arlington",
+                "source": "Dept of Highways",
+                "unit": "MPH",
+                "valid": "2025-12-22T03:12:00Z",
+                "lon": -106.09,
+                "lat": 41.55,
+                "qualifier": "M",
+                "product_id": "202512220540-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.09,
+                    41.55
+                ]
+            }
+        },
+        {
+            "id": "25",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY22 2.7 NW Arlington (WYDOT).",
+                "city": "3 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T16:32:00Z",
+                "lon": -106.24,
+                "lat": 41.62,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.24,
+                    41.62
+                ]
+            }
+        },
+        {
+            "id": "63",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 3.6,
+                "county": "Oswego",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "2 SSE Palermo",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2025-12-22T11:00:00Z",
+                "lon": -76.27,
+                "lat": 43.33,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "3.6"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -76.27,
+                    43.33
+                ]
+            }
+        },
+        {
+            "id": "27",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "San Mateo",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Roadway flooding was reported on northbound Interstate 280 at John Daly Boulevard.",
+                "city": "1 NNE Broadmoor",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T15:30:00Z",
+                "lon": -122.47,
+                "lat": 37.71,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.47,
+                    37.71
+                ]
+            }
+        },
+        {
+            "id": "28",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "50 foot tall tree fell over at Beretta Lane and Waverly Ave.",
+                "city": "4 S Redding",
+                "source": "Broadcast Media",
+                "unit": null,
+                "valid": "2025-12-22T00:30:00Z",
+                "lon": -122.38,
+                "lat": 40.52,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.38,
+                    40.52
+                ]
+            }
+        },
+        {
+            "id": "29",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Laramie",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KCYS Cheyenne Airport - Cys.",
+                "city": "1 NW Cheyenne",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T18:53:00Z",
+                "lon": -104.8,
+                "lat": 41.15,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.8,
+                    41.15
+                ]
+            }
+        },
+        {
+            "id": "30",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY19 2.9 NW Elk Mountain (WYDOT).",
+                "city": "3 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T00:42:00Z",
+                "lon": -106.45,
+                "lat": 41.72,
+                "qualifier": "M",
+                "product_id": "202512220152-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.45,
+                    41.72
+                ]
+            }
+        },
+        {
+            "id": "31",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Flooding on California Highway 121 between California Highway 116 and De Matos Road, blocking all lanes.",
+                "city": "5 SE Temelec",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:04:00Z",
+                "lon": -122.45,
+                "lat": 38.2,
+                "qualifier": null,
+                "product_id": "202512221315-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.45,
+                    38.2
+                ]
+            }
+        },
+        {
+            "id": "32",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Yuba",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "Tree fell on phone lines and took down pole at intersection of Escheman Lane and State Route 20. Both are blocking the entire roadway.",
+                "city": "2 ESE Browns Valley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T05:23:00Z",
+                "lon": -121.37,
+                "lat": 39.23,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.37,
+                    39.23
+                ]
+            }
+        },
+        {
+            "id": "33",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "F",
+                "magf": null,
+                "county": "Tehama",
+                "typetext": "FLASH FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a water rescue from vehicle at South Avenue and Hall Road.",
+                "city": "3 ESE Corning",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T01:56:00Z",
+                "lon": -122.12,
+                "lat": 39.91,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.12,
+                    39.91
+                ]
+            }
+        },
+        {
+            "id": "34",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:42:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512221008-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "35",
+            "type": "Feature",
+            "properties": {
+                "wfo": "EKA",
+                "type": "x",
+                "magf": null,
+                "county": "Del Norte",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "Vehicle struck large builder in road on 199 west of Gasquet.",
+                "city": "3 WSW Gasquet",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:23:00Z",
+                "lon": -124.03,
+                "lat": 41.84,
+                "qualifier": null,
+                "product_id": "202512221354-KEKA-NWUS56-LSREKA",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -124.03,
+                    41.84
+                ]
+            }
+        },
+        {
+            "id": "36",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 2.5,
+                "county": "Oswego",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "2 N Richland",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T13:00:00Z",
+                "lon": -76.05,
+                "lat": 43.59,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "2.5"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -76.05,
+                    43.59
+                ]
+            }
+        },
+        {
+            "id": "37",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 84,
+                "county": "Mono",
+                "typetext": "NON-TSTM WND GST",
+                "state": "CA",
+                "remark": "Mesonet station SE390 3.7 E Toms Place (SCE).",
+                "city": "4 ESE Toms Place",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T00:00:00Z",
+                "lon": -118.63,
+                "lat": 37.55,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": "84"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -118.63,
+                    37.55
+                ]
+            }
+        },
+        {
+            "id": "38",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Roadway flooding reported on eastbound Interstate 580 just west of Grand Avenue.",
+                "city": "1 SW Piedmont",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:41:00Z",
+                "lon": -122.25,
+                "lat": 37.81,
+                "qualifier": null,
+                "product_id": "202512221346-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.25,
+                    37.81
+                ]
+            }
+        },
+        {
+            "id": "39",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY22 2.7 NW Arlington (WYDOT).",
+                "city": "3 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T13:12:00Z",
+                "lon": -106.24,
+                "lat": 41.62,
+                "qualifier": "M",
+                "product_id": "202512221355-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.24,
+                    41.62
+                ]
+            }
+        },
+        {
+            "id": "40",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T16:56:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "41",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 64,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY24 6.9 E Arlington (WYDOT).",
+                "city": "7 ESE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:16:00Z",
+                "lon": -106.09,
+                "lat": 41.55,
+                "qualifier": "M",
+                "product_id": "202512221008-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "64"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.09,
+                    41.55
+                ]
+            }
+        },
+        {
+            "id": "42",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 66,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY18 Halleck Ridge (WYDOT).",
+                "city": "7 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:16:00Z",
+                "lon": -106.51,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "66"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.51,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "43",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "S",
+                "magf": 3,
+                "county": "Washoe",
+                "typetext": "SNOW",
+                "state": "NV",
+                "remark": "Diamond Peak Ski Base reported 3 inches of new snow in the last 24 hours.",
+                "city": "Diamond Peak Ski Base",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T15:00:00Z",
+                "lon": -119.92,
+                "lat": 39.26,
+                "qualifier": "E",
+                "product_id": "202512230524-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "3"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.92,
+                    39.26
+                ]
+            }
+        },
+        {
+            "id": "44",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY17 8.9 S Hanna (WYDOT).",
+                "city": "9 WNW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T20:12:00Z",
+                "lon": -106.57,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.57,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "45",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Laramie",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY48 7.4 SW Federal (WYDOT).",
+                "city": "7 SW Federal",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T11:26:00Z",
+                "lon": -105.2,
+                "lat": 41.19,
+                "qualifier": "M",
+                "product_id": "202512221202-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.2,
+                    41.19
+                ]
+            }
+        },
+        {
+            "id": "46",
+            "type": "Feature",
+            "properties": {
+                "wfo": "PIH",
+                "type": "S",
+                "magf": 2,
+                "county": "Fremont",
+                "typetext": "SNOW",
+                "state": "ID",
+                "remark": "Station Elevation: 5463 ft.",
+                "city": "3 N Ashton",
+                "source": "Emergency Mngr",
+                "unit": "Inch",
+                "valid": "2025-12-22T01:59:00Z",
+                "lon": -111.44,
+                "lat": 44.12,
+                "qualifier": "M",
+                "product_id": "202512220159-KPIH-NWUS55-LSRPIH",
+                "st": "ID",
+                "magnitude": "2"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -111.44,
+                    44.12
+                ]
+            }
+        },
+        {
+            "id": "47",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Contra Costa",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "One foot of water was reported on westbound Interstate 580 just east of Canal Boulevard.",
+                "city": "2 SSW Richmond",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T16:51:00Z",
+                "lon": -122.38,
+                "lat": 37.93,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.38,
+                    37.93
+                ]
+            }
+        },
+        {
+            "id": "48",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 67,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY24 6.9 E Arlington (WYDOT).",
+                "city": "7 ESE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T10:12:00Z",
+                "lon": -106.09,
+                "lat": 41.55,
+                "qualifier": "M",
+                "product_id": "202512221106-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "67"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.09,
+                    41.55
+                ]
+            }
+        },
+        {
+            "id": "49",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 3.7,
+                "county": "Oneida",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "Holland Patent",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T02:00:00Z",
+                "lon": -75.26,
+                "lat": 43.24,
+                "qualifier": "M",
+                "product_id": "202512220651-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "3.7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.26,
+                    43.24
+                ]
+            }
+        },
+        {
+            "id": "50",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "5",
+                "magf": 0.02,
+                "county": "Missoula",
+                "typetext": "FREEZING RAIN",
+                "state": "MT",
+                "remark": "Received 0.6 inch of snow last evening then it turned to freezing rain after a lull.",
+                "city": "6 NW Missoula",
+                "source": "Official NWS Obs",
+                "unit": "Inch",
+                "valid": "2025-12-22T13:20:00Z",
+                "lon": -114.09,
+                "lat": 46.92,
+                "qualifier": "M",
+                "product_id": "202512221321-KMSO-NWUS55-LSRMSO",
+                "st": "MT",
+                "magnitude": "0.02"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -114.09,
+                    46.92
+                ]
+            }
+        },
+        {
+            "id": "51",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 75,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:36:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512221008-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "75"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "52",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "S",
+                "magf": 5.8,
+                "county": "Lemhi",
+                "typetext": "SNOW",
+                "state": "ID",
+                "remark": "0.63 inches of snow water equivalent.",
+                "city": "Salmon",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T14:00:00Z",
+                "lon": -113.9,
+                "lat": 45.18,
+                "qualifier": "M",
+                "product_id": "202512221625-KMSO-NWUS55-LSRMSO",
+                "st": "ID",
+                "magnitude": "5.8"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -113.9,
+                    45.18
+                ]
+            }
+        },
+        {
+            "id": "53",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 58,
+                "county": "Lassen",
+                "typetext": "NON-TSTM WND GST",
+                "state": "CA",
+                "remark": "Mesonet station DYLC1 Doyle.",
+                "city": "3 N Doyle",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T01:11:00Z",
+                "lon": -120.09,
+                "lat": 40.06,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -120.09,
+                    40.06
+                ]
+            }
+        },
+        {
+            "id": "54",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T00:52:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512220152-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "55",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY15 14.5 E Sinclair (WYDOT).",
+                "city": "15 E Sinclair",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T19:02:00Z",
+                "lon": -106.84,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.84,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "165",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "CHP reports flooding on the SB Slusser Road. Flood waters estimated to be around 1 foot.",
+                "city": "1 W Rohnert Park",
+                "source": "Public",
+                "unit": null,
+                "valid": "2025-12-22T06:06:00Z",
+                "lon": -122.72,
+                "lat": 38.35,
+                "qualifier": null,
+                "product_id": "202512221837-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.72,
+                    38.35
+                ]
+            }
+        },
+        {
+            "id": "57",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY18 Halleck Ridge (WYDOT).",
+                "city": "7 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T20:12:00Z",
+                "lon": -106.51,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.51,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "58",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY21 5.5 NW Arlington (WYDOT).",
+                "city": "5 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T16:32:00Z",
+                "lon": -106.29,
+                "lat": 41.64,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.29,
+                    41.64
+                ]
+            }
+        },
+        {
+            "id": "59",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported rocks and trees in roadway at State Route 299.",
+                "city": "7 WSW Round Mountain",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T02:45:00Z",
+                "lon": -122.06,
+                "lat": 40.75,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.06,
+                    40.75
+                ]
+            }
+        },
+        {
+            "id": "60",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MFR",
+                "type": "R",
+                "magf": 1.63,
+                "county": "Klamath",
+                "typetext": "RAIN",
+                "state": "OR",
+                "remark": "24 hour amount. Station Elevation: 4500 ft.",
+                "city": "5 N Keno",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T02:00:00Z",
+                "lon": -121.92,
+                "lat": 42.2,
+                "qualifier": "M",
+                "product_id": "202512220239-KMFR-NWUS56-LSRMFR",
+                "st": "OR",
+                "magnitude": "1.63"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.92,
+                    42.2
+                ]
+            }
+        },
+        {
+            "id": "61",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Nevada",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "Boulder in roadway about 1/4 mile just north of Yuba Bridge blocking northbound lane.",
+                "city": "Sweetland",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T05:16:00Z",
+                "lon": -121.12,
+                "lat": 39.35,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.12,
+                    39.35
+                ]
+            }
+        },
+        {
+            "id": "62",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 66,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Dept of Highways",
+                "unit": "MPH",
+                "valid": "2025-12-22T03:22:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512220540-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "66"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "64",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 54,
+                "county": "Campbell",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "25 ESE Wright",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2025-12-22T20:05:00Z",
+                "lon": -105.09,
+                "lat": 43.55,
+                "qualifier": "M",
+                "product_id": "202512230445-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "54"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.09,
+                    43.55
+                ]
+            }
+        },
+        {
+            "id": "65",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "S",
+                "magf": 1.7,
+                "county": "Powell",
+                "typetext": "SNOW",
+                "state": "MT",
+                "remark": "0.23 inches of snow water equivalent. 5 inches snow depth.",
+                "city": "1 E Seeley Lake",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T15:00:00Z",
+                "lon": -113.46,
+                "lat": 47.18,
+                "qualifier": "M",
+                "product_id": "202512221612-KMSO-NWUS55-LSRMSO",
+                "st": "MT",
+                "magnitude": "1.7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -113.46,
+                    47.18
+                ]
+            }
+        },
+        {
+            "id": "66",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T05:13:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512220658-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "67",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 12,
+                "county": "Oneida",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "Lee",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T02:00:00Z",
+                "lon": -75.58,
+                "lat": 43.28,
+                "qualifier": "M",
+                "product_id": "202512220208-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "12"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.58,
+                    43.28
+                ]
+            }
+        },
+        {
+            "id": "68",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Onramp from Ashby Avenue to westbound Interstate 80 flooded.",
+                "city": "1 S Berkeley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:51:00Z",
+                "lon": -122.3,
+                "lat": 37.85,
+                "qualifier": null,
+                "product_id": "202512221357-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.3,
+                    37.85
+                ]
+            }
+        },
+        {
+            "id": "69",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 59,
+                "county": "Douglas",
+                "typetext": "NON-TSTM WND GST",
+                "state": "NV",
+                "remark": "Mesonet station FISN2 Fish Springs.",
+                "city": "5 ESE Gardnerville",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T03:08:00Z",
+                "lon": -119.64,
+                "lat": 38.92,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.64,
+                    38.92
+                ]
+            }
+        },
+        {
+            "id": "70",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 1.2,
+                "county": "Madison",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": "Since 9 PM last evening.",
+                "city": "Chittenango",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T13:44:00Z",
+                "lon": -75.87,
+                "lat": 43.05,
+                "qualifier": "M",
+                "product_id": "202512221345-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "1.2"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.87,
+                    43.05
+                ]
+            }
+        },
+        {
+            "id": "71",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Platte",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KBRX 1.4 S Bordeaux (WYDOT).",
+                "city": "1 SSE Bordeaux",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:26:00Z",
+                "lon": -104.94,
+                "lat": 41.93,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.94,
+                    41.93
+                ]
+            }
+        },
+        {
+            "id": "72",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY22 2.7 NW Arlington (WYDOT).",
+                "city": "3 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T20:12:00Z",
+                "lon": -106.24,
+                "lat": 41.62,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.24,
+                    41.62
+                ]
+            }
+        },
+        {
+            "id": "73",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY27 14.5 SW Bosler (WYDOT).",
+                "city": "14 WNW Laramie",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T21:52:00Z",
+                "lon": -105.82,
+                "lat": 41.4,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.82,
+                    41.4
+                ]
+            }
+        },
+        {
+            "id": "74",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T13:02:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512221310-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "75",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "S",
+                "magf": 7,
+                "county": "El Dorado",
+                "typetext": "SNOW",
+                "state": "CA",
+                "remark": "Heavenly Ski Base reported 7 inches of new snow in the last 24 hours.",
+                "city": "Heavenly Ski Base",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T15:39:00Z",
+                "lon": -119.93,
+                "lat": 38.94,
+                "qualifier": "E",
+                "product_id": "202512230524-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": "7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.93,
+                    38.94
+                ]
+            }
+        },
+        {
+            "id": "76",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station PC571 Rawlins Sw.",
+                "city": "4 SW Rawlins",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T12:30:00Z",
+                "lon": -107.29,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512221310-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.29,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "77",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "S",
+                "magf": 10,
+                "county": "Ravalli",
+                "typetext": "SNOW",
+                "state": "MT",
+                "remark": "24 hour snowfall.",
+                "city": "1 SSW Lost Trail Pass",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T13:00:00Z",
+                "lon": -113.95,
+                "lat": 45.69,
+                "qualifier": "M",
+                "product_id": "202512221324-KMSO-NWUS55-LSRMSO",
+                "st": "MT",
+                "magnitude": "10"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -113.95,
+                    45.69
+                ]
+            }
+        },
+        {
+            "id": "78",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station PC572 Platte.",
+                "city": "1 NNE Sinclair",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T12:00:00Z",
+                "lon": -107.11,
+                "lat": 41.79,
+                "qualifier": "M",
+                "product_id": "202512221310-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.11,
+                    41.79
+                ]
+            }
+        },
+        {
+            "id": "79",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Napa",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "CHP reports roadway flooding on 975 Golden Gate Dr.",
+                "city": "1 S Napa",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T16:26:00Z",
+                "lon": -122.3,
+                "lat": 38.28,
+                "qualifier": null,
+                "product_id": "202512221854-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.3,
+                    38.28
+                ]
+            }
+        },
+        {
+            "id": "80",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported mud slides in SB lane at Harley Leighton Road and Old Oregon Trl.",
+                "city": "3 ENE Redding",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T15:28:00Z",
+                "lon": -122.31,
+                "lat": 40.59,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.31,
+                    40.59
+                ]
+            }
+        },
+        {
+            "id": "81",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "x",
+                "magf": null,
+                "county": "Napa",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "CHP reports 2 large boulders blocking the northbound lane on highway 121.",
+                "city": "6 NE Napa",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T18:04:00Z",
+                "lon": -122.21,
+                "lat": 38.36,
+                "qualifier": null,
+                "product_id": "202512221902-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.21,
+                    38.36
+                ]
+            }
+        },
+        {
+            "id": "82",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 64,
+                "county": "Lyon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "NV",
+                "remark": "Mesonet station STGNV 2.8 E Stagecoach (NV DOT).",
+                "city": "3 ENE Stagecoach",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T01:55:00Z",
+                "lon": -119.32,
+                "lat": 39.38,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "64"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.32,
+                    39.38
+                ]
+            }
+        },
+        {
+            "id": "83",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "O",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "Tree down across Tin Barn Road north of King Ridge Road.",
+                "city": "20 WNW Guerneville",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:18:00Z",
+                "lon": -123.32,
+                "lat": 38.63,
+                "qualifier": null,
+                "product_id": "202512221323-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -123.32,
+                    38.63
+                ]
+            }
+        },
+        {
+            "id": "84",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "S",
+                "magf": 1.2,
+                "county": "Lake",
+                "typetext": "SNOW",
+                "state": "MT",
+                "remark": "0.12 inches of snow water equivalent.",
+                "city": "3 ESE Bigfork",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T13:09:00Z",
+                "lon": -114.01,
+                "lat": 48.05,
+                "qualifier": "M",
+                "product_id": "202512221610-KMSO-NWUS55-LSRMSO",
+                "st": "MT",
+                "magnitude": "1.2"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -114.01,
+                    48.05
+                ]
+            }
+        },
+        {
+            "id": "85",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Nevada",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a whole tree across road at Penn Valley Drive and State Route 20.",
+                "city": "2 W Penn Valley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T02:50:00Z",
+                "lon": -121.22,
+                "lat": 39.2,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.22,
+                    39.2
+                ]
+            }
+        },
+        {
+            "id": "143",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "E",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a road closure due to flooding at Northbound State Route 273 from South Bonneyview Road and from Buenaventura Boulevard to Wyndham Lane.",
+                "city": "3 SSW Redding",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T06:00:00Z",
+                "lon": -122.38,
+                "lat": 40.53,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.38,
+                    40.53
+                ]
+            }
+        },
+        {
+            "id": "87",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 71,
+                "county": "Douglas",
+                "typetext": "NON-TSTM WND GST",
+                "state": "NV",
+                "remark": "Mesonet station NV021 Sw Gardnerville.",
+                "city": "2 S Minden",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T03:00:00Z",
+                "lon": -119.78,
+                "lat": 38.93,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "71"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.78,
+                    38.93
+                ]
+            }
+        },
+        {
+            "id": "88",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Nevada",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a large boulder at State Route 20 and Penn Valley Drive.",
+                "city": "1 ENE Penn Valley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T08:46:00Z",
+                "lon": -121.17,
+                "lat": 39.2,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.17,
+                    39.2
+                ]
+            }
+        },
+        {
+            "id": "89",
+            "type": "Feature",
+            "properties": {
+                "wfo": "PIH",
+                "type": "S",
+                "magf": 6,
+                "county": "Blaine",
+                "typetext": "SNOW",
+                "state": "ID",
+                "remark": "6 inches of storm total snow with a total of 1.50 liquid precipitation. Temperatures warmed up in afternoon turning snow to rain.",
+                "city": "Bellevue",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2025-12-22T05:54:00Z",
+                "lon": -114.26,
+                "lat": 43.47,
+                "qualifier": "M",
+                "product_id": "202512220555-KPIH-NWUS55-LSRPIH",
+                "st": "ID",
+                "magnitude": "6"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -114.26,
+                    43.47
+                ]
+            }
+        },
+        {
+            "id": "90",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KVDW Vedauwoo (WYDOT).",
+                "city": "Vedauwoo",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T20:12:00Z",
+                "lon": -105.4,
+                "lat": 41.16,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.4,
+                    41.16
+                ]
+            }
+        },
+        {
+            "id": "91",
+            "type": "Feature",
+            "properties": {
+                "wfo": "EKA",
+                "type": "x",
+                "magf": null,
+                "county": "Trinity",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "Westbound lane of 299 near Helena closed due to landslide.",
+                "city": "1 ESE Helena",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T10:11:00Z",
+                "lon": -123.1,
+                "lat": 40.77,
+                "qualifier": null,
+                "product_id": "202512221148-KEKA-NWUS56-LSREKA",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -123.1,
+                    40.77
+                ]
+            }
+        },
+        {
+            "id": "92",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Butte",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "Large oak tree blocking most of road.",
+                "city": "1 NNE Wyandotte",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T05:40:00Z",
+                "lon": -121.46,
+                "lat": 39.47,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.46,
+                    39.47
+                ]
+            }
+        },
+        {
+            "id": "93",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station PC571 Rawlins Sw.",
+                "city": "4 SW Rawlins",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T10:40:00Z",
+                "lon": -107.29,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512221106-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.29,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "94",
+            "type": "Feature",
+            "properties": {
+                "wfo": "PIH",
+                "type": "S",
+                "magf": 4,
+                "county": "Custer",
+                "typetext": "SNOW",
+                "state": "ID",
+                "remark": "Report via social media.",
+                "city": "Challis",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T01:45:00Z",
+                "lon": -114.22,
+                "lat": 44.51,
+                "qualifier": "E",
+                "product_id": "202512220343-KPIH-NWUS55-LSRPIH",
+                "st": "ID",
+                "magnitude": "4"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -114.22,
+                    44.51
+                ]
+            }
+        },
+        {
+            "id": "95",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "One foot of flooding was reported on southbound Slusser Road just north of River Road.",
+                "city": "3 E Forestville",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T06:06:00Z",
+                "lon": -122.83,
+                "lat": 38.48,
+                "qualifier": null,
+                "product_id": "202512221306-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.83,
+                    38.48
+                ]
+            }
+        },
+        {
+            "id": "96",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "E",
+                "magf": null,
+                "county": "El Dorado",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported roadway flooding at Silva Valley Parkway and Harvard Way.",
+                "city": "1 ESE El Dorado Hills",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T18:08:00Z",
+                "lon": -121.07,
+                "lat": 38.68,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.07,
+                    38.68
+                ]
+            }
+        },
+        {
+            "id": "97",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 50,
+                "county": "Lawrence",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "3 SE Dwtn Spearfish",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2025-12-22T16:09:00Z",
+                "lon": -103.82,
+                "lat": 44.46,
+                "qualifier": "M",
+                "product_id": "202512230445-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "50"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.82,
+                    44.46
+                ]
+            }
+        },
+        {
+            "id": "98",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CAR",
+                "type": "S",
+                "magf": 1,
+                "county": "Aroostook",
+                "typetext": "SNOW",
+                "state": "ME",
+                "remark": "CO-OP Observer station FISM1 Fort Kent 1 SE.",
+                "city": "2 SW Fort Kent",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2025-12-22T12:00:00Z",
+                "lon": -68.61,
+                "lat": 47.24,
+                "qualifier": "M",
+                "product_id": "202512221231-KCAR-NWUS51-LSRCAR",
+                "st": "ME",
+                "magnitude": "1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -68.61,
+                    47.24
+                ]
+            }
+        },
+        {
+            "id": "99",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 64,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY24 6.9 E Arlington (WYDOT).",
+                "city": "7 ESE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:12:00Z",
+                "lon": -106.09,
+                "lat": 41.55,
+                "qualifier": "M",
+                "product_id": "202512220919-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "64"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.09,
+                    41.55
+                ]
+            }
+        },
+        {
+            "id": "100",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 63,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY22 2.7 NW Arlington (WYDOT).",
+                "city": "3 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:16:00Z",
+                "lon": -106.24,
+                "lat": 41.62,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "63"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.24,
+                    41.62
+                ]
+            }
+        },
+        {
+            "id": "101",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 63,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station PC571 Rawlins Sw.",
+                "city": "4 SW Rawlins",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T13:30:00Z",
+                "lon": -107.29,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512221355-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "63"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.29,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "102",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY15 14.5 E Sinclair (WYDOT).",
+                "city": "15 E Sinclair",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:26:00Z",
+                "lon": -106.84,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.84,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "103",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 65,
+                "county": "PKZ031",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station SDIA2 South Douglas.",
+                "city": "Douglas",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T08:04:00Z",
+                "lon": -134.39,
+                "lat": 58.28,
+                "qualifier": "M",
+                "product_id": "202512222045-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "65"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -134.39,
+                    58.28
+                ]
+            }
+        },
+        {
+            "id": "104",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "E",
+                "magf": null,
+                "county": "Lassen",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "The Lassen County EM reported minor flooding along Robbers Creek in Westwood.",
+                "city": "Westwood",
+                "source": "Emergency Mngr",
+                "unit": null,
+                "valid": "2025-12-22T19:00:00Z",
+                "lon": -121,
+                "lat": 40.32,
+                "qualifier": null,
+                "product_id": "202512230524-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121,
+                    40.32
+                ]
+            }
+        },
+        {
+            "id": "105",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Platte",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KBRX 1.4 S Bordeaux (WYDOT).",
+                "city": "1 SSE Bordeaux",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T19:02:00Z",
+                "lon": -104.94,
+                "lat": 41.93,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.94,
+                    41.93
+                ]
+            }
+        },
+        {
+            "id": "106",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 1,
+                "county": "Oneida",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "1 S Knoxboro",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T11:50:00Z",
+                "lon": -75.52,
+                "lat": 42.98,
+                "qualifier": "M",
+                "product_id": "202512221320-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.52,
+                    42.98
+                ]
+            }
+        },
+        {
+            "id": "107",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a mud/rock slide at State Route 299.",
+                "city": "9 WSW Round Mountain",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T16:11:00Z",
+                "lon": -122.09,
+                "lat": 40.72,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.09,
+                    40.72
+                ]
+            }
+        },
+        {
+            "id": "108",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MFR",
+                "type": "R",
+                "magf": 1,
+                "county": "Jackson",
+                "typetext": "RAIN",
+                "state": "OR",
+                "remark": null,
+                "city": "Shady Cove",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T01:30:00Z",
+                "lon": -122.82,
+                "lat": 42.61,
+                "qualifier": "M",
+                "product_id": "202512220700-KMFR-NWUS56-LSRMFR",
+                "st": "OR",
+                "magnitude": "1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.82,
+                    42.61
+                ]
+            }
+        },
+        {
+            "id": "109",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY19 2.9 NW Elk Mountain (WYDOT).",
+                "city": "3 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T21:32:00Z",
+                "lon": -106.45,
+                "lat": 41.72,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.45,
+                    41.72
+                ]
+            }
+        },
+        {
+            "id": "110",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY19 2.9 NW Elk Mountain (WYDOT).",
+                "city": "3 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:16:00Z",
+                "lon": -106.45,
+                "lat": 41.72,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.45,
+                    41.72
+                ]
+            }
+        },
+        {
+            "id": "111",
+            "type": "Feature",
+            "properties": {
+                "wfo": "EKA",
+                "type": "E",
+                "magf": null,
+                "county": "Humboldt",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Cattle injured. Cattle on wrong side of the fence. Cattle being evacuated from Loleta, CA.",
+                "city": "3 W Arcata",
+                "source": "Public",
+                "unit": null,
+                "valid": "2025-12-22T00:37:00Z",
+                "lon": -124.13,
+                "lat": 40.87,
+                "qualifier": null,
+                "product_id": "202512220056-KEKA-NWUS56-LSREKA",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -124.13,
+                    40.87
+                ]
+            }
+        },
+        {
+            "id": "112",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T10:56:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512221106-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "113",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T11:16:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512221202-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "114",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "CHP reports vehicle stuck in flood water on Slusser Road.",
+                "city": "1 W Rohnert Park",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T07:47:00Z",
+                "lon": -122.72,
+                "lat": 38.35,
+                "qualifier": null,
+                "product_id": "202512221838-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.72,
+                    38.35
+                ]
+            }
+        },
+        {
+            "id": "115",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 72,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T10:16:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512221106-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "72"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "116",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "The 7th Street onramp to southbound Interstate 880 was flooded.",
+                "city": "4 S Berkeley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T12:32:00Z",
+                "lon": -122.31,
+                "lat": 37.81,
+                "qualifier": null,
+                "product_id": "202512221306-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.31,
+                    37.81
+                ]
+            }
+        },
+        {
+            "id": "117",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Marin",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway 1 flooded on both sides at Bear Valley Road.",
+                "city": "4 SE Inverness",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T09:38:00Z",
+                "lon": -122.79,
+                "lat": 38.04,
+                "qualifier": null,
+                "product_id": "202512221310-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.79,
+                    38.04
+                ]
+            }
+        },
+        {
+            "id": "118",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Laramie",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KWTR 0.6 NW Whitaker (WYDOT).",
+                "city": "1 NNW Whitaker",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T21:52:00Z",
+                "lon": -104.88,
+                "lat": 41.42,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.88,
+                    41.42
+                ]
+            }
+        },
+        {
+            "id": "119",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY24 6.9 E Arlington (WYDOT).",
+                "city": "7 ESE Arlington",
+                "source": "Dept of Highways",
+                "unit": "MPH",
+                "valid": "2025-12-22T02:56:00Z",
+                "lon": -106.09,
+                "lat": 41.55,
+                "qualifier": "M",
+                "product_id": "202512220540-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.09,
+                    41.55
+                ]
+            }
+        },
+        {
+            "id": "120",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Around 1 foot of water was reported on the onramp from Buchanan Street to Westbound Interstate 80.",
+                "city": "2 NNW Berkeley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T16:41:00Z",
+                "lon": -122.31,
+                "lat": 37.89,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.31,
+                    37.89
+                ]
+            }
+        },
+        {
+            "id": "121",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY21 5.5 NW Arlington (WYDOT).",
+                "city": "5 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T20:12:00Z",
+                "lon": -106.29,
+                "lat": 41.64,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.29,
+                    41.64
+                ]
+            }
+        },
+        {
+            "id": "122",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Nevada",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a mud/rock slide blocking the road at Pleasant Valley Road and Rices Crossing Road.",
+                "city": "Bridgeport",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T08:04:00Z",
+                "lon": -121.19,
+                "lat": 39.29,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.19,
+                    39.29
+                ]
+            }
+        },
+        {
+            "id": "123",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 1,
+                "county": "Lewis",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "5 W Constableville",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2025-12-22T11:00:00Z",
+                "lon": -75.52,
+                "lat": 43.58,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.52,
+                    43.58
+                ]
+            }
+        },
+        {
+            "id": "124",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T10:45:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512221106-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "125",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "E",
+                "magf": null,
+                "county": "Butte",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported roadway flooding at Cox Lane and Lone Tree Road.",
+                "city": "4 SW Palermo",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T15:04:00Z",
+                "lon": -121.58,
+                "lat": 39.39,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.58,
+                    39.39
+                ]
+            }
+        },
+        {
+            "id": "126",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Butte",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a down tree at Los Verjeles Road and Gipson Road.",
+                "city": "Bangor",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T06:32:00Z",
+                "lon": -121.4,
+                "lat": 39.39,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.4,
+                    39.39
+                ]
+            }
+        },
+        {
+            "id": "127",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 1.5,
+                "county": "Lewis",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "1 NW Constableville",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T11:00:00Z",
+                "lon": -75.45,
+                "lat": 43.58,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "1.5"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.45,
+                    43.58
+                ]
+            }
+        },
+        {
+            "id": "128",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Butte",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported rocks on the road at State Route 32.",
+                "city": "5 SW Butte Meadows",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T02:49:00Z",
+                "lon": -121.62,
+                "lat": 40.04,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.62,
+                    40.04
+                ]
+            }
+        },
+        {
+            "id": "129",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:24:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512221008-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "130",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "E",
+                "magf": null,
+                "county": "Butte",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported roadway flooding at West Sacramento Avenue and Meridian Road.",
+                "city": "4 SSE Nord",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T08:53:00Z",
+                "lon": -121.92,
+                "lat": 39.73,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.92,
+                    39.73
+                ]
+            }
+        },
+        {
+            "id": "131",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "E",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported flooding at Interstate 5 and Hartwell Ave.",
+                "city": "1 SSE Redding",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T00:57:00Z",
+                "lon": -122.36,
+                "lat": 40.56,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.36,
+                    40.56
+                ]
+            }
+        },
+        {
+            "id": "132",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KVDW Vedauwoo (WYDOT).",
+                "city": "Vedauwoo",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T19:56:00Z",
+                "lon": -105.4,
+                "lat": 41.16,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.4,
+                    41.16
+                ]
+            }
+        },
+        {
+            "id": "133",
+            "type": "Feature",
+            "properties": {
+                "wfo": "EKA",
+                "type": "x",
+                "magf": null,
+                "county": "Humboldt",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "Rocks and trees blocking roadway on Highway 101 and Pesula Road south of Weott.",
+                "city": "2 SSE Weott",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T07:18:00Z",
+                "lon": -123.9,
+                "lat": 40.31,
+                "qualifier": null,
+                "product_id": "202512220733-KEKA-NWUS56-LSREKA",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -123.9,
+                    40.31
+                ]
+            }
+        },
+        {
+            "id": "134",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 56,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KPUM Pumpkin Vine (WYDOT).",
+                "city": "Pumpkin Vine",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:06:00Z",
+                "lon": -105.47,
+                "lat": 41.05,
+                "qualifier": "M",
+                "product_id": "202512220919-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "56"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.47,
+                    41.05
+                ]
+            }
+        },
+        {
+            "id": "135",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 62,
+                "county": "Washoe",
+                "typetext": "NON-TSTM WND GST",
+                "state": "NV",
+                "remark": "Mesonet station NV053 Pleasant Valley.",
+                "city": "2 NE Washoe City",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T00:10:00Z",
+                "lon": -119.78,
+                "lat": 39.35,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.78,
+                    39.35
+                ]
+            }
+        },
+        {
+            "id": "136",
+            "type": "Feature",
+            "properties": {
+                "wfo": "EKA",
+                "type": "x",
+                "magf": null,
+                "county": "Mendocino",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "Large rocks reported in road on CA 253 east of Boonville.",
+                "city": "2 E Boonville",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T07:08:00Z",
+                "lon": -123.34,
+                "lat": 39,
+                "qualifier": null,
+                "product_id": "202512220723-KEKA-NWUS56-LSREKA",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -123.34,
+                    39
+                ]
+            }
+        },
+        {
+            "id": "137",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 57,
+                "county": "Custer",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "Pringle",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2025-12-22T19:42:00Z",
+                "lon": -103.59,
+                "lat": 43.61,
+                "qualifier": "M",
+                "product_id": "202512230445-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "57"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.59,
+                    43.61
+                ]
+            }
+        },
+        {
+            "id": "138",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "S",
+                "magf": 0.5,
+                "county": "Ravalli",
+                "typetext": "SNOW",
+                "state": "MT",
+                "remark": "Drizzle all last night. 1 inch of slushy snow in open areas with none under the trees.",
+                "city": "2 W Charlos Heights",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T14:00:00Z",
+                "lon": -114.22,
+                "lat": 46.13,
+                "qualifier": "M",
+                "product_id": "202512221615-KMSO-NWUS55-LSRMSO",
+                "st": "MT",
+                "magnitude": "0.5"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -114.22,
+                    46.13
+                ]
+            }
+        },
+        {
+            "id": "139",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "F",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "FLASH FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported two vehicles stuck in the flooded roadway with water over the top of both vehicles.",
+                "city": "5 ESE Pine Grove",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T00:58:00Z",
+                "lon": -122.28,
+                "lat": 40.63,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.28,
+                    40.63
+                ]
+            }
+        },
+        {
+            "id": "140",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "F",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "FLASH FLOOD",
+                "state": "CA",
+                "remark": "*** 1 FATAL *** County Coroner confirms 74 year old male from Redding, CA was pronounced deceased at the Shasta Regional Medical Center as a result of severe flash flooding. Exact circumstances not released at this time.",
+                "city": "2 NW Redding",
+                "source": "County Official",
+                "unit": null,
+                "valid": "2025-12-22T01:45:00Z",
+                "lon": -122.39,
+                "lat": 40.59,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.39,
+                    40.59
+                ]
+            }
+        },
+        {
+            "id": "141",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 62,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY26 12.6 NE Centennial (WYDOT).",
+                "city": "13 NE Centennial",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T17:16:00Z",
+                "lon": -105.96,
+                "lat": 41.44,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.96,
+                    41.44
+                ]
+            }
+        },
+        {
+            "id": "142",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY19 2.9 NW Elk Mountain (WYDOT).",
+                "city": "3 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T13:26:00Z",
+                "lon": -106.45,
+                "lat": 41.72,
+                "qualifier": "M",
+                "product_id": "202512221355-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.45,
+                    41.72
+                ]
+            }
+        },
+        {
+            "id": "144",
+            "type": "Feature",
+            "properties": {
+                "wfo": "EKA",
+                "type": "x",
+                "magf": null,
+                "county": "Humboldt",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": null,
+                "city": "2 NNW Weott",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T07:14:00Z",
+                "lon": -123.93,
+                "lat": 40.35,
+                "qualifier": null,
+                "product_id": "202512220731-KEKA-NWUS56-LSREKA",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -123.93,
+                    40.35
+                ]
+            }
+        },
+        {
+            "id": "145",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Marin",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "CHP reports roadway flooding on 53 San Clemente Dr. Flooding is still being reported at 11:22 AM Dec 22, 2025.",
+                "city": "Corte Madera",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T02:33:00Z",
+                "lon": -122.51,
+                "lat": 37.93,
+                "qualifier": null,
+                "product_id": "202512221922-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.51,
+                    37.93
+                ]
+            }
+        },
+        {
+            "id": "146",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a mud/rock slide at Clear Creek Road and Honeybee Road. West bound lane is covered in approximately 1 ft of mud.",
+                "city": "2 SE Centerville",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:47:00Z",
+                "lon": -122.45,
+                "lat": 40.5,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.45,
+                    40.5
+                ]
+            }
+        },
+        {
+            "id": "147",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MSO",
+                "type": "S",
+                "magf": 3,
+                "county": "Lincoln",
+                "typetext": "SNOW",
+                "state": "MT",
+                "remark": null,
+                "city": "Libby",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T12:00:00Z",
+                "lon": -115.56,
+                "lat": 48.39,
+                "qualifier": "M",
+                "product_id": "202512221318-KMSO-NWUS55-LSRMSO",
+                "st": "MT",
+                "magnitude": "3"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -115.56,
+                    48.39
+                ]
+            }
+        },
+        {
+            "id": "148",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 59,
+                "county": "Lyon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "NV",
+                "remark": "Mesonet station NV059 Pine Grove Mountain.",
+                "city": "11 SE Smith Valley",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T03:30:00Z",
+                "lon": -119.19,
+                "lat": 38.68,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "NV",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.19,
+                    38.68
+                ]
+            }
+        },
+        {
+            "id": "149",
+            "type": "Feature",
+            "properties": {
+                "wfo": "RIW",
+                "type": "N",
+                "magf": 68,
+                "county": "Fremont",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KLND Lander Airport (ASOS).",
+                "city": "1 SSW Lander",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T06:43:00Z",
+                "lon": -108.73,
+                "lat": 42.82,
+                "qualifier": "M",
+                "product_id": "202512221128-KRIW-NWUS55-LSRRIW",
+                "st": "WY",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -108.73,
+                    42.82
+                ]
+            }
+        },
+        {
+            "id": "150",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY19 2.9 NW Elk Mountain (WYDOT).",
+                "city": "3 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T12:36:00Z",
+                "lon": -106.45,
+                "lat": 41.72,
+                "qualifier": "M",
+                "product_id": "202512221310-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.45,
+                    41.72
+                ]
+            }
+        },
+        {
+            "id": "151",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 61,
+                "county": "Laramie",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KWTR 0.6 NW Whitaker (WYDOT).",
+                "city": "1 NNW Whitaker",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T19:02:00Z",
+                "lon": -104.88,
+                "lat": 41.42,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.88,
+                    41.42
+                ]
+            }
+        },
+        {
+            "id": "152",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Flooding was reported on northbound Interstate 880 around a half mile south of 5th Street.",
+                "city": "2 NW Oakland",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T19:30:00Z",
+                "lon": -122.26,
+                "lat": 37.79,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.26,
+                    37.79
+                ]
+            }
+        },
+        {
+            "id": "153",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 68,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T12:07:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512221310-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "154",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 4.7,
+                "county": "Oswego",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "4 NW Constantia",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T12:35:00Z",
+                "lon": -76.06,
+                "lat": 43.3,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "4.7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -76.06,
+                    43.3
+                ]
+            }
+        },
+        {
+            "id": "155",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BUF",
+                "type": "S",
+                "magf": 1,
+                "county": "Oswego",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "2 NNE Richland",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2025-12-22T12:00:00Z",
+                "lon": -76.04,
+                "lat": 43.6,
+                "qualifier": "M",
+                "product_id": "202512221430-KBUF-NWUS51-LSRBUF",
+                "st": "NY",
+                "magnitude": "1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -76.04,
+                    43.6
+                ]
+            }
+        },
+        {
+            "id": "156",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY17 8.9 S Hanna (WYDOT).",
+                "city": "9 WNW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T19:02:00Z",
+                "lon": -106.57,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.57,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "157",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 1.8,
+                "county": "Onondaga",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "1 N Manlius",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2025-12-22T13:50:00Z",
+                "lon": -75.98,
+                "lat": 43.02,
+                "qualifier": "M",
+                "product_id": "202512221522-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "1.8"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.98,
+                    43.02
+                ]
+            }
+        },
+        {
+            "id": "158",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KRWL 1 ENE Rawlins.",
+                "city": "2 NE Rawlins",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2025-12-22T04:17:00Z",
+                "lon": -107.2,
+                "lat": 41.8,
+                "qualifier": "M",
+                "product_id": "202512220540-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.2,
+                    41.8
+                ]
+            }
+        },
+        {
+            "id": "159",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "N",
+                "magf": 62,
+                "county": "Alpine",
+                "typetext": "NON-TSTM WND GST",
+                "state": "CA",
+                "remark": "Mesonet station LIB25 Muller1296-Emigrant Trail.",
+                "city": "1 ENE Paynesville",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T03:20:00Z",
+                "lon": -119.78,
+                "lat": 38.82,
+                "qualifier": "M",
+                "product_id": "202512220438-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.78,
+                    38.82
+                ]
+            }
+        },
+        {
+            "id": "160",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Tehama",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a down tree, partially blocking lanes at State Route 299 and Wilson Street.",
+                "city": "2 N Los Molinos",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T02:29:00Z",
+                "lon": -122.1,
+                "lat": 40.05,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.1,
+                    40.05
+                ]
+            }
+        },
+        {
+            "id": "161",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 11.7,
+                "county": "Oneida",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "2 NW Taberg",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2025-12-22T01:00:00Z",
+                "lon": -75.64,
+                "lat": 43.32,
+                "qualifier": "M",
+                "product_id": "202512220207-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "11.7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.64,
+                    43.32
+                ]
+            }
+        },
+        {
+            "id": "162",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "x",
+                "magf": null,
+                "county": "Plumas",
+                "typetext": "LANDSLIDE",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a mud/rock slide on State Route 70 at Storrie Bridge. A semi-truck was stuck as the roadway was blocked.",
+                "city": "Storrie",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T15:59:00Z",
+                "lon": -121.32,
+                "lat": 39.92,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.32,
+                    39.92
+                ]
+            }
+        },
+        {
+            "id": "163",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Alameda",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Four to six inches of water were reported on the offramp from eastbound Interstate 580 to West MacArthur Boulevard.",
+                "city": "3 SSE Berkeley",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T16:53:00Z",
+                "lon": -122.28,
+                "lat": 37.83,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.28,
+                    37.83
+                ]
+            }
+        },
+        {
+            "id": "164",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY23 1.6 E Arlington (WYDOT).",
+                "city": "2 E Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T16:32:00Z",
+                "lon": -106.18,
+                "lat": 41.59,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.18,
+                    41.59
+                ]
+            }
+        },
+        {
+            "id": "166",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "San Francisco",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Up to a foot of water was reported in lanes of eastbound Interstate 80 just west of 7th Street.",
+                "city": "1 E San Francisco",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T12:45:00Z",
+                "lon": -122.41,
+                "lat": 37.77,
+                "qualifier": null,
+                "product_id": "202512221306-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.41,
+                    37.77
+                ]
+            }
+        },
+        {
+            "id": "167",
+            "type": "Feature",
+            "properties": {
+                "wfo": "REV",
+                "type": "E",
+                "magf": null,
+                "county": "Lassen",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "The California Highway Patrol reported flooding along the Susan River near Cut Off Road to Bronson Road west of Litchfield.",
+                "city": "1 ENE Standish",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T22:38:00Z",
+                "lon": -120.4,
+                "lat": 40.38,
+                "qualifier": null,
+                "product_id": "202512230524-KREV-NWUS55-LSRREV",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -120.4,
+                    40.38
+                ]
+            }
+        },
+        {
+            "id": "168",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY17 8.9 S Hanna (WYDOT).",
+                "city": "9 WNW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T18:26:00Z",
+                "lon": -106.57,
+                "lat": 41.74,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.57,
+                    41.74
+                ]
+            }
+        },
+        {
+            "id": "169",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "O",
+                "magf": null,
+                "county": "Placer",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "CA",
+                "remark": "California Highway Patrol reported a large tree blocking the lane at Garden Bar Road and Mount Pleasant Road.",
+                "city": "6 NE Lincoln",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T11:16:00Z",
+                "lon": -121.23,
+                "lat": 38.94,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -121.23,
+                    38.94
+                ]
+            }
+        },
+        {
+            "id": "170",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "Sonoma",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Vehicle stuck in water on Green Valley Road near Sullivan Road.",
+                "city": "1 WNW Graton",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T13:27:00Z",
+                "lon": -122.88,
+                "lat": 38.44,
+                "qualifier": null,
+                "product_id": "202512221333-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.88,
+                    38.44
+                ]
+            }
+        },
+        {
+            "id": "171",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY22 2.7 NW Arlington (WYDOT).",
+                "city": "3 NW Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T12:46:00Z",
+                "lon": -106.24,
+                "lat": 41.62,
+                "qualifier": "M",
+                "product_id": "202512221310-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.24,
+                    41.62
+                ]
+            }
+        },
+        {
+            "id": "172",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MTR",
+                "type": "E",
+                "magf": null,
+                "county": "San Mateo",
+                "typetext": "FLOOD",
+                "state": "CA",
+                "remark": "Roadway flooding was reported on the offramp from northbound US Highway 101 to the Candlestick Point area.",
+                "city": "1 NNE Brisbane",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T15:57:00Z",
+                "lon": -122.39,
+                "lat": 37.7,
+                "qualifier": null,
+                "product_id": "202512230659-KMTR-NWUS56-LSRMTR",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.39,
+                    37.7
+                ]
+            }
+        },
+        {
+            "id": "173",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 71,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T08:46:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512220919-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "71"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "174",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 58,
+                "county": "Albany",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY25 10.7 SE Arlington (WYDOT).",
+                "city": "11 SE Arlington",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T21:32:00Z",
+                "lon": -106.05,
+                "lat": 41.5,
+                "qualifier": "M",
+                "product_id": "202512230421-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.05,
+                    41.5
+                ]
+            }
+        },
+        {
+            "id": "175",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 59,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY18 Halleck Ridge (WYDOT).",
+                "city": "7 NW Elk Mountain",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2025-12-22T09:42:00Z",
+                "lon": -106.51,
+                "lat": 41.75,
+                "qualifier": "M",
+                "product_id": "202512221008-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.51,
+                    41.75
+                ]
+            }
+        },
+        {
+            "id": "176",
+            "type": "Feature",
+            "properties": {
+                "wfo": "HNX",
+                "type": "J",
+                "magf": 0.25,
+                "county": "Kings",
+                "typetext": "FOG",
+                "state": "CA",
+                "remark": "Forecaster saw 0.25 miles or so of low lying fog this morning.",
+                "city": "2 SSE Hanford",
+                "source": "NWS Employee",
+                "unit": "Mi",
+                "valid": "2025-12-22T14:45:00Z",
+                "lon": -119.63,
+                "lat": 36.3,
+                "qualifier": "E",
+                "product_id": "202512221517-KHNX-NWUS56-LSRHNX",
+                "st": "CA",
+                "magnitude": "0.25"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.63,
+                    36.3
+                ]
+            }
+        },
+        {
+            "id": "177",
+            "type": "Feature",
+            "properties": {
+                "wfo": "STO",
+                "type": "F",
+                "magf": null,
+                "county": "Shasta",
+                "typetext": "FLASH FLOOD",
+                "state": "CA",
+                "remark": "California Highway Patrol reported flash flooding with the river coming over the bridge at SR 299 and Old Ranch Road with a semi truck and 6 or 7 vehicles stuck.",
+                "city": "6 N Palo Cedro",
+                "source": "Law Enforcement",
+                "unit": null,
+                "valid": "2025-12-22T01:51:00Z",
+                "lon": -122.23,
+                "lat": 40.64,
+                "qualifier": null,
+                "product_id": "202512222159-KSTO-NWUS56-LSRSTO",
+                "st": "CA",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.23,
+                    40.64
+                ]
+            }
+        }
+    ]
+}

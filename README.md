@@ -1,2 +1,432 @@
-# lsrMap
+# NWS Local Storm Reports - Interactive Map
 
+A modern, interactive web application for visualizing National Weather Service (NWS) Local Storm Reports (LSR) on an interactive map. Built with vanilla JavaScript, Leaflet.js, and ES6 modules.
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)
+![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-green.svg)
+
+## Features
+
+- 🗺️ **Interactive Map** - Explore storm reports on an interactive Leaflet map
+- 🔍 **Advanced Filtering** - Filter by report type, date range, and geographic region
+- 📊 **Real-time Data** - Live mode with automatic refresh for current conditions
+- 💾 **Client-side Caching** - Intelligent caching with localStorage for improved performance
+- 🔄 **Request Management** - Automatic retry logic with exponential backoff
+- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
+- ⌨️ **Keyboard Shortcuts** - Power user features for quick navigation
+- 📤 **Data Export** - Export filtered data as CSV, JSON, or GeoJSON
+- 🌐 **Offline Detection** - Automatic detection and notification of network status
+- 🎯 **Performance Optimized** - Zoom-based marker limits and viewport filtering
+- 📋 **Public Information Statements** - View NWS PNS statements on the map
+
+## Demo
+
+[Live Demo](https://your-domain.com) *(Update with your deployment URL)*
+
+## Screenshots
+
+*Add screenshots of your application here*
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Installation
+
+### Prerequisites
+
+- A modern web browser (Chrome, Firefox, Safari, Edge)
+- A web server (Apache, Nginx, or any static file server)
+- PHP 7.4+ (optional, for server-side caching)
+
+### Quick Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/nws-lsr-map.git
+   cd nws-lsr-map
+   ```
+
+2. **Set file permissions (recommended):**
+   ```bash
+   # Linux/Mac
+   chmod +x set-permissions.sh
+   ./set-permissions.sh
+   
+   # Or with PHP cache support
+   ./set-permissions.sh --cache
+   
+   # Or run PHP version (works on server)
+   php set-permissions.php --cache
+   ```
+
+3. **Serve the application:**
+   
+   **Option A: Using PHP built-in server (for development):**
+   ```bash
+   php -S localhost:8000
+   ```
+   Then open `http://localhost:8000` in your browser.
+
+   **Option B: Using a static file server (no PHP required):**
+   ```bash
+   # Using Python
+   python -m http.server 8000
+   
+   # Using Node.js http-server
+   npx http-server -p 8000
+   
+   # Using any static file server
+   ```
+   The application works perfectly without PHP - it will automatically use the source API directly.
+
+   **Option C: Using a web server with PHP (for caching):**
+   - Copy all files to your web server's document root
+   - Run `php set-permissions.php --cache` on the server (or use FTP client)
+   - Ensure the server can serve static files and execute PHP (for optional caching)
+
+3. **Configure caching (optional but recommended):**
+   
+   See [CACHE-SETUP.md](CACHE-SETUP.md) for detailed instructions on setting up the server-side cache system. 
+   
+   **Note:** The application works perfectly without server-side caching. If PHP is not configured, the application automatically falls back to the source API. Queries for the last 24 hours always use the source API directly for real-time data, regardless of cache configuration.
+
+## Quick Start
+
+1. Open `index.html` in a web browser or serve via a web server
+2. Select a date range using the date pickers or preset buttons
+3. Optionally select a geographic region (state or region)
+4. Click "Fetch Data" or press `G` to load storm reports
+5. Click on markers to view detailed report information
+6. Use filters to narrow down results by report type
+
+## Configuration
+
+Configuration is managed in `config.js`. Key settings include:
+
+### Map Settings
+```javascript
+CONFIG = {
+    ICON_SIZE: 28,                    // Marker icon size in pixels
+    BATCH_SIZE: 200,                  // Markers processed per batch
+    MAP_INITIAL: {
+        lat: 39.8283,                 // Initial map center latitude
+        lon: -98.5795,                // Initial map center longitude
+        zoom: 4                       // Initial zoom level
+    }
+}
+```
+
+### Performance Settings
+```javascript
+CONFIG = {
+    MAX_MARKERS: 5000,                // Maximum markers to display
+    VIEWPORT_ONLY: true,              // Only show markers in viewport
+    MIN_ZOOM_FOR_VIEWPORT: 6,         // Minimum zoom for viewport filtering
+    ZOOM_BASED_LIMITS: {              // Marker limits by zoom level
+        3: 500,
+        4: 1000,
+        5: 2000,
+        6: 3500,
+        7: 4500,
+        8: 5000
+    }
+}
+```
+
+### Cache Settings
+Client-side caching is configured in `js/cache/cacheService.js`:
+- Default TTL: 5 minutes
+- Max cache size: 10MB
+- Automatic cleanup of expired entries
+
+## Usage
+
+### Basic Operations
+
+- **Load Data**: Click "Fetch Data" button or press `G`
+- **Clear Map**: Click "Clear Map" button or press `C`
+- **Share Link**: Click "Share Link" button or press `S` to generate a shareable URL
+- **Export Data**: Click "Export Data" button or press `E` to export filtered data
+- **Help**: Click "Help" button or press `?` to view keyboard shortcuts
+
+### Filtering
+
+1. **By Report Type**: Check/uncheck report type chips in the filter panel
+2. **By Date Range**: Use date pickers or preset buttons (Last 24h, Last 7 days, etc.)
+3. **By Region**: Select a state or region from the dropdown
+4. **Quick Filters**: Use preset buttons for Severe, Winter, or Precipitation reports
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `G` | Fetch/Refresh data |
+| `C` | Clear map |
+| `S` | Share link |
+| `E` | Export data |
+| `?` | Show help |
+
+### Export Options
+
+The application supports exporting filtered data in three formats:
+
+- **CSV**: Comma-separated values for spreadsheet applications
+- **JSON**: JavaScript Object Notation for data processing
+- **GeoJSON**: Geographic JSON format for GIS applications
+
+## Architecture
+
+The application is built with a modular architecture using ES6 modules:
+
+```
+/
+├── index.html              # Main HTML file
+├── app.js                  # Main application entry point
+├── config.js               # Configuration file
+├── styles.css              # Application styles
+├── js/
+│   ├── api/                # API services
+│   │   ├── lsrService.js   # LSR API service
+│   │   └── requestManager.js # Request management & retry logic
+│   ├── cache/              # Caching services
+│   │   └── cacheService.js # Client-side caching
+│   ├── errors/             # Error handling
+│   │   └── errorHandler.js # Centralized error handling
+│   ├── map/                # Map-related services
+│   │   ├── iconService.js  # Icon creation
+│   │   ├── markerService.js # Marker management
+│   │   └── popupService.js # Popup content generation
+│   ├── state/              # State management
+│   │   └── appState.js     # Application state
+│   ├── ui/                 # UI services
+│   │   └── toastService.js # Status notifications
+│   └── utils/              # Utilities
+│       ├── formatters.js    # Data formatting
+│       └── offlineDetector.js # Network status detection
+└── api/                    # Server-side API (optional)
+    ├── cache.php           # Cache API endpoint
+    ├── update-cache.php    # Cache update script
+    └── cleanup-cache.php   # Cache cleanup script
+```
+
+### Key Components
+
+- **LSR Service**: Handles API communication with automatic caching and fallback
+- **Request Manager**: Manages request deduplication, cancellation, and retry logic
+- **Cache Service**: Client-side caching with localStorage
+- **Error Handler**: Centralized error handling with production-safe logging
+- **State Management**: Centralized application state with change listeners
+
+## API Documentation
+
+### Data Sources
+
+The application fetches data from:
+- **Primary**: Iowa State Mesonet API (`https://mesonet.agron.iastate.edu/geojson/lsr.php`)
+- **Cache API**: Local cache endpoint (`api/cache.php`) for recent data (last 7 days)
+- **PNS Data**: NWS API for Public Information Statements
+
+### API Endpoints
+
+#### LSR Data
+```
+GET /api/cache.php?start=YYYY-MM-DD&startHour=HH:MM&end=YYYY-MM-DD&endHour=HH:MM
+```
+
+Returns GeoJSON format:
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [lon, lat]
+      },
+      "properties": {
+        "type": "report_type_code",
+        "magnitude": 1.5,
+        "remark": "Report description",
+        "city": "City Name",
+        "st": "ST",
+        "valid": "2024-01-15T12:00:00Z"
+      }
+    }
+  ]
+}
+```
+
+## Deployment
+
+### Production Checklist
+
+- [ ] Update API endpoints in `js/api/lsrService.js` if needed
+- [ ] Configure server-side caching (see [CACHE-SETUP.md](CACHE-SETUP.md))
+- [ ] Set up HTTPS for secure connections
+- [ ] Configure CORS headers if serving from different domain
+- [ ] Enable gzip compression for static assets
+- [ ] Set appropriate cache headers
+- [ ] Test offline functionality
+- [ ] Verify error handling and logging
+
+### Server Configuration
+
+#### Apache (.htaccess)
+```apache
+# Enable CORS
+Header set Access-Control-Allow-Origin "*"
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+```
+
+#### Nginx
+```nginx
+# Enable gzip
+gzip on;
+gzip_types text/css application/javascript application/json;
+
+# Cache static assets
+location ~* \.(css|js)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+## Development
+
+### Project Structure
+
+The codebase follows a modular architecture with clear separation of concerns:
+
+- **Modules**: Each module has a single responsibility
+- **Services**: Reusable services for common functionality
+- **Error Handling**: Centralized error handling throughout
+- **State Management**: Centralized state with change listeners
+
+### Adding New Features
+
+1. Create a new module in the appropriate directory
+2. Export functions/classes from the module
+3. Import and use in `app.js` or other modules
+4. Update configuration in `config.js` if needed
+5. Add tests if applicable
+
+### Code Style
+
+- Use ES6+ features (modules, arrow functions, destructuring)
+- Follow existing code patterns
+- Add JSDoc comments for public functions
+- Keep functions focused and single-purpose
+
+## Browser Support
+
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## Performance
+
+The application includes several performance optimizations:
+
+- **Client-side caching**: Reduces API calls
+- **Request deduplication**: Prevents duplicate requests
+- **Batch processing**: Processes markers in batches using `requestAnimationFrame`
+- **Viewport filtering**: Only renders markers in visible area
+- **Zoom-based limits**: Adjusts marker density based on zoom level
+
+## Troubleshooting
+
+### Map Not Loading
+- Check browser console for errors
+- Verify Leaflet.js is loaded correctly
+- Ensure `CONFIG` is defined in `config.js`
+
+### Data Not Loading
+- Check network connectivity
+- Verify API endpoints are accessible
+- Check browser console for API errors
+- Try disabling browser extensions
+
+### Performance Issues
+- Reduce `MAX_MARKERS` in config
+- Enable `VIEWPORT_ONLY` filtering
+- Adjust `ZOOM_BASED_LIMITS` for your use case
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Setup
+
+1. Clone the repository
+2. Serve using a local web server
+3. Make changes and test in browser
+4. Ensure no console errors
+5. Test on multiple browsers
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Iowa State Mesonet](https://mesonet.agron.iastate.edu/) for providing the LSR API
+- [Leaflet.js](https://leafletjs.com/) for the mapping library
+- [Font Awesome](https://fontawesome.com/) for icons
+- National Weather Service for the data
+
+## Support
+
+For issues, questions, or contributions:
+- Open an issue on GitHub
+- Check existing issues for solutions
+- Review the documentation
+
+## Changelog
+
+### Version 2.0.0 (Current)
+- Refactored to ES6 modules
+- Added client-side caching
+- Implemented request management and retry logic
+- Added comprehensive error handling
+- Improved offline detection
+- Enhanced performance optimizations
+
+### Version 1.0.0
+- Initial release
+- Basic map functionality
+- Report filtering
+- Data export
+
+---
+
+**Made with ❤️ for weather enthusiasts and developers**

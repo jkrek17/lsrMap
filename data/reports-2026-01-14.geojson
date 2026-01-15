@@ -1,0 +1,755 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "0",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "A",
+                "magf": 61,
+                "county": "Ketchikan Gateway",
+                "typetext": "HIGH SUST WINDS",
+                "state": "AK",
+                "remark": "Mesonet station KEXA2 Ketchikan Dock.",
+                "city": "Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:22:00Z",
+                "lon": -131.68,
+                "lat": 55.35,
+                "qualifier": "M",
+                "product_id": "202601140147-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "61"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.68,
+                    55.35
+                ]
+            }
+        },
+        {
+            "id": "1",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "A",
+                "magf": 63,
+                "county": "Ketchikan Gateway",
+                "typetext": "HIGH SUST WINDS",
+                "state": "AK",
+                "remark": "Corrects previous high sust winds report from Ketchikan. Mesonet station KEXA2 Ketchikan Dock.",
+                "city": "Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:32:00Z",
+                "lon": -131.68,
+                "lat": 55.35,
+                "qualifier": "M",
+                "product_id": "202601140152-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "63"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.68,
+                    55.35
+                ]
+            }
+        },
+        {
+            "id": "2",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "A",
+                "magf": 68,
+                "county": "Ketchikan Gateway",
+                "typetext": "HIGH SUST WINDS",
+                "state": "AK",
+                "remark": "Corrects previous high sust winds report from Ketchikan. Corrects previous high sust winds report from Ketchikan. Mesonet station KEXA2 Ketchikan Dock.",
+                "city": "Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:42:00Z",
+                "lon": -131.68,
+                "lat": 55.35,
+                "qualifier": "M",
+                "product_id": "202601140210-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.68,
+                    55.35
+                ]
+            }
+        },
+        {
+            "id": "3",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 59,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station STXA2 Sitka AML.",
+                "city": "5 NNW Sitka",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:12:00Z",
+                "lon": -135.39,
+                "lat": 57.12,
+                "qualifier": "M",
+                "product_id": "202601140148-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.39,
+                    57.12
+                ]
+            }
+        },
+        {
+            "id": "4",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 60,
+                "county": "Ketchikan Gateway",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Buoy station KECA2 Ketchikan Tide Gauge.",
+                "city": "3 ESE Ketchikan",
+                "source": "Buoy",
+                "unit": "MPH",
+                "valid": "2026-01-14T02:54:00Z",
+                "lon": -131.63,
+                "lat": 55.33,
+                "qualifier": "M",
+                "product_id": "202601140303-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.63,
+                    55.33
+                ]
+            }
+        },
+        {
+            "id": "5",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 60,
+                "county": "PKZ036",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station SXXA2 Saxman.",
+                "city": "5 SE Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T02:32:00Z",
+                "lon": -131.6,
+                "lat": 55.31,
+                "qualifier": "M",
+                "product_id": "202601140301-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.6,
+                    55.31
+                ]
+            }
+        },
+        {
+            "id": "6",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 60,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station SHXA2 Sitka Harbor.",
+                "city": "1 WNW Sitka",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:12:00Z",
+                "lon": -135.35,
+                "lat": 57.05,
+                "qualifier": "M",
+                "product_id": "202601140148-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.05
+                ]
+            }
+        },
+        {
+            "id": "7",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 64,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "ASOS station PASI Sitka Airport.",
+                "city": "1 NNW Sitka",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2026-01-14T00:53:00Z",
+                "lon": -135.35,
+                "lat": 57.07,
+                "qualifier": "M",
+                "product_id": "202601140111-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "64"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.07
+                ]
+            }
+        },
+        {
+            "id": "8",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 67,
+                "county": "Ketchikan Gateway",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station SLXA2 Salmon Landing.",
+                "city": "2 ESE Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:52:00Z",
+                "lon": -131.64,
+                "lat": 55.34,
+                "qualifier": "M",
+                "product_id": "202601140213-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "67"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.64,
+                    55.34
+                ]
+            }
+        },
+        {
+            "id": "9",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 67,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 1 WNW Sitka. Mesonet station SHXA2 Sitka Harbor.",
+                "city": "1 WNW Sitka",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:32:00Z",
+                "lon": -135.35,
+                "lat": 57.05,
+                "qualifier": "M",
+                "product_id": "202601140152-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "67"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.05
+                ]
+            }
+        },
+        {
+            "id": "10",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 68,
+                "county": "Ketchikan Gateway",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 2 ESE Ketchikan. Mesonet station SLXA2 Salmon Landing.",
+                "city": "2 ESE Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T02:42:00Z",
+                "lon": -131.64,
+                "lat": 55.34,
+                "qualifier": "M",
+                "product_id": "202601140305-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.64,
+                    55.34
+                ]
+            }
+        },
+        {
+            "id": "11",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 68,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "ASOS station PASI Sitka Airport.",
+                "city": "1 NNW Sitka",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2026-01-14T02:52:00Z",
+                "lon": -135.35,
+                "lat": 57.07,
+                "qualifier": "M",
+                "product_id": "202601140304-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.07
+                ]
+            }
+        },
+        {
+            "id": "12",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 68,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 5 NNW Sitka. Mesonet station STXA2 Sitka AML.",
+                "city": "5 NNW Sitka",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T03:02:00Z",
+                "lon": -135.39,
+                "lat": 57.12,
+                "qualifier": "M",
+                "product_id": "202601140318-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.39,
+                    57.12
+                ]
+            }
+        },
+        {
+            "id": "13",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 70,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 1 NNW Sitka. ASOS station PASI Sitka Airport.",
+                "city": "1 NNW Sitka",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2026-01-14T04:56:00Z",
+                "lon": -135.35,
+                "lat": 57.07,
+                "qualifier": "M",
+                "product_id": "202601140538-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "70"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.07
+                ]
+            }
+        },
+        {
+            "id": "14",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 71,
+                "county": "PKZ036",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 5 SE Ketchikan. Mesonet station SXXA2 Saxman.",
+                "city": "5 SE Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T03:32:00Z",
+                "lon": -131.6,
+                "lat": 55.31,
+                "qualifier": "M",
+                "product_id": "202601140409-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "71"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.6,
+                    55.31
+                ]
+            }
+        },
+        {
+            "id": "15",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 72,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 1 WNW Sitka. Corrects previous non-tstm wnd gst report from 1 WNW Sitka. Mesonet station SHXA2 Sitka Harbor.",
+                "city": "1 WNW Sitka",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T06:02:00Z",
+                "lon": -135.35,
+                "lat": 57.05,
+                "qualifier": "M",
+                "product_id": "202601140624-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "72"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.05
+                ]
+            }
+        },
+        {
+            "id": "16",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 76,
+                "county": "Ketchikan Gateway",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 2 ESE Ketchikan. Corrects previous non-tstm wnd gst report from 2 ESE Ketchikan. Mesonet station SLXA2 Salmon Landing.",
+                "city": "2 ESE Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T02:22:00Z",
+                "lon": -131.64,
+                "lat": 55.34,
+                "qualifier": "M",
+                "product_id": "202601140321-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "76"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.64,
+                    55.34
+                ]
+            }
+        },
+        {
+            "id": "17",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 76,
+                "county": "Sitka",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 1 NNW Sitka. Corrects previous non-tstm wnd gst report from 1 NNW Sitka. ASOS station PASI Sitka Airport.",
+                "city": "1 NNW Sitka",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2026-01-14T05:53:00Z",
+                "lon": -135.35,
+                "lat": 57.07,
+                "qualifier": "M",
+                "product_id": "202601140622-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "76"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.35,
+                    57.07
+                ]
+            }
+        },
+        {
+            "id": "18",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 83,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 2 ESE Metlakatla. Mesonet station GW6670 Chester Lake Dam CWOP.",
+                "city": "2 ESE Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T02:00:00Z",
+                "lon": -131.53,
+                "lat": 55.12,
+                "qualifier": "M",
+                "product_id": "202601140215-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "83"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.53,
+                    55.12
+                ]
+            }
+        },
+        {
+            "id": "19",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 88,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 2 S Metlakatla. Mesonet station GW4906 Yellow Hill Summit.",
+                "city": "2 S Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T00:40:00Z",
+                "lon": -131.58,
+                "lat": 55.1,
+                "qualifier": "M",
+                "product_id": "202601140215-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "88"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.58,
+                    55.1
+                ]
+            }
+        },
+        {
+            "id": "20",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 95,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Corrects previous non-tstm wnd gst report from 2 ESE Metlakatla. Corrects previous non-tstm wnd gst report from 2 ESE Metlakatla. Mesonet station GW6670 Chester Lake Dam CWOP.",
+                "city": "2 ESE Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-14T04:00:00Z",
+                "lon": -131.53,
+                "lat": 55.12,
+                "qualifier": "M",
+                "product_id": "202601140426-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "95"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.53,
+                    55.12
+                ]
+            }
+        },
+        {
+            "id": "21",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "O",
+                "magf": null,
+                "county": "Ketchikan Gateway",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "AK",
+                "remark": "NWS Employee relayed reports of multiple power outages and trees down across the Ketchikan area. Fire chief also reported outages and downed trees..",
+                "city": "Ketchikan",
+                "source": "NWS Employee",
+                "unit": null,
+                "valid": "2026-01-14T04:10:00Z",
+                "lon": -131.69,
+                "lat": 55.36,
+                "qualifier": null,
+                "product_id": "202601140411-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.69,
+                    55.36
+                ]
+            }
+        },
+        {
+            "id": "22",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "V",
+                "magf": null,
+                "county": "Haines",
+                "typetext": "AVALANCHE",
+                "state": "AK",
+                "remark": "Avalanche over the Haines highway at milepost 16. Highway is impassable and close from Haines to milepost 20.",
+                "city": "6 SE Klukwan",
+                "source": "Dept of Highways",
+                "unit": null,
+                "valid": "2026-01-14T02:45:00Z",
+                "lon": -135.77,
+                "lat": 59.35,
+                "qualifier": null,
+                "product_id": "202601140704-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -135.77,
+                    59.35
+                ]
+            }
+        },
+        {
+            "id": "23",
+            "type": "Feature",
+            "properties": {
+                "wfo": "GLD",
+                "type": "N",
+                "magf": 58,
+                "county": "Gove",
+                "typetext": "NON-TSTM WND GST",
+                "state": "KS",
+                "remark": "A screen shot of a personal weather station showing a 57.7 mph wind gust.",
+                "city": "2 WSW Campus",
+                "source": "Public",
+                "unit": "MPH",
+                "valid": "2026-01-14T01:40:00Z",
+                "lon": -100.77,
+                "lat": 39.12,
+                "qualifier": "M",
+                "product_id": "202601140217-KGLD-NWUS53-LSRGLD",
+                "st": "KS",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -100.77,
+                    39.12
+                ]
+            }
+        },
+        {
+            "id": "24",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 51,
+                "county": "Pennington",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "1 E Dwtn Rapid City",
+                "source": "Official NWS Obs",
+                "unit": "mph",
+                "valid": "2026-01-14T02:56:00Z",
+                "lon": -103.21,
+                "lat": 44.07,
+                "qualifier": "M",
+                "product_id": "202601140320-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "51"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.21,
+                    44.07
+                ]
+            }
+        }
+    ]
+}

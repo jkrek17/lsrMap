@@ -1,0 +1,1805 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "0",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 53,
+                "county": "Big Horn",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station BHMM8 Bighorn Mountain.",
+                "city": "18 S Fort Smith",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T00:18:00Z",
+                "lon": -107.89,
+                "lat": 45.07,
+                "qualifier": "M",
+                "product_id": "202601130854-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "53"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -107.89,
+                    45.07
+                ]
+            }
+        },
+        {
+            "id": "1",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0.05,
+                "county": "Alger",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Freezing rain. Had to melt the ice off the gauge at MI-AG-14; Au Train 6.3 NW.",
+                "city": "4 ENE Deerton",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -86.96,
+                "lat": 46.49,
+                "qualifier": "M",
+                "product_id": "202601131522-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0.05"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -86.96,
+                    46.49
+                ]
+            }
+        },
+        {
+            "id": "2",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "S",
+                "magf": 1.9,
+                "county": "Baraga",
+                "typetext": "SNOW",
+                "state": "MI",
+                "remark": "CO-OP Observer station MIEM4 Michigamme 3WNW.",
+                "city": "1 ESE Three Lakes",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -88.18,
+                "lat": 46.55,
+                "qualifier": "M",
+                "product_id": "202601131502-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "1.9"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -88.18,
+                    46.55
+                ]
+            }
+        },
+        {
+            "id": "3",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 54,
+                "county": "Park",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station MTELV 3.3 E Livingston (MT DOT).",
+                "city": "3 ENE Livingston",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T09:30:00Z",
+                "lon": -110.5,
+                "lat": 45.69,
+                "qualifier": "M",
+                "product_id": "202601131554-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "54"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -110.5,
+                    45.69
+                ]
+            }
+        },
+        {
+            "id": "4",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BGM",
+                "type": "S",
+                "magf": 0.7,
+                "county": "Oneida",
+                "typetext": "SNOW",
+                "state": "NY",
+                "remark": null,
+                "city": "Holland Patent",
+                "source": "Trained Spotter",
+                "unit": "Inch",
+                "valid": "2026-01-13T00:00:00Z",
+                "lon": -75.26,
+                "lat": 43.24,
+                "qualifier": "M",
+                "product_id": "202601130131-KBGM-NWUS51-LSRBGM",
+                "st": "NY",
+                "magnitude": "0.7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -75.26,
+                    43.24
+                ]
+            }
+        },
+        {
+            "id": "5",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "S",
+                "magf": 2,
+                "county": "Baraga",
+                "typetext": "SNOW",
+                "state": "MI",
+                "remark": "CO-OP Observer station HERM4 2.0 SE Herman.",
+                "city": "2 SE Herman",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -88.33,
+                "lat": 46.65,
+                "qualifier": "M",
+                "product_id": "202601131502-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "2"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -88.33,
+                    46.65
+                ]
+            }
+        },
+        {
+            "id": "6",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 58,
+                "county": "Teton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station MTCTS Choteau South Us-287 Mp 56.0.",
+                "city": "8 SSW Choteau",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:00:00Z",
+                "lon": -112.23,
+                "lat": 47.7,
+                "qualifier": "M",
+                "product_id": "202601131236-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -112.23,
+                    47.7
+                ]
+            }
+        },
+        {
+            "id": "7",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 59,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station GW4126 Annette CWOP 6 S.",
+                "city": "6 S Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T22:50:00Z",
+                "lon": -131.59,
+                "lat": 55.05,
+                "qualifier": "M",
+                "product_id": "202601140009-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.59,
+                    55.05
+                ]
+            }
+        },
+        {
+            "id": "8",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "O",
+                "magf": null,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND DMG",
+                "state": "AK",
+                "remark": "Strong winds in downtown Metlakatla blew down a tree near Early Head Start.",
+                "city": "Metlakatla",
+                "source": "Local Official",
+                "unit": null,
+                "valid": "2026-01-13T23:00:00Z",
+                "lon": -131.57,
+                "lat": 55.13,
+                "qualifier": null,
+                "product_id": "202601140159-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": ""
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.57,
+                    55.13
+                ]
+            }
+        },
+        {
+            "id": "9",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 74,
+                "county": "PKZ036",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station GW5794 AIPCo Metlakatla.",
+                "city": "Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T22:35:00Z",
+                "lon": -131.57,
+                "lat": 55.13,
+                "qualifier": "M",
+                "product_id": "202601140007-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "74"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.57,
+                    55.13
+                ]
+            }
+        },
+        {
+            "id": "10",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 52,
+                "county": "Campbell",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "25 ESE Wright",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T20:05:00Z",
+                "lon": -105.09,
+                "lat": 43.55,
+                "qualifier": "M",
+                "product_id": "202601132108-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "52"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.09,
+                    43.55
+                ]
+            }
+        },
+        {
+            "id": "11",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 54,
+                "county": "Pennington",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "3 NNW Scenic",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T18:55:00Z",
+                "lon": -102.58,
+                "lat": 43.82,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "54"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -102.58,
+                    43.82
+                ]
+            }
+        },
+        {
+            "id": "12",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 50,
+                "county": "Weston",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "10 S Upton",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T18:41:00Z",
+                "lon": -104.64,
+                "lat": 43.96,
+                "qualifier": "M",
+                "product_id": "202601131909-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "50"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.64,
+                    43.96
+                ]
+            }
+        },
+        {
+            "id": "13",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 56,
+                "county": "Teton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station MTCTS Choteau South Us-287 Mp 56.0.",
+                "city": "8 SSW Choteau",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T01:30:00Z",
+                "lon": -112.23,
+                "lat": 47.7,
+                "qualifier": "M",
+                "product_id": "202601130613-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "56"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -112.23,
+                    47.7
+                ]
+            }
+        },
+        {
+            "id": "14",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 50,
+                "county": "Weston",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "11 NE Morrisey",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T18:57:00Z",
+                "lon": -104.26,
+                "lat": 43.67,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "50"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.26,
+                    43.67
+                ]
+            }
+        },
+        {
+            "id": "15",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 57,
+                "county": "Campbell",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "1 NE Echeta",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T17:51:00Z",
+                "lon": -105.84,
+                "lat": 44.47,
+                "qualifier": "M",
+                "product_id": "202601131812-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "57"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.84,
+                    44.47
+                ]
+            }
+        },
+        {
+            "id": "16",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 54,
+                "county": "Park",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station TT453 Crazy.",
+                "city": "17 NE Wilsall",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T04:12:00Z",
+                "lon": -110.38,
+                "lat": 46.16,
+                "qualifier": "M",
+                "product_id": "202601131554-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "54"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -110.38,
+                    46.16
+                ]
+            }
+        },
+        {
+            "id": "17",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 53,
+                "county": "Custer",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "8 W Jewel Cave",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T19:27:00Z",
+                "lon": -103.99,
+                "lat": 43.73,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "53"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.99,
+                    43.73
+                ]
+            }
+        },
+        {
+            "id": "18",
+            "type": "Feature",
+            "properties": {
+                "wfo": "GRB",
+                "type": "5",
+                "magf": 0.04,
+                "county": "Florence",
+                "typetext": "FREEZING RAIN",
+                "state": "WI",
+                "remark": "A thin glaze of ice on pavements. Report relayed via social media.",
+                "city": "Aurora",
+                "source": "Public",
+                "unit": "Inch",
+                "valid": "2026-01-13T11:45:00Z",
+                "lon": -88.1,
+                "lat": 45.79,
+                "qualifier": "E",
+                "product_id": "202601131238-KGRB-NWUS53-LSRGRB",
+                "st": "WI",
+                "magnitude": "0.04"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -88.1,
+                    45.79
+                ]
+            }
+        },
+        {
+            "id": "19",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 52,
+                "county": "Custer",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "Pringle",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T20:32:00Z",
+                "lon": -103.59,
+                "lat": 43.61,
+                "qualifier": "M",
+                "product_id": "202601132108-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "52"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.59,
+                    43.61
+                ]
+            }
+        },
+        {
+            "id": "20",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0,
+                "county": "Gogebic",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Whiteboard had a thin layer of ice on it at MI-GG-11; Ironwood 7.3 NNE.",
+                "city": "5 NNW Bessemer",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -90.1,
+                "lat": 46.55,
+                "qualifier": "M",
+                "product_id": "202601131509-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -90.1,
+                    46.55
+                ]
+            }
+        },
+        {
+            "id": "21",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 62,
+                "county": "Stillwater",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station MTM67 6.1 S Reed Point (MT-MESO).",
+                "city": "6 S Reed Point",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:45:00Z",
+                "lon": -109.56,
+                "lat": 45.61,
+                "qualifier": "M",
+                "product_id": "202601131554-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -109.56,
+                    45.61
+                ]
+            }
+        },
+        {
+            "id": "22",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 51,
+                "county": "Campbell",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "13 NNE Wright",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T19:16:00Z",
+                "lon": -105.45,
+                "lat": 43.93,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "51"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.45,
+                    43.93
+                ]
+            }
+        },
+        {
+            "id": "23",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 67,
+                "county": "Park",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station MTLRH Livingston River Hill.",
+                "city": "1 SSE Livingston",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T06:30:00Z",
+                "lon": -110.55,
+                "lat": 45.64,
+                "qualifier": "M",
+                "product_id": "202601130854-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "67"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -110.55,
+                    45.64
+                ]
+            }
+        },
+        {
+            "id": "24",
+            "type": "Feature",
+            "properties": {
+                "wfo": "HNX",
+                "type": "J",
+                "magf": 0.06,
+                "county": "Kings",
+                "typetext": "FOG",
+                "state": "CA",
+                "remark": "Visibility around 300-500 feet along 6th Ave north of Highway 198.",
+                "city": "7 NE Hanford",
+                "source": "NWS Employee",
+                "unit": "Mi",
+                "valid": "2026-01-13T14:35:00Z",
+                "lon": -119.56,
+                "lat": 36.4,
+                "qualifier": "E",
+                "product_id": "202601131526-KHNX-NWUS56-LSRHNX",
+                "st": "CA",
+                "magnitude": "0.06"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.56,
+                    36.4
+                ]
+            }
+        },
+        {
+            "id": "25",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 58,
+                "county": "Teton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "AWOS station K1FM Foxtrot.",
+                "city": "8 NNE Augusta",
+                "source": "AWOS",
+                "unit": "MPH",
+                "valid": "2026-01-13T09:58:00Z",
+                "lon": -112.32,
+                "lat": 47.6,
+                "qualifier": "M",
+                "product_id": "202601131105-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -112.32,
+                    47.6
+                ]
+            }
+        },
+        {
+            "id": "26",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "N",
+                "magf": 40,
+                "county": "Houghton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MI",
+                "remark": "ASOS station KCMX Houghton Co. Airport.",
+                "city": "Houghton Co Airport",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2026-01-13T20:01:00Z",
+                "lon": -88.48,
+                "lat": 47.17,
+                "qualifier": "M",
+                "product_id": "202601132115-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "40"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -88.48,
+                    47.17
+                ]
+            }
+        },
+        {
+            "id": "27",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 65,
+                "county": "Sheridan",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "ASOS station KSHR Sheridan.",
+                "city": "2 SSW Sheridan",
+                "source": "ASOS",
+                "unit": "MPH",
+                "valid": "2026-01-13T13:06:00Z",
+                "lon": -106.97,
+                "lat": 44.77,
+                "qualifier": "M",
+                "product_id": "202601131554-KBYZ-NWUS55-LSRBYZ",
+                "st": "WY",
+                "magnitude": "65"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.97,
+                    44.77
+                ]
+            }
+        },
+        {
+            "id": "28",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 59,
+                "county": "Teton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "59 mph at Foxtrot mesonet.",
+                "city": "9 NNE Augusta",
+                "source": "Other Federal",
+                "unit": "MPH",
+                "valid": "2026-01-13T02:55:00Z",
+                "lon": -112.31,
+                "lat": 47.6,
+                "qualifier": "M",
+                "product_id": "202601130916-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -112.31,
+                    47.6
+                ]
+            }
+        },
+        {
+            "id": "29",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 56,
+                "county": "Campbell",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "5 NNW Dwtn Gillette",
+                "source": "ASOS",
+                "unit": "mph",
+                "valid": "2026-01-13T16:44:00Z",
+                "lon": -105.54,
+                "lat": 44.34,
+                "qualifier": "M",
+                "product_id": "202601131812-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "56"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -105.54,
+                    44.34
+                ]
+            }
+        },
+        {
+            "id": "30",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 58,
+                "county": "Judith Basin",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station MTGYS Geyser (MT DOT).",
+                "city": "2 SSE Geyser",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:30:00Z",
+                "lon": -110.48,
+                "lat": 47.25,
+                "qualifier": "M",
+                "product_id": "202601131239-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -110.48,
+                    47.25
+                ]
+            }
+        },
+        {
+            "id": "31",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 75,
+                "county": "PKZ036",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station LCNA2 Lincoln Island.",
+                "city": "6 ENE Coffman Cove",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T21:10:00Z",
+                "lon": -132.69,
+                "lat": 56.06,
+                "qualifier": "M",
+                "product_id": "202601140007-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "75"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -132.69,
+                    56.06
+                ]
+            }
+        },
+        {
+            "id": "32",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0.05,
+                "county": "Marquette",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Freezing rain was observed near Harvey at MI-MQ-43; Marquette 4.4 SSE.",
+                "city": "Harvey",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:15:00Z",
+                "lon": -87.35,
+                "lat": 46.49,
+                "qualifier": "M",
+                "product_id": "202601131516-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0.05"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.35,
+                    46.49
+                ]
+            }
+        },
+        {
+            "id": "33",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 57,
+                "county": "Fall River",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "7 W Ardmore",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T19:45:00Z",
+                "lon": -103.8,
+                "lat": 43.04,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "57"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.8,
+                    43.04
+                ]
+            }
+        },
+        {
+            "id": "34",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 63,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station WY22 2.7 NW Arlington (WYDOT).",
+                "city": "3 NW Arlington",
+                "source": "Dept of Highways",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:56:00Z",
+                "lon": -106.24,
+                "lat": 41.62,
+                "qualifier": "M",
+                "product_id": "202601131304-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "63"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -106.24,
+                    41.62
+                ]
+            }
+        },
+        {
+            "id": "35",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 52,
+                "county": "Weston",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": null,
+                "city": "7 NNE Rochelle",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T19:07:00Z",
+                "lon": -104.88,
+                "lat": 43.68,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "WY",
+                "magnitude": "52"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.88,
+                    43.68
+                ]
+            }
+        },
+        {
+            "id": "36",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 86,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station GW4906 Yellow Hill Summit.",
+                "city": "2 S Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T21:25:00Z",
+                "lon": -131.58,
+                "lat": 55.1,
+                "qualifier": "M",
+                "product_id": "202601140006-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "86"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.58,
+                    55.1
+                ]
+            }
+        },
+        {
+            "id": "37",
+            "type": "Feature",
+            "properties": {
+                "wfo": "HNX",
+                "type": "J",
+                "magf": 0.09,
+                "county": "Tulare",
+                "typetext": "FOG",
+                "state": "CA",
+                "remark": "Dense Fog, with visibility at the intersection of 1st Ave and CA Hwy 198 down to 500 feet. Very hazardous to motorists, because it is extremely difficult to see tractor trailers crossing the intersection.",
+                "city": "3 WSW Goshen",
+                "source": "NWS Employee",
+                "unit": "Mi",
+                "valid": "2026-01-13T15:10:00Z",
+                "lon": -119.48,
+                "lat": 36.33,
+                "qualifier": "E",
+                "product_id": "202601131538-KHNX-NWUS56-LSRHNX",
+                "st": "CA",
+                "magnitude": "0.09"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -119.48,
+                    36.33
+                ]
+            }
+        },
+        {
+            "id": "38",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 50,
+                "county": "Pennington",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "1 W Box Elder",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T17:55:00Z",
+                "lon": -103.09,
+                "lat": 44.12,
+                "qualifier": "M",
+                "product_id": "202601131909-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "50"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.09,
+                    44.12
+                ]
+            }
+        },
+        {
+            "id": "39",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 65,
+                "county": "Teton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station DELMT Dellwo (MCSCN).",
+                "city": "14 W Bynum",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T10:30:00Z",
+                "lon": -112.61,
+                "lat": 47.98,
+                "qualifier": "M",
+                "product_id": "202601131105-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "65"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -112.61,
+                    47.98
+                ]
+            }
+        },
+        {
+            "id": "40",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0,
+                "county": "Marquette",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Freezing drizzle and snowflakes were observed this morning in Clarksburg /CLKM4/.",
+                "city": "6 E Champion",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2026-01-13T12:00:00Z",
+                "lon": -87.84,
+                "lat": 46.5,
+                "qualifier": "E",
+                "product_id": "202601131531-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.84,
+                    46.5
+                ]
+            }
+        },
+        {
+            "id": "41",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0,
+                "county": "Baraga",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "A glaze of ice was observed at Herman /HERM4/ this morning. Two inches of snow was also observed this morning with a total of 0.30 inches of liquid equivalent.",
+                "city": "Herman",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -88.37,
+                "lat": 46.66,
+                "qualifier": "E",
+                "product_id": "202601131536-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -88.37,
+                    46.66
+                ]
+            }
+        },
+        {
+            "id": "42",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 59,
+                "county": "Fall River",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "10 W Edgemont",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T19:25:00Z",
+                "lon": -104.02,
+                "lat": 43.3,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.02,
+                    43.3
+                ]
+            }
+        },
+        {
+            "id": "43",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "N",
+                "magf": 36,
+                "county": "LSZ266",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MI",
+                "remark": "C-MAN station STDM4, 27 ESE Keweenaw Point.",
+                "city": "Stannard Rock Lighthous",
+                "source": "C-Man Station",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:20:00Z",
+                "lon": -87.22,
+                "lat": 47.18,
+                "qualifier": "M",
+                "product_id": "202601131632-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "36"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.22,
+                    47.18
+                ]
+            }
+        },
+        {
+            "id": "44",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 68,
+                "county": "Prince of Wales-Hyd",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station GW6670 Chester Lake Dam CWOP.",
+                "city": "2 ESE Metlakatla",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T23:00:00Z",
+                "lon": -131.53,
+                "lat": 55.12,
+                "qualifier": "M",
+                "product_id": "202601140008-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "68"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.53,
+                    55.12
+                ]
+            }
+        },
+        {
+            "id": "45",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 64,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station TT839 Quad Creek (RAWS).",
+                "city": "13 SW Washoe",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:25:00Z",
+                "lon": -109.41,
+                "lat": 45.03,
+                "qualifier": "M",
+                "product_id": "202601131554-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "64"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -109.41,
+                    45.03
+                ]
+            }
+        },
+        {
+            "id": "46",
+            "type": "Feature",
+            "properties": {
+                "wfo": "CYS",
+                "type": "N",
+                "magf": 60,
+                "county": "Platte",
+                "typetext": "NON-TSTM WND GST",
+                "state": "WY",
+                "remark": "Mesonet station KBRX 1.4 S Bordeaux (WYDOT).",
+                "city": "1 SSE Bordeaux",
+                "source": "Dept of Highways",
+                "unit": "MPH",
+                "valid": "2026-01-13T09:56:00Z",
+                "lon": -104.94,
+                "lat": 41.93,
+                "qualifier": "M",
+                "product_id": "202601131004-KCYS-NWUS55-LSRCYS",
+                "st": "WY",
+                "magnitude": "60"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.94,
+                    41.93
+                ]
+            }
+        },
+        {
+            "id": "47",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 57,
+                "county": "Carbon",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station TT839 Quad Creek (RAWS).",
+                "city": "13 SW Washoe",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T11:25:00Z",
+                "lon": -109.41,
+                "lat": 45.03,
+                "qualifier": "M",
+                "product_id": "202601131152-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "57"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -109.41,
+                    45.03
+                ]
+            }
+        },
+        {
+            "id": "48",
+            "type": "Feature",
+            "properties": {
+                "wfo": "AJK",
+                "type": "N",
+                "magf": 62,
+                "county": "PKZ036",
+                "typetext": "NON-TSTM WND GST",
+                "state": "AK",
+                "remark": "Mesonet station WCXA2 Ward Cove.",
+                "city": "3 NNW Ketchikan",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T23:52:00Z",
+                "lon": -131.73,
+                "lat": 55.4,
+                "qualifier": "M",
+                "product_id": "202601140024-PAJK-NWAK57-LSRAJK",
+                "st": "AK",
+                "magnitude": "62"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -131.73,
+                    55.4
+                ]
+            }
+        },
+        {
+            "id": "49",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 59,
+                "county": "Custer",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "3 WSW Fairburn",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T20:56:00Z",
+                "lon": -103.26,
+                "lat": 43.68,
+                "qualifier": "M",
+                "product_id": "202601132205-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.26,
+                    43.68
+                ]
+            }
+        },
+        {
+            "id": "50",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 58,
+                "county": "Fall River",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "10 W Edgemont",
+                "source": "Dept of Highways",
+                "unit": "mph",
+                "valid": "2026-01-13T18:20:00Z",
+                "lon": -104.02,
+                "lat": 43.3,
+                "qualifier": "M",
+                "product_id": "202601131909-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "58"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -104.02,
+                    43.3
+                ]
+            }
+        },
+        {
+            "id": "51",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0.03,
+                "county": "Marquette",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Freezing rain. Glaze of ice on snowboard at MI-MQ-33; Marquette 2.0 WNW.",
+                "city": "Trowbridge Park",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:10:00Z",
+                "lon": -87.43,
+                "lat": 46.56,
+                "qualifier": "M",
+                "product_id": "202601131519-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0.03"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.43,
+                    46.56
+                ]
+            }
+        },
+        {
+            "id": "52",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0,
+                "county": "Marquette",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Rain transitioning to freezing rain at the surface this morning at the lakeshore in Marquette /MRQM4/.",
+                "city": "1 ESE Marquette",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -87.38,
+                "lat": 46.55,
+                "qualifier": "E",
+                "product_id": "202601131541-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.38,
+                    46.55
+                ]
+            }
+        },
+        {
+            "id": "53",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0,
+                "county": "Marquette",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "A glaze of ice on vehicles and on rain gauge this morning at MI-MQ-19; Ishpeming 7.2 SW. A mix of freezing drizzle, sleet and snow was observed at the morning observation. Overnight TN22.",
+                "city": "5 SW National Mine",
+                "source": "Cocorahs",
+                "unit": "Inch",
+                "valid": "2026-01-13T15:11:00Z",
+                "lon": -87.76,
+                "lat": 46.41,
+                "qualifier": "M",
+                "product_id": "202601131512-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.76,
+                    46.41
+                ]
+            }
+        },
+        {
+            "id": "54",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0.09,
+                "county": "Dickinson",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "ASOS station KIMT Ford Airport.",
+                "city": "1 NW Kingsford",
+                "source": "ASOS",
+                "unit": "Inch",
+                "valid": "2026-01-13T14:54:00Z",
+                "lon": -88.12,
+                "lat": 45.82,
+                "qualifier": "M",
+                "product_id": "202601132115-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0.09"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -88.12,
+                    45.82
+                ]
+            }
+        },
+        {
+            "id": "55",
+            "type": "Feature",
+            "properties": {
+                "wfo": "MQT",
+                "type": "5",
+                "magf": 0,
+                "county": "Marquette",
+                "typetext": "FREEZING RAIN",
+                "state": "MI",
+                "remark": "Freezing rain started at 06:45 in Harvey /HRVM4/.",
+                "city": "Harvey",
+                "source": "CO-OP Observer",
+                "unit": "Inch",
+                "valid": "2026-01-13T13:00:00Z",
+                "lon": -87.36,
+                "lat": 46.49,
+                "qualifier": "M",
+                "product_id": "202601131533-KMQT-NWUS53-LSRMQT",
+                "st": "MI",
+                "magnitude": "0"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -87.36,
+                    46.49
+                ]
+            }
+        },
+        {
+            "id": "56",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 55,
+                "county": "Meade",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "7 E Sturgis",
+                "source": "AWOS",
+                "unit": "mph",
+                "valid": "2026-01-13T13:55:00Z",
+                "lon": -103.38,
+                "lat": 44.42,
+                "qualifier": "M",
+                "product_id": "202601131812-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "55"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.38,
+                    44.42
+                ]
+            }
+        },
+        {
+            "id": "57",
+            "type": "Feature",
+            "properties": {
+                "wfo": "TFX",
+                "type": "N",
+                "magf": 59,
+                "county": "Teton",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "Mesonet station DVI01084 Dupuyer.",
+                "city": "9 SW Dupuyer",
+                "source": "Mesonet",
+                "unit": "MPH",
+                "valid": "2026-01-13T12:15:00Z",
+                "lon": -112.66,
+                "lat": 48.12,
+                "qualifier": "M",
+                "product_id": "202601131234-KTFX-NWUS55-LSRTFX",
+                "st": "MT",
+                "magnitude": "59"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -112.66,
+                    48.12
+                ]
+            }
+        },
+        {
+            "id": "58",
+            "type": "Feature",
+            "properties": {
+                "wfo": "BYZ",
+                "type": "N",
+                "magf": 72,
+                "county": "Sweet Grass",
+                "typetext": "NON-TSTM WND GST",
+                "state": "MT",
+                "remark": "AWOS station K6S0 Big Timber.",
+                "city": "2 SSW Big Timber",
+                "source": "AWOS",
+                "unit": "MPH",
+                "valid": "2026-01-13T13:35:00Z",
+                "lon": -109.97,
+                "lat": 45.8,
+                "qualifier": "M",
+                "product_id": "202601131554-KBYZ-NWUS55-LSRBYZ",
+                "st": "MT",
+                "magnitude": "72"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -109.97,
+                    45.8
+                ]
+            }
+        },
+        {
+            "id": "59",
+            "type": "Feature",
+            "properties": {
+                "wfo": "UNR",
+                "type": "N",
+                "magf": 51,
+                "county": "Fall River",
+                "typetext": "NON-TSTM WND GST",
+                "state": "SD",
+                "remark": null,
+                "city": "14 NNW Edgemont",
+                "source": "Mesonet",
+                "unit": "mph",
+                "valid": "2026-01-13T19:15:00Z",
+                "lon": -103.97,
+                "lat": 43.47,
+                "qualifier": "M",
+                "product_id": "202601132007-KUNR-NWUS53-LSRUNR",
+                "st": "SD",
+                "magnitude": "51"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103.97,
+                    43.47
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,54 @@
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache files
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build files (if any)
+dist/
+build/
+
+# Node modules (if using npm for development tools)
+node_modules/
+
+# PHP specific
+vendor/
+composer.lock
+
+# Data files (optional - uncomment if you don't want to track cache data)
+# data/*.geojson
