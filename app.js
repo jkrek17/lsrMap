@@ -1386,14 +1386,22 @@ function setDatePreset(preset) {
     const customDateFields = document.getElementById('customDateFields');
     const actionButtons = document.getElementById('actionButtons');
     
-    endDateEl.value = today.toISOString().split('T')[0];
+    // Helper to format local date as YYYY-MM-DD
+    const formatLocalDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    endDateEl.value = formatLocalDate(today);
     endHourEl.value = '23:59';
     
     switch(preset) {
         case '24h':
             const yesterday24h = new Date(today);
             yesterday24h.setHours(today.getHours() - 24);
-            startDateEl.value = yesterday24h.toISOString().split('T')[0];
+            startDateEl.value = formatLocalDate(yesterday24h);
             startHourEl.value = yesterday24h.toTimeString().slice(0, 5);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
@@ -1408,7 +1416,7 @@ function setDatePreset(preset) {
         case '48h':
             const yesterday48h = new Date(today);
             yesterday48h.setHours(today.getHours() - 48);
-            startDateEl.value = yesterday48h.toISOString().split('T')[0];
+            startDateEl.value = formatLocalDate(yesterday48h);
             startHourEl.value = yesterday48h.toTimeString().slice(0, 5);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
@@ -1425,7 +1433,7 @@ function setDatePreset(preset) {
         case 'week':
             const lastWeek = new Date(today);
             lastWeek.setDate(lastWeek.getDate() - 7);
-            startDateEl.value = lastWeek.toISOString().split('T')[0];
+            startDateEl.value = formatLocalDate(lastWeek);
             startHourEl.value = '00:00';
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
