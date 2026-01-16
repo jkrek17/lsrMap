@@ -88,20 +88,19 @@ class LSRService {
         const startDateTime = new Date(startDate + 'T' + startHour);
         const now = new Date();
         
-        // Calculate hours difference from start to now
-        const hoursDiff = (now.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
-        
-        // If query includes last 24 hours, use source API directly for real-time data
-        // This matches the cache.php logic and avoids unnecessary cache API calls
-        const includesLast24Hours = hoursDiff <= 24 && endDateTime >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        // Check if the query includes data from the last 24 hours
+        // If so, use source API directly for real-time data (cache.php does this anyway)
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const includesLast24Hours = endDateTime > twentyFourHoursAgo;
         
         // Use cache API only if:
         // 1. Cache is enabled
-        // 2. End date is within last 7 days
+        // 2. Start date is within cache range (30 days, matching cache.php CACHE_DAYS)
         // 3. Query does NOT include last 24 hours (cache.php proxies to source anyway)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const shouldUseCache = useCache && endDateTime >= sevenDaysAgo && !includesLast24Hours;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const isWithinCacheRange = startDateTime >= thirtyDaysAgo;
+        const shouldUseCache = useCache && isWithinCacheRange && !includesLast24Hours;
 
         // Generate cache key
         const cacheKey = cacheService.generateCacheKey({
@@ -121,8 +120,8 @@ class LSRService {
         // Fetch from API
         let data;
         if (shouldUseCache) {
-            // Use cached API
-            const url = `${this.cacheAPIBase}?start=${startDate}&startHour=${startHour}&end=${endDate}&endHour=${endHour}`;
+            // Use cached API - URL encode the hour parameters (they contain colons)
+            const url = `${this.cacheAPIBase}?start=${encodeURIComponent(startDate)}&startHour=${encodeURIComponent(startHour)}&end=${encodeURIComponent(endDate)}&endHour=${encodeURIComponent(endHour)}`;
             
             try {
                 const response = await requestManager.fetchWithRetry(url, {
