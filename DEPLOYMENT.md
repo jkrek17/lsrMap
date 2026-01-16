@@ -12,6 +12,7 @@ your-server-root/
 ├── app.js              # Main JavaScript (ES6 modules)
 ├── config.js           # Configuration
 ├── styles.css          # Styles
+├── lib/             # Local libraries (Leaflet, FontAwesome)
 ├── js/                 # JavaScript modules
 │   ├── api/
 │   ├── cache/
@@ -140,6 +141,17 @@ If deploying to a subdirectory (e.g., `/lsr/` or `/weather/`):
 ### "PHP cache endpoint not executing"
 - **Cause:** PHP not configured or files served as static
 - **Solution:** Either configure PHP or ignore (app works without it)
+
+### "Refused to apply style..." or "Refused to execute script..." (MIME type mismatch)
+- **Cause:** This is almost always caused by a **403 Forbidden** error. The server blocks access to the .css/.js file and serves an HTML error page instead. The browser expects CSS/JS but gets HTML, causing this error.
+- **Solution:** Fix file permissions! Run `php set-permissions.php` on the server or manually set files to 644 and directories to 755.
+
+### Content Security Policy (CSP) Violations
+- **Cause:** Browser security feature blocking external resources (Leaflet, Font Awesome).
+- **Solution:** We have added a permissive `<meta>` CSP tag to `index.html`. If errors persist, check if your web server sends a strict `Content-Security-Policy` header that overrides the meta tag. You may need to ask your server admin to allow:
+  - `unpkg.com` (Leaflet)
+  - `cdnjs.cloudflare.com` (Font Awesome)
+  - `*.tile.openstreetmap.org` (Map tiles)
 
 ### Map not loading
 - **Cause:** Leaflet.js CDN blocked or network issue
