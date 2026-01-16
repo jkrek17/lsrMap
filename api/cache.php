@@ -27,16 +27,23 @@ if (!$startDate || !$endDate) {
     $startHour = '00:00';
 }
 
-// Check if this is a "last 24 hours" query (real-time data needed)
+// Parse date/time with validation
 $now = new DateTime();
 $endDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $endDate . ' ' . $endHour . ':00');
 $startDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $startDate . ' ' . $startHour . ':00');
 
+// If date parsing fails, fall back to source API
+if (!$endDateTime || !$startDateTime) {
+    serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
+    exit;
+}
+
 // Calculate hours difference
 $hoursDiff = ($now->getTimestamp() - $startDateTime->getTimestamp()) / 3600;
 
-// If query is within last 24 hours, fetch from source API for real-time data
-if ($hoursDiff <= 24 && $endDateTime >= (clone $now)->modify('-1 day')) {
+// If query includes recent data (end date is within last 24 hours), fetch from source API for real-time data
+$oneDayAgo = (clone $now)->modify('-1 day');
+if ($endDateTime >= $oneDayAgo) {
     serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
     exit;
 }
@@ -66,24 +73,33 @@ if ($cachedData !== null) {
  */
 function loadFromCache($startDate, $startHour, $endDate, $endHour) {
     $allFeatures = [];
-    $current = new DateTime($startDate);
-    $end = new DateTime($endDate);
+    
+    try {
+        $current = new DateTime($startDate);
+        $end = new DateTime($endDate);
+    } catch (Exception $e) {
+        return null; // Invalid dates, fall back to source API
+    }
     
     // Build full datetime range for filtering
     $filterStart = DateTime::createFromFormat('Y-m-d H:i', $startDate . ' ' . $startHour);
     $filterEnd = DateTime::createFromFormat('Y-m-d H:i', $endDate . ' ' . $endHour);
     
+    // If filter dates couldn't be parsed, skip time filtering
+    $useTimeFilter = ($filterStart !== false && $filterEnd !== false);
+    
     // Check if we have all required files
     $missingFiles = [];
-    while ($current <= $end) {
-        $dateKey = $current->format('Y-m-d');
+    $checkDate = clone $current;
+    while ($checkDate <= $end) {
+        $dateKey = $checkDate->format('Y-m-d');
         $file = CACHE_DIR . CACHE_FILE_PREFIX . $dateKey . CACHE_FILE_EXT;
         
         if (!file_exists($file)) {
             $missingFiles[] = $dateKey;
         }
         
-        $current->modify('+1 day');
+        $checkDate->modify('+1 day');
     }
     
     // If any files are missing, return null to fall back to source API
@@ -92,7 +108,6 @@ function loadFromCache($startDate, $startHour, $endDate, $endHour) {
     }
     
     // Load all files and merge features
-    $current = new DateTime($startDate);
     while ($current <= $end) {
         $dateKey = $current->format('Y-m-d');
         $file = CACHE_DIR . CACHE_FILE_PREFIX . $dateKey . CACHE_FILE_EXT;
@@ -102,9 +117,9 @@ function loadFromCache($startDate, $startHour, $endDate, $endHour) {
             $dayData = json_decode($fileContent, true);
             
             if ($dayData && isset($dayData['features']) && is_array($dayData['features'])) {
-                // Filter features by time range
+                // Filter features by time range if we have valid filter dates
                 foreach ($dayData['features'] as $feature) {
-                    if (isFeatureInTimeRange($feature, $filterStart, $filterEnd)) {
+                    if (!$useTimeFilter || isFeatureInTimeRange($feature, $filterStart, $filterEnd)) {
                         $allFeatures[] = $feature;
                     }
                 }
@@ -124,6 +139,11 @@ function loadFromCache($startDate, $startHour, $endDate, $endHour) {
  * Check if a feature falls within the requested time range
  */
 function isFeatureInTimeRange($feature, $filterStart, $filterEnd) {
+    // Safety check for invalid filter parameters
+    if (!$filterStart || !$filterEnd) {
+        return true;
+    }
+    
     // If no valid timestamp, include the feature (conservative approach)
     if (!isset($feature['properties']['valid'])) {
         return true;
