@@ -13,6 +13,10 @@ import { createIcon, getIconForReport } from './js/map/iconService.js';
 import { addMarkersInBatches } from './js/map/markerService.js';
 import { showStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
+import PNSService from './js/api/pnsService.js';
+import StatisticsService from './js/ui/statisticsService.js';
+import ReportCountService from './js/ui/reportCountService.js';
+import FilterService from './js/filter/filterService.js';
 
 // ============================================================================
 // MAP INITIALIZATION
@@ -22,8 +26,6 @@ import WarningsService from './js/api/warningsService.js';
 let map = null;
 let baseTileLayer = null; // Base map tile layer
 let markersLayer = null;
-let heatMapLayer = null; // Heat map layer
-let heatMapMode = false; // Whether heat map mode is active
 let pnsLayer = null; // Layer for Public Information Statements
 let showPNS = false; // Toggle for PNS display
 let warningsLayer = null; // Layer for NWS warnings/alerts
@@ -45,6 +47,18 @@ let radarRefreshInterval = null;
 // Initialize LSR Service
 let lsrService = null;
 
+// Initialize PNS Service
+let pnsService = null;
+
+// Initialize Statistics Service
+let statisticsService = null;
+
+// Initialize Report Count Service
+let reportCountService = null;
+
+// Initialize Filter Service
+let filterService = null;
+
 // ============================================================================
 // ICON CREATION (wrapper functions for compatibility)
 // ============================================================================
@@ -52,19 +66,23 @@ let lsrService = null;
 // Wrapper to maintain compatibility with existing code
 function createIconWrapper(config, fillColor, strokeColor, emoji = null) {
     if (typeof CONFIG === 'undefined') {
-        console.error('CONFIG not available');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('CONFIG not available');
+        }
         return null;
     }
     return createIcon(config, fillColor, strokeColor, emoji, CONFIG.ICON_SIZE);
 }
 
 // Wrapper for getIconForReport
-function getIconForReportWrapper(rtype, magnitude, remark) {
+function getIconForReportWrapper(rtype, magnitude, remark, typetext = '') {
     if (typeof CONFIG === 'undefined' || typeof ICON_CONFIG === 'undefined') {
-        console.error('CONFIG or ICON_CONFIG not available');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('CONFIG or ICON_CONFIG not available');
+        }
         return null;
     }
-    return getIconForReport(rtype, magnitude, remark, ICON_CONFIG, CONFIG.ICON_SIZE, extractWindSpeed);
+    return getIconForReport(rtype, magnitude, remark, ICON_CONFIG, CONFIG.ICON_SIZE, extractWindSpeed, typetext);
 }
 
 // ============================================================================
@@ -259,6 +277,7 @@ async function fetchLSRData() {
 let allFilteredReports = [];
 let lastGeoJsonData = null; // Store last fetched data for viewport refresh
 let topReportsByType = {}; // Store top 10 reports by type
+let allPNSReports = []; // All PNS reports (filtered and processed for performance)
 
 // Sync with appState
 appState.set('allFilteredReports', allFilteredReports);
@@ -268,7 +287,9 @@ appState.set('topReportsByType', topReportsByType);
 function displayReports(geoJsonData, south, north, east, west) {
     // Ensure CONFIG is available
     if (typeof CONFIG === 'undefined' || typeof REPORT_TYPE_MAP === 'undefined') {
-        console.error('CONFIG or REPORT_TYPE_MAP not available');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('CONFIG or REPORT_TYPE_MAP not available');
+        }
         return;
     }
     
@@ -313,30 +334,73 @@ function displayReports(geoJsonData, south, north, east, west) {
             return;
         }
         
-        const rtype = props.type || props.rtype || '';
-        const filterType = getReportTypeName(rtype, REPORT_TYPE_MAP);
+        let rtype = props.type || props.rtype || '';
+        const typetext = props.typetext || '';
+        
+        // Check if this is a snow squall - treat it as snow type for filtering and icon
+        const isSnowSquall = typetext && typetext.toUpperCase().includes('SNOW SQUALL');
+        if (isSnowSquall) {
+            rtype = 'S'; // Force snow type for snow squalls
+        }
+        
+        // Check if this is a temperature-related report - use temperature icon but keep original category name
+        // Look for temperature, extreme cold, wind chill, heat index, extreme heat, etc.
+        const upperTypetext = typetext ? typetext.toUpperCase() : '';
+        const isTemperature = upperTypetext && (
+            upperTypetext.includes('TEMPERATURE') || 
+            upperTypetext.includes('EXTREME TEMP') ||
+            upperTypetext.includes('EXTREME COLD') ||
+            upperTypetext.includes('WIND CHILL') ||
+            upperTypetext.includes('HEAT INDEX') ||
+            upperTypetext.includes('EXTREME HEAT') ||
+            (upperTypetext.includes('COLD') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY'))) ||
+            (upperTypetext.includes('HEAT') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY')))
+        );
+        
+        // Always use temperature icon (X) for temperature-related reports, regardless of original rtype
+        let iconRtype = rtype;
+        if (isTemperature) {
+            iconRtype = 'X'; // Always use temperature icon configuration for temperature-related reports
+        }
+        
+        // Determine filter type - use Temperature for filtering if it's a temperature-related report
+        let filterType;
+        if (isTemperature) {
+            filterType = 'Temperature'; // Filter as Temperature
+        } else {
+            filterType = getReportTypeName(rtype, REPORT_TYPE_MAP);
+        }
         
         if (!activeFilters.includes(filterType)) return;
         
-        const magnitude = props.magnitude || 0;
+        let magnitude = props.magnitude || 0;
         const remark = props.remark || '';
         const valid = (props.valid || '').replace('T', ' ');
         const city = props.city || '';
         const state = props.st || props.state || '';
         // Use REPORT_TYPE_MAP for consistent naming, but prefer typetext if it's more descriptive
         let category = getReportTypeName(rtype, REPORT_TYPE_MAP);
-        const typetext = props.typetext || '';
+        
+        // Check if this is a snow squall - set magnitude to 0 for display
+        if (isSnowSquall) {
+            magnitude = 0;
+        }
         
         // Normalize "Tropical Cyclone" to "Tropical" for consistency
         if (typetext.toLowerCase().includes('tropical')) {
             category = 'Tropical';
         } else if (typetext && !typetext.toLowerCase().includes('unknown')) {
             // Use typetext if it's meaningful and not "unknown"
+            // This keeps original names like "EXTREME COLD", "WIND CHILL", etc.
             category = typetext;
         }
-        const unit = getUnitForReportType(rtype);
+        // Use iconRtype for icon creation (allows temperature reports to use temp icon)
+        // but keep original rtype for unit and category purposes
+        const unit = getUnitForReportType(iconRtype);
         
-        const icon = getIconForReportWrapper(rtype, magnitude, remark);
+        // For snow squalls, pass 0 magnitude to icon service so it uses the base snow icon
+        const iconMagnitude = isSnowSquall ? 0 : magnitude;
+        const icon = getIconForReportWrapper(iconRtype, iconMagnitude, remark, typetext);
         
         const locationStr = city + (state ? ', ' + state : '');
         
@@ -350,7 +414,7 @@ function displayReports(geoJsonData, south, north, east, west) {
             location: locationStr,
             time: valid,
             remark: remark,
-            rtype: rtype,
+            rtype: rtype, // Use modified rtype (e.g., 'S' for snow squalls)
             category: category // For popup service
         };
         
@@ -393,69 +457,12 @@ function displayReports(geoJsonData, south, north, east, west) {
     updateFeatureBadges(); // Update feature discoverability badges
     updateFilterSummary();
     updateExportCount(); // Update export count in modal
-    updateHeatMapButtonState(); // Update heat map button state based on active filters
     if (liveModeActive) {
         updateLastUpdateTime();
     }
     
-    // Check if heat map mode is active and only one report type is selected
-    if (heatMapMode && activeFilters.length === 1) {
-        // Remove existing heat map layer
-        if (heatMapLayer) {
-            map.removeLayer(heatMapLayer);
-        }
-        
-        // Create heat map data points weighted by magnitude
-        const magnitudes = allFilteredReports
-            .map(r => parseFloat(r.magnitude) || 0)
-            .filter(m => m > 0);
-        
-        if (magnitudes.length > 0) {
-            // Find min and max for normalization
-            const minMag = Math.min(...magnitudes);
-            const maxMag = Math.max(...magnitudes);
-            const range = maxMag - minMag || 1; // Avoid division by zero
-            
-            // Create heat map data with normalized intensity (0.1 to 1.0)
-            const heatMapData = allFilteredReports.map(report => {
-                const mag = parseFloat(report.magnitude) || 0;
-                // Normalize to 0.1-1.0 range, with minimum of 0.1 for visibility
-                const normalizedIntensity = range > 0 
-                    ? 0.1 + ((mag - minMag) / range) * 0.9 
-                    : 0.5; // Default if all magnitudes are the same
-                return [report.lat, report.lon, normalizedIntensity];
-            });
-            
-            // Create heat map layer with appropriate settings
-            heatMapLayer = L.heatLayer(heatMapData, {
-                radius: 25, // Blur radius in pixels
-                maxZoom: 18,
-                max: 1.0, // Maximum intensity (normalized)
-                gradient: {
-                    0.0: 'blue',
-                    0.2: 'cyan',
-                    0.4: 'lime',
-                    0.6: 'yellow',
-                    0.8: 'orange',
-                    1.0: 'red'
-                },
-                blur: 15, // Blur amount
-                minOpacity: 0.05 // Minimum opacity
-            });
-            
-            heatMapLayer.addTo(map);
-        }
-    } else {
-        // Normal marker mode
-        // Remove heat map if it exists
-        if (heatMapLayer) {
-            map.removeLayer(heatMapLayer);
-            heatMapLayer = null;
-        }
-        
-        // Add markers
-        addMarkersInBatches(reportsToDisplay, markersLayer, CONFIG.BATCH_SIZE);
-    }
+    // Add markers
+    addMarkersInBatches(reportsToDisplay, markersLayer, CONFIG.BATCH_SIZE);
     
     if (reportsToDisplay.length > 0) {
         setTimeout(() => {
@@ -636,157 +643,158 @@ async function fetchWarnings() {
  * Fetch Public Information Statements from NWS
  * Displays PNS at the issuing WFO office location with a formatted popup
  */
+// Fetch PNS data using the service
 async function fetchPNSData() {
+    if (!pnsService) {
+        pnsService = new PNSService();
+    }
+    
+    // Clear previous PNS reports
+    allPNSReports = [];
+    
     if (!showPNS) {
+        // If PNS is disabled, clear layer and update counts
         if (pnsLayer) {
             pnsLayer.clearLayers();
         }
+        updateReportCountWithPNS();
+        updateStatisticsWithPNS();
         return;
     }
     
-    try {
-        const url = 'https://api.weather.gov/products/types/PNS';
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': '(LSR Map App, contact@example.com)'
-            }
-        });
-        
-        if (!response.ok) {
-            errorHandler.log('Failed to fetch PNS data', new Error(response.statusText), ERROR_TYPES.API);
-            return;
+    // Collect PNS marker data (without adding to layer yet)
+    const pnsMarkerData = [];
+    
+    await pnsService.fetchPNSData(
+        showPNS, 
+        null, // Don't pass pnsLayer - we'll handle adding markers in filterPNSMarkers
+        openPnsModal,
+        getIconForReportWrapper,
+        getReportTypeName,
+        REPORT_TYPE_MAP,
+        (markerData) => {
+            // Callback to collect marker data instead of adding directly
+            pnsMarkerData.push(markerData);
         }
-        
-        const data = await response.json();
-        
-        if (!data || !data['@graph'] || data['@graph'].length === 0) {
-            if (pnsLayer) pnsLayer.clearLayers();
-            // No PNS found - not an error, just informational
-            return;
-        }
-        
-        if (pnsLayer) pnsLayer.clearLayers();
-        
-        // Get recent PNS (last 24 hours only)
-        const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const recentPNS = data['@graph'].filter(product => {
-            const issueTime = new Date(product.issuanceTime);
-            return issueTime >= oneDayAgo;
-        }).slice(0, 50);
-        
-        if (recentPNS.length === 0) {
-            // No recent PNS found - not an error
-            return;
-        }
-        
-        // WFO office coordinates
-        const wfoCoords = {
-            'KABQ': [35.04, -106.62], 'KABR': [45.45, -98.41], 'KAMA': [35.23, -101.71],
-            'KAPX': [44.90, -84.72], 'KARX': [43.82, -91.19], 'KBGM': [42.20, -75.98],
-            'KBIS': [46.77, -100.75], 'KBMX': [33.17, -86.77], 'KBOI': [43.56, -116.21],
-            'KBOU': [39.75, -105.00], 'KBOX': [41.95, -71.14], 'KBRO': [25.91, -97.42],
-            'KBTV': [44.47, -73.15], 'KBUF': [42.94, -78.72], 'KBYZ': [45.75, -108.57],
-            'KCAE': [33.95, -81.12], 'KCAR': [46.87, -68.02], 'KCHS': [32.90, -80.04],
-            'KCLE': [41.41, -81.85], 'KCRP': [27.78, -97.51], 'KCTP': [40.79, -77.86],
-            'KCYS': [41.15, -104.81], 'KDDC': [37.76, -99.97], 'KDLH': [46.84, -92.21],
-            'KDMX': [41.73, -93.72], 'KDTX': [42.70, -83.47], 'KDVN': [41.61, -90.58],
-            'KEAX': [38.81, -94.26], 'KEKA': [40.80, -124.16], 'KEPZ': [31.87, -106.70],
-            'KEWX': [29.70, -98.03], 'KFFC': [33.36, -84.57], 'KFGF': [47.92, -97.09],
-            'KFGZ': [35.23, -111.82], 'KFSD': [43.59, -96.73], 'KFWD': [32.83, -97.30],
-            'KGGW': [48.21, -106.62], 'KGID': [40.97, -98.38], 'KGJT': [39.12, -108.53],
-            'KGLD': [39.37, -101.70], 'KGRB': [44.48, -88.13], 'KGRR': [42.89, -85.54],
-            'KGSP': [34.88, -82.22], 'KGYX': [43.89, -70.26], 'KHGX': [29.47, -95.08],
-            'KHNX': [36.31, -119.63], 'KHUN': [34.72, -86.66], 'KICT': [37.65, -97.43],
-            'KILM': [34.27, -77.91], 'KILN': [39.42, -83.82], 'KIND': [39.71, -86.28],
-            'KIWX': [41.36, -85.70], 'KJAN': [32.32, -90.08], 'KJAX': [30.48, -81.70],
-            'KJKL': [37.59, -83.31], 'KKEY': [24.56, -81.78], 'KLBF': [41.13, -100.68],
-            'KLCH': [30.13, -93.22], 'KLIX': [30.34, -89.83], 'KLKN': [40.87, -117.80],
-            'KLMK': [38.23, -85.66], 'KLOT': [41.60, -88.08], 'KLOX': [34.20, -119.18],
-            'KLUB': [33.65, -101.82], 'KLWX': [38.97, -77.48], 'KLZK': [34.84, -92.26],
-            'KMAF': [31.94, -102.19], 'KMEG': [35.05, -89.99], 'KMFL': [25.75, -80.38],
-            'KMFR': [42.37, -122.87], 'KMHX': [34.78, -76.88], 'KMKX': [42.97, -88.55],
-            'KMLB': [28.11, -80.65], 'KMOB': [30.68, -88.24], 'KMPX': [44.85, -93.57],
-            'KMQT': [46.53, -87.55], 'KMRX': [36.17, -83.40], 'KMSO': [46.92, -114.09],
-            'KMTR': [36.60, -121.90], 'KOAX': [41.32, -96.37], 'KOHX': [36.25, -86.56],
-            'KOKX': [40.87, -72.86], 'KOTX': [47.68, -117.63], 'KOUN': [35.24, -97.46],
-            'KPAH': [37.07, -88.77], 'KPBZ': [40.53, -80.22], 'KPDT': [45.69, -118.85],
-            'KPHI': [39.87, -75.01], 'KPIH': [42.91, -112.60], 'KPQR': [45.56, -122.54],
-            'KPSR': [33.43, -112.02], 'KPUB': [38.28, -104.52], 'KRAH': [35.87, -78.79],
-            'KREV': [39.57, -119.80], 'KRIW': [43.06, -108.48], 'KRLX': [38.31, -81.72],
-            'KRNK': [37.21, -80.41], 'KSEW': [47.69, -122.26], 'KSGF': [37.24, -93.40],
-            'KSGX': [32.73, -117.18], 'KSHV': [32.45, -93.84], 'KSJT': [31.37, -100.49],
-            'KSLC': [40.77, -111.95], 'KSTO': [38.60, -121.38], 'KTAE': [30.45, -84.30],
-            'KTBW': [27.70, -82.40], 'KTFX': [47.46, -111.38], 'KTOP': [39.07, -95.63],
-            'KTSA': [36.15, -95.86], 'KTWC': [32.23, -110.95], 'KUNR': [41.14, -104.24],
-            'KVEF': [36.05, -115.18]
-        };
-        
-        let displayedCount = 0;
-        const processedOffices = new Set();
-        
-        for (const product of recentPNS) {
-            try {
-                // Get WFO code from issuing office (e.g., "KICT" from "NWS Wichita KS")
-                const wfoCode = product.issuingOffice?.match(/K[A-Z]{2,3}/)?.[0];
-                
-                // Skip if we've already processed this office or don't have coordinates
-                if (!wfoCode || processedOffices.has(wfoCode) || !wfoCoords[wfoCode]) {
-                    continue;
-                }
-                
-                // Fetch full product text
-                const productUrl = `https://api.weather.gov/products/${product.id}`;
-                const productResponse = await fetch(productUrl, {
-                    headers: { 'User-Agent': '(LSR Map App, contact@example.com)' }
-                });
-                
-                if (!productResponse.ok) continue;
-                
-                const productData = await productResponse.json();
-                const productText = productData.productText || '';
-                
-                if (!productText.trim()) continue;
-                
-                processedOffices.add(wfoCode);
-                
-                // Store PNS data for modal
-                const pnsData = {
-                    office: product.issuingOffice || wfoCode,
-                    time: new Date(product.issuanceTime),
-                    text: productText,
-                    productId: product.id
-                };
-                
-                // Create custom PNS icon
-                const pnsIcon = L.divIcon({
-                    className: 'pns-marker',
-                    html: '<div class="pns-marker-inner">📋</div>',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
-                });
-                
-                const [lat, lon] = wfoCoords[wfoCode];
-                const marker = L.marker([lat, lon], { icon: pnsIcon });
-                
-                // Open modal on click instead of popup
-                marker.on('click', () => openPnsModal(pnsData));
-                marker.addTo(pnsLayer);
-                displayedCount++;
-                
-            } catch (error) {
-                errorHandler.log(`Error processing PNS product ${product.id}`, error, ERROR_TYPES.API);
-            }
-        }
-        
-        if (displayedCount > 0) {
-            // Successfully loaded PNS data
-                    showStatusToast(`Loaded ${displayedCount} PNS from ${displayedCount} office${displayedCount !== 1 ? 's' : ''}`, 'info');
-        }
-    } catch (error) {
-        errorHandler.handleError(error, 'Fetch PNS Data');
-    }
+    );
+    
+    // Store all PNS marker data for performance optimization
+    allPNSReports = pnsMarkerData;
+    
+    // After fetching, apply current filters and performance optimizations to PNS markers
+    filterPNSMarkers();
 }
+
+/**
+ * Collect PNS reports from visible markers for statistics and counting
+ */
+function getPNSReports() {
+    if (!filterService) {
+        return [];
+    }
+    return filterService.getFilteredPNSReports(
+        showPNS,
+        allPNSReports,
+        allFilteredReports,
+        map,
+        CONFIG,
+        getZoomBasedLimit
+    );
+}
+
+/**
+ * Apply performance optimizations and filter PNS markers
+ */
+function filterPNSMarkers() {
+    if (!filterService) {
+        return;
+    }
+    
+    filterService.filterPNSMarkers(
+        pnsLayer,
+        showPNS,
+        allPNSReports,
+        allFilteredReports,
+        map,
+        CONFIG,
+        getZoomBasedLimit,
+        updateReportCountWithPNS,
+        updateStatisticsWithPNS
+    );
+}
+
+/**
+ * Update report count including PNS reports
+ */
+function updateReportCountWithPNS() {
+    // Get filtered PNS reports (before limits) for total count
+    const currentZoom = map ? map.getZoom() : 4;
+    const zoomLimit = getZoomBasedLimit(currentZoom);
+    const viewportBounds = CONFIG.VIEWPORT_ONLY && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT 
+        ? map.getBounds() 
+        : null;
+    
+    // Get active filters
+    const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
+        .map(cb => cb.value);
+    const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
+    const hasAnyFilter = activeFilters.length > 0 && activeFilters.length < allWeatherTypes.length;
+    
+    // Filter PNS reports by active filters and viewport (before limits) - for total count
+    let totalPNSReports = 0;
+    if (showPNS && allPNSReports) {
+        totalPNSReports = allPNSReports.filter(report => {
+            // Filter by weather type
+            if (hasAnyFilter && (!report.filterType || !activeFilters.includes(report.filterType))) {
+                return false;
+            }
+            
+            // Filter by viewport if enabled
+            if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+                return false;
+            }
+            
+            return true;
+        }).length;
+    }
+    
+    // Get displayed PNS reports (after limits)
+    const displayedPNSReports = getPNSReports();
+    
+    // Calculate totals
+    const totalReports = allFilteredReports.length + totalPNSReports;
+    
+    // Calculate LSR displayed/hidden
+    let displayedLSRCount = allFilteredReports.length;
+    let hiddenLSRCount = 0;
+    
+    if (zoomLimit !== undefined && displayedLSRCount > zoomLimit) {
+        hiddenLSRCount = displayedLSRCount - zoomLimit;
+        displayedLSRCount = zoomLimit;
+    } else if (displayedLSRCount > CONFIG.MAX_MARKERS) {
+        hiddenLSRCount = displayedLSRCount - CONFIG.MAX_MARKERS;
+        displayedLSRCount = CONFIG.MAX_MARKERS;
+    }
+    
+    // Calculate total displayed and hidden (LSR + PNS)
+    const displayedCount = displayedLSRCount + displayedPNSReports.length;
+    const hiddenPNSCount = totalPNSReports - displayedPNSReports.length;
+    const hiddenCount = hiddenLSRCount + hiddenPNSCount;
+    
+    updateReportCount(displayedCount, totalReports, hiddenCount);
+}
+
+/**
+ * Update statistics including PNS reports
+ */
+function updateStatisticsWithPNS() {
+    const pnsReports = getPNSReports();
+    const allReports = [...allFilteredReports, ...pnsReports];
+    
+    updateStatistics(allReports);
+}
+
+// parsePNSMetadata is now in PNSService - removed from app.js
 
 // Show empty state with message
 function showEmptyState(message) {
@@ -835,65 +843,47 @@ function openPnsModal(pnsData) {
     if (!modal) return;
     
     // Populate modal content
-    officeEl.textContent = pnsData.office;
-    timeEl.innerHTML = `<i class="far fa-clock"></i> ${getTimeAgo(pnsData.time)} &nbsp;•&nbsp; ${pnsData.time.toLocaleString()}`;
-    textEl.textContent = pnsData.text;
-    linkEl.href = `https://api.weather.gov/products/${pnsData.productId}`;
+    if (officeEl) officeEl.textContent = pnsData.office;
+    if (timeEl) timeEl.innerHTML = `<i class="far fa-clock"></i> ${getTimeAgo(pnsData.time)} &nbsp;•&nbsp; ${pnsData.time.toLocaleString()}`;
+    if (textEl) textEl.textContent = pnsData.text;
+    if (linkEl) linkEl.href = `https://api.weather.gov/products/${pnsData.productId}`;
     
     // Show modal
     modal.classList.add('show');
 }
 
+// Global function to open PNS modal from popup button (called from popup HTML)
+window.openPnsModalFromMarker = function(productId) {
+    if (!pnsLayer) return;
+    
+    // Find the marker with this product ID
+    let foundPnsData = null;
+    pnsLayer.eachLayer(layer => {
+        if (layer instanceof L.Marker && layer.pnsData && layer.pnsData.productId === productId) {
+            foundPnsData = layer.pnsData;
+        }
+    });
+    
+    if (foundPnsData) {
+        openPnsModal(foundPnsData);
+    }
+};
+
 // addMarkersInBatches is now imported from markerService module
 
 function updateReportCount(count, totalCount = null, hiddenCount = 0) {
-    const countEl = document.getElementById('reportCount');
-    const performanceBanner = document.getElementById('performanceBanner');
-    const performanceBannerText = document.getElementById('performanceBannerText');
-    const currentZoom = map ? map.getZoom() : 4;
-    const zoomLimit = getZoomBasedLimit(currentZoom);
-    
-    // Hide empty state if we have reports
-    const emptyState = document.getElementById('emptyState');
-    if (count > 0 && emptyState) {
-        emptyState.style.display = 'none';
+    if (!reportCountService) {
+        return;
     }
     
-    if (hiddenCount > 0) {
-        // Show warning when markers are limited
-        countEl.textContent = `${count.toLocaleString()} displayed`;
-        countEl.title = `${hiddenCount.toLocaleString()} markers hidden for performance (zoom in to see more)`;
-        countEl.style.color = count >= CONFIG.MAX_MARKERS_WARNING ? '#f59e0b' : 'inherit';
-        
-        // Show persistent performance banner
-        if (performanceBanner && performanceBannerText) {
-            const reason = zoomLimit !== undefined 
-                ? `Zoom level ${currentZoom} limit: ${zoomLimit.toLocaleString()} markers`
-                : `Maximum limit: ${CONFIG.MAX_MARKERS.toLocaleString()} markers`;
-            
-            performanceBannerText.innerHTML = `
-                <strong>Showing ${count.toLocaleString()} of ${totalCount.toLocaleString()} reports.</strong>
-                ${hiddenCount.toLocaleString()} hidden for performance (${reason}). 
-                <strong>Zoom in to see more markers.</strong>
-            `;
-            performanceBanner.style.display = 'block';
-            performanceBanner.className = 'performance-banner performance-banner-warning';
-        }
-    } else {
-        countEl.textContent = count.toLocaleString();
-        countEl.title = '';
-        countEl.style.color = 'inherit';
-        
-        // Hide performance banner when no markers are hidden
-        if (performanceBanner) {
-            performanceBanner.style.display = 'none';
-        }
-    }
-    
-    // Store total count for reference
-    if (totalCount !== null) {
-        countEl.dataset.totalCount = totalCount;
-    }
+    reportCountService.updateReportCount(
+        count,
+        totalCount,
+        hiddenCount,
+        getZoomBasedLimit,
+        map,
+        CONFIG
+    );
 }
 
 // Update feature badges for discoverability
@@ -929,111 +919,11 @@ function updateFeatureBadges() {
 // ============================================================================
 
 function updateStatistics(reports) {
-    const statsContent = document.getElementById('statisticsContent');
-    const dataInsightsPanel = document.getElementById('dataInsightsPanel');
-    
-    if (!reports || reports.length === 0) {
-        if (dataInsightsPanel) dataInsightsPanel.style.display = 'none';
+    if (!statisticsService) {
         return;
     }
     
-    if (dataInsightsPanel) dataInsightsPanel.style.display = 'block';
-    
-    // Calculate statistics
-    const stats = {
-        total: reports.length,
-        byType: {},
-        maxMagnitude: {},
-        tornadoCount: 0,
-        maxWindSpeed: 0,
-        maxHail: 0,
-        maxRain: 0
-    };
-    
-    reports.forEach(report => {
-        const type = report.type || 'Other';
-        const magnitude = parseFloat(report.magnitude) || 0;
-        
-        stats.byType[type] = (stats.byType[type] || 0) + 1;
-        
-        // Check for tornado
-        if (type === 'Tornado') {
-            stats.tornadoCount++;
-        }
-        
-        // Track max values by type
-        if (type === 'Wind' || type === 'Thunderstorm') {
-            stats.maxWindSpeed = Math.max(stats.maxWindSpeed, magnitude);
-        } else if (type === 'Hail') {
-            stats.maxHail = Math.max(stats.maxHail, magnitude);
-        } else if (type === 'Rain') {
-            stats.maxRain = Math.max(stats.maxRain, magnitude);
-        }
-        
-        if (!stats.maxMagnitude[type] || magnitude > stats.maxMagnitude[type]) {
-            stats.maxMagnitude[type] = magnitude;
-        }
-    });
-    
-    // Build statistics HTML
-    const topTypes = Object.entries(stats.byType)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-    
-    let statsHTML = `
-        <div class="stat-item">
-            <div class="stat-label">Total Reports</div>
-            <div class="stat-value">${stats.total.toLocaleString()}</div>
-        </div>
-    `;
-    
-    if (stats.tornadoCount > 0) {
-        statsHTML += `
-            <div class="stat-item">
-                <div class="stat-label">Tornadoes</div>
-                <div class="stat-value">${stats.tornadoCount}</div>
-            </div>
-        `;
-    }
-    
-    if (stats.maxWindSpeed > 0) {
-        statsHTML += `
-            <div class="stat-item">
-                <div class="stat-label">Max Wind</div>
-                <div class="stat-value">${stats.maxWindSpeed.toFixed(0)} mph</div>
-            </div>
-        `;
-    }
-    
-    if (stats.maxHail > 0) {
-        statsHTML += `
-            <div class="stat-item">
-                <div class="stat-label">Max Hail</div>
-                <div class="stat-value">${stats.maxHail.toFixed(1)}"</div>
-            </div>
-        `;
-    }
-    
-    if (topTypes.length > 0) {
-        statsHTML += `
-            <div class="stat-item" style="grid-column: 1 / -1;">
-                <div class="stat-label">Top Types</div>
-                <div class="stat-breakdown">
-                    ${topTypes.map(([type, count]) => `<div>${type}: ${count}</div>`).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
-    statsContent.innerHTML = statsHTML;
-    
-    // Show/hide Top Reports button based on data availability
-    const showTopReportsBtn = document.getElementById('showTopReports');
-    if (reports && reports.length > 0 && Object.keys(topReportsByType).length > 0) {
-        if (showTopReportsBtn) showTopReportsBtn.style.display = 'block';
-    } else {
-        if (showTopReportsBtn) showTopReportsBtn.style.display = 'none';
-    }
+    statisticsService.updateStatistics(reports, topReportsByType);
 }
 
 // ============================================================================
@@ -1041,87 +931,11 @@ function updateStatistics(reports) {
 // ============================================================================
 
 function displayTopReports() {
-    const content = document.getElementById('topReportsContent');
-    
-    if (Object.keys(topReportsByType).length === 0) {
-        content.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No reports with magnitude data available.</p>';
+    if (!statisticsService) {
         return;
     }
     
-    // Sort types by highest magnitude in their top report
-    const sortedTypes = Object.keys(topReportsByType)
-        .map(type => ({
-            type,
-            reports: topReportsByType[type],
-            maxMagnitude: topReportsByType[type][0]?.magnitude || 0
-        }))
-        .sort((a, b) => b.maxMagnitude - a.maxMagnitude);
-    
-    let html = '';
-    
-    sortedTypes.forEach(({ type, reports }) => {
-        const typeIcon = getTypeIcon(type);
-        html += `
-            <div class="top-reports-section">
-                <div class="top-reports-section-title">
-                    ${typeIcon}
-                    <span>${type}</span>
-                </div>
-                <div class="top-reports-list">
-        `;
-        
-        reports.forEach((report, index) => {
-            html += `
-                <div class="top-report-item">
-                    <div class="top-report-rank">#${index + 1}</div>
-                    <div class="top-report-magnitude">${report.magnitude}${report.unit || ''}</div>
-                    <div class="top-report-details">
-                        ${report.location ? `
-                            <div class="top-report-location">
-                                <i class="fas fa-map-marker-alt"></i>
-                                ${report.location}
-                            </div>
-                        ` : ''}
-                        ${report.time ? `
-                            <div class="top-report-time">
-                                <i class="fas fa-clock"></i>
-                                ${report.time}
-                            </div>
-                        ` : ''}
-                        ${report.remark ? `
-                            <div class="top-report-remark">
-                                <i class="fas fa-comment-alt"></i>
-                                ${report.remark}
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += `
-                </div>
-            </div>
-        `;
-    });
-    
-    content.innerHTML = html;
-}
-
-function getTypeIcon(type) {
-    const iconMap = {
-        'Tornado': '<i class="fas fa-tornado" style="color: #dc2626;"></i>',
-        'Thunderstorm': '<i class="fas fa-bolt" style="color: #f59e0b;"></i>',
-        'Hail': '<i class="fas fa-circle" style="color: #3b82f6;"></i>',
-        'Wind': '<i class="fas fa-wind" style="color: #8b5cf6;"></i>',
-        'Snow': '<i class="fas fa-snowflake" style="color: #60a5fa;"></i>',
-        'Ice': '<i class="fas fa-icicles" style="color: #34d399;"></i>',
-        'Rain': '<i class="fas fa-cloud-rain" style="color: #3b82f6;"></i>',
-        'Flood': '<i class="fas fa-water" style="color: #2563eb;"></i>',
-        'Tropical': '<i class="fas fa-hurricane" style="color: #ef4444;"></i>',
-        'Other': '<i class="fas fa-cloud" style="color: #6b7280;"></i>'
-    };
-    return iconMap[type] || '<i class="fas fa-cloud" style="color: #6b7280;"></i>';
+    statisticsService.displayTopReports(topReportsByType);
 }
 
 function clearMap() {
@@ -1142,9 +956,10 @@ function clearMap() {
 
 // Reset map to default US view
 function resetView() {
-    console.log('resetView called');
     if (!map) {
-        console.warn('Map not initialized');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.warn('Map not initialized');
+        }
         showStatusToast('Map not ready', 'error');
         return;
     }
@@ -1158,9 +973,10 @@ function resetView() {
 
 // Center map on user's location
 function centerOnMyLocation() {
-    console.log('centerOnMyLocation called');
     if (!map) {
-        console.warn('Map not initialized');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.warn('Map not initialized');
+        }
         showStatusToast('Map not ready', 'error');
         return;
     }
@@ -1200,101 +1016,6 @@ function centerOnMyLocation() {
 // ============================================================================
 // LIVE MODE
 // ============================================================================
-
-// ============================================================================
-// HEAT MAP
-// ============================================================================
-
-function updateHeatMapButtonState() {
-    const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
-        .map(cb => cb.value);
-    const toggleBtn = document.getElementById('toggleHeatMap');
-    
-    if (!toggleBtn) return;
-    
-    // Disable heat map if not exactly one type selected
-    if (activeFilters.length !== 1) {
-        if (heatMapMode) {
-            // Auto-disable heat map mode
-            heatMapMode = false;
-            if (heatMapLayer) {
-                map.removeLayer(heatMapLayer);
-                heatMapLayer = null;
-            }
-            if (markersLayer) {
-                map.addLayer(markersLayer);
-            }
-            // Refresh to show markers
-            if (lastGeoJsonData) {
-                const bounds = map.getBounds();
-                displayReports(lastGeoJsonData, bounds.getSouth(), bounds.getNorth(), bounds.getEast(), bounds.getWest());
-            }
-        }
-        toggleBtn.classList.add('disabled');
-        toggleBtn.disabled = true;
-        toggleBtn.title = 'Heat map requires exactly one weather type selected';
-    } else {
-        toggleBtn.classList.remove('disabled');
-        toggleBtn.disabled = false;
-        if (heatMapMode) {
-            toggleBtn.title = 'Switch back to marker view';
-        } else {
-            toggleBtn.title = 'Switch to heat map view (weighted by magnitude)';
-        }
-    }
-}
-
-function toggleHeatMap() {
-    const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
-        .map(cb => cb.value);
-    
-    // Heat map only works with exactly one report type selected
-    if (activeFilters.length !== 1) {
-        showStatusToast('Heat map requires exactly one weather type to be selected.', 'warning');
-        return;
-    }
-    
-    heatMapMode = !heatMapMode;
-    const toggleBtn = document.getElementById('toggleHeatMap');
-    
-    if (heatMapMode) {
-        toggleBtn.classList.add('active');
-        toggleBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Markers';
-        toggleBtn.title = 'Switch back to marker view';
-        
-        // Hide markers layer
-        if (markersLayer) {
-            map.removeLayer(markersLayer);
-        }
-        
-        // Refresh data to show heat map
-        if (lastGeoJsonData) {
-            const bounds = map.getBounds();
-            displayReports(lastGeoJsonData, bounds.getSouth(), bounds.getNorth(), bounds.getEast(), bounds.getWest());
-        }
-    } else {
-        toggleBtn.classList.remove('active');
-        toggleBtn.innerHTML = '<i class="fas fa-fire"></i> Heat Map';
-        toggleBtn.title = 'Switch to heat map view (weighted by magnitude)';
-        
-        // Remove heat map layer
-        if (heatMapLayer) {
-            map.removeLayer(heatMapLayer);
-            heatMapLayer = null;
-        }
-        
-        // Show markers layer
-        if (markersLayer) {
-            map.addLayer(markersLayer);
-        }
-        
-        // Refresh data to show markers
-        if (lastGeoJsonData) {
-            const bounds = map.getBounds();
-            displayReports(lastGeoJsonData, bounds.getSouth(), bounds.getNorth(), bounds.getEast(), bounds.getWest());
-        }
-    }
-}
 
 function toggleLiveMode() {
     liveModeActive = !liveModeActive;
@@ -1730,18 +1451,8 @@ function toggleAllWeatherTypes(selectAll) {
         cb.checked = selectAll;
     });
     
-    // Update heat map button state
-    updateHeatMapButtonState();
-    
-    // If heat map is active, refresh data
-    if (heatMapMode && lastGeoJsonData) {
-        const bounds = map.getBounds();
-        displayReports(lastGeoJsonData, bounds.getSouth(), bounds.getNorth(), bounds.getEast(), bounds.getWest());
-    }
-    
-    // Auto-fetch data after toggling
-    fetchLSRData();
     updateFilterSummary();
+    // Note: refreshMapWithCurrentFilters() is called from the button click handler
 }
 
 // ============================================================================
@@ -1806,7 +1517,10 @@ function handleMapClick(e) {
 }
 
 function clearBounds() {
-    document.getElementById('regionSelect').value = '';
+    const regionSelect = document.getElementById('regionSelect');
+    if (regionSelect) {
+        regionSelect.value = '';
+    }
     userArea.clearLayers();
     disableBoundsClickMode();
     
@@ -1817,6 +1531,46 @@ function clearBounds() {
 // ============================================================================
 // UI INITIALIZATION
 // ============================================================================
+
+// Refresh map with current filters (called when weather type filters change)
+// Defined before initializeUI so it's accessible when chip listeners are set up
+function refreshMapWithCurrentFilters() {
+    // Use a small timeout to ensure checkbox state is updated
+    setTimeout(() => {
+        if (lastGeoJsonData) {
+            // Get current bounds from selected region/state
+            const regionSelect = document.getElementById('regionSelect');
+            const selectedRegion = regionSelect ? regionSelect.value : '';
+            
+            let southLat, northLat, eastLon, westLon;
+            
+            if (selectedRegion && CONFIG.STATES[selectedRegion]) {
+                const stateBounds = CONFIG.STATES[selectedRegion].bounds;
+                southLat = stateBounds[0];
+                northLat = stateBounds[1];
+                eastLon = stateBounds[2];
+                westLon = stateBounds[3];
+            } else if (selectedRegion && CONFIG.REGIONS[selectedRegion]) {
+                const regionBounds = CONFIG.REGIONS[selectedRegion].bounds;
+                southLat = regionBounds[0];
+                northLat = regionBounds[1];
+                eastLon = regionBounds[2];
+                westLon = regionBounds[3];
+            } else {
+                southLat = CONFIG.DEFAULT_BOUNDS.south;
+                northLat = CONFIG.DEFAULT_BOUNDS.north;
+                eastLon = CONFIG.DEFAULT_BOUNDS.east;
+                westLon = CONFIG.DEFAULT_BOUNDS.west;
+            }
+            
+            // Re-display with current filters
+            displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon);
+        }
+        
+        // Also filter PNS markers (this updates counts and statistics)
+        filterPNSMarkers();
+    }, 10);
+}
 
 function initializeUI() {
     const today = new Date();
@@ -1840,6 +1594,7 @@ function initializeUI() {
         'Thunderstorm': 'fa-bolt',
         'Tornado': 'fa-tornado',
         'Tropical': 'fa-hurricane',
+        'Temperature': 'fa-thermometer-half',
         'Other': 'fa-cloud'
     };
     
@@ -1853,20 +1608,18 @@ function initializeUI() {
             <i class="fas ${typeIcons[type] || 'fa-cloud'}"></i>
             <span>${type}</span>
         `;
-        chip.addEventListener('click', () => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent event bubbling
             chip.classList.toggle('active');
             // Update hidden checkbox for compatibility
             const hiddenCheckbox = document.getElementById(`hidden-filter-${type}`);
             if (hiddenCheckbox) {
                 hiddenCheckbox.checked = chip.classList.contains('active');
             }
-            // Update heat map button state
-            updateHeatMapButtonState();
-            // Refresh data if heat map is active
-            if (heatMapMode && lastGeoJsonData) {
-                const bounds = map.getBounds();
-                displayReports(lastGeoJsonData, bounds.getSouth(), bounds.getNorth(), bounds.getEast(), bounds.getWest());
-            }
+            // Update filter summary
+            updateFilterSummary();
+            // Always refresh map if data is loaded (will filter based on current checkbox states)
+            refreshMapWithCurrentFilters();
         });
         filterContainer.appendChild(chip);
         
@@ -2212,7 +1965,9 @@ offlineDetector.addListener((isOnline) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Ensure CONFIG is loaded (it should be from script tag, but check anyway)
     if (typeof CONFIG === 'undefined') {
-        console.error('CONFIG is not defined. Make sure config.js is loaded before app.js');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('CONFIG is not defined. Make sure config.js is loaded before app.js');
+        }
         showStatusToast('Configuration error. Please refresh the page.', 'error');
         return;
     }
@@ -2227,20 +1982,21 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDarkMode();
     
     markersLayer = L.layerGroup().addTo(map);
-    heatMapLayer = null; // Will be created when heat map mode is enabled
     pnsLayer = L.layerGroup().addTo(map);
     warningsLayer = L.layerGroup().addTo(map);
     userArea = L.layerGroup().addTo(map);
     
-    // Initialize heat map button state
-    setTimeout(() => updateHeatMapButtonState(), 100);
-    
     // Initialize warnings service
     warningsService = new WarningsService();
     
+    // Initialize services
+    statisticsService = new StatisticsService();
+    reportCountService = new ReportCountService();
+    filterService = new FilterService();
+
     // Initialize radar layer (will be added when live mode is enabled)
     radarLayer = null;
-    
+
     initializeUI();
     
     // Collapsible sections
@@ -2272,23 +2028,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Clear all filters
-    document.getElementById('clearAllFilters').addEventListener('click', () => {
-        // Reset date to 24h
-        setDatePreset('24h');
-        // Reset location
-        document.getElementById('regionSelect').value = '';
-        document.getElementById('regionSelect').dispatchEvent(new Event('change'));
-        // Reset weather types to all
-        toggleAllWeatherTypes(true);
-        // Clear PNS toggle
-        const pnsCheckbox = document.getElementById('showPNS');
-        if (pnsCheckbox) {
-            pnsCheckbox.checked = false;
-            showPNS = false;
-        }
-        // Clear map
-        clearMap();
-    });
+    const clearAllFiltersBtn = document.getElementById('clearAllFilters');
+    if (clearAllFiltersBtn) {
+        clearAllFiltersBtn.addEventListener('click', () => {
+            // Reset date to 24h
+            setDatePreset('24h');
+            // Reset location
+            const regionSelect = document.getElementById('regionSelect');
+            if (regionSelect) {
+                regionSelect.value = '';
+                regionSelect.dispatchEvent(new Event('change'));
+            }
+            // Reset weather types to all
+            toggleAllWeatherTypes(true);
+            // Clear PNS toggle
+            const pnsCheckbox = document.getElementById('showPNS');
+            if (pnsCheckbox) {
+                pnsCheckbox.checked = false;
+                showPNS = false;
+            }
+            // Clear map
+            clearMap();
+        });
+    }
     
     // PNS Toggle Logic
     const pnsCheckbox = document.getElementById('showPNS');
@@ -2306,16 +2068,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Live mode toggle
-    document.getElementById('toggleLiveMode').addEventListener('click', toggleLiveMode);
-    
-    // Heat map toggle
-    document.getElementById('toggleHeatMap').addEventListener('click', toggleHeatMap);
+    const toggleLiveModeBtn = document.getElementById('toggleLiveMode');
+    if (toggleLiveModeBtn) {
+        toggleLiveModeBtn.addEventListener('click', toggleLiveMode);
+    }
     
     // Status toast close
-    document.getElementById('closeStatusToast').addEventListener('click', () => {
-        const toast = document.getElementById('statusToast');
-        toast.style.display = 'none';
-    });
+    const closeStatusToastBtn = document.getElementById('closeStatusToast');
+    if (closeStatusToastBtn) {
+        closeStatusToastBtn.addEventListener('click', () => {
+            const toast = document.getElementById('statusToast');
+            if (toast) {
+                toast.style.display = 'none';
+            }
+        });
+    }
     
     // Date presets
     document.querySelectorAll('.btn-preset').forEach(btn => {
@@ -2327,8 +2094,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Weather type toggles
-    document.getElementById('selectAllTypes').addEventListener('click', () => toggleAllWeatherTypes(true));
-    document.getElementById('selectNoneTypes').addEventListener('click', () => toggleAllWeatherTypes(false));
+    const selectAllTypesBtn = document.getElementById('selectAllTypes');
+    if (selectAllTypesBtn) {
+        selectAllTypesBtn.addEventListener('click', () => {
+            toggleAllWeatherTypes(true);
+            updateFilterSummary();
+            if (lastGeoJsonData) {
+                refreshMapWithCurrentFilters();
+            }
+        });
+    }
+    const selectNoneTypesBtn = document.getElementById('selectNoneTypes');
+    if (selectNoneTypesBtn) {
+        selectNoneTypesBtn.addEventListener('click', () => {
+            toggleAllWeatherTypes(false);
+            updateFilterSummary();
+            if (lastGeoJsonData) {
+                refreshMapWithCurrentFilters();
+            }
+        });
+    }
     
     
     
@@ -2382,6 +2167,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Viewport filtering is handled inside displayReports based on zoom level
                 displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon);
             }
+            
+            // Also refresh PNS markers to apply zoom-based limits and viewport filtering
+            filterPNSMarkers();
         }, 300); // Debounce for 300ms
     };
     
@@ -2394,7 +2182,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Region/State selector
-    document.getElementById('regionSelect').addEventListener('change', (e) => {
+    const regionSelect = document.getElementById('regionSelect');
+    if (regionSelect) {
+        regionSelect.addEventListener('change', (e) => {
         const selectedRegion = e.target.value;
         userArea.clearLayers();
         
@@ -2432,21 +2222,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateFilterSummary();
             }, 300);
         }
-    });
+        });
+    }
     
     // Update filter summary when weather types change
-    document.getElementById('weatherTypeFilters').addEventListener('click', () => {
-        setTimeout(updateFilterSummary, 100);
-    });
+    const weatherTypeFilters = document.getElementById('weatherTypeFilters');
+    if (weatherTypeFilters) {
+        weatherTypeFilters.addEventListener('click', () => {
+            setTimeout(updateFilterSummary, 100);
+        });
+    }
     
     // Clear bounds button
-    document.getElementById('clearBounds').addEventListener('click', clearBounds);
+    const clearBoundsBtn = document.getElementById('clearBounds');
+    if (clearBoundsBtn) {
+        clearBoundsBtn.addEventListener('click', clearBounds);
+    }
     
     // Action buttons
-    document.getElementById('fetchData').addEventListener('click', () => {
-        fetchLSRData();
-        updateFilterSummary();
-    });
+    const fetchDataBtn = document.getElementById('fetchData');
+    if (fetchDataBtn) {
+        fetchDataBtn.addEventListener('click', () => {
+            fetchLSRData();
+            updateFilterSummary();
+        });
+    }
     // clearMap and autoRefresh are now in dropdown menu
     
     // Mobile menu toggle
@@ -2499,8 +2299,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chip) chip.classList.add('active');
             if (hiddenCheckbox) hiddenCheckbox.checked = true;
         });
+        updateFilterSummary();
         if (document.querySelector('.btn-preset.active')?.dataset.preset !== 'custom') {
             fetchLSRData();
+        } else {
+            refreshMapWithCurrentFilters();
         }
     });
     
@@ -2512,8 +2315,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chip) chip.classList.add('active');
             if (hiddenCheckbox) hiddenCheckbox.checked = true;
         });
+        updateFilterSummary();
         if (document.querySelector('.btn-preset.active')?.dataset.preset !== 'custom') {
             fetchLSRData();
+        } else {
+            refreshMapWithCurrentFilters();
         }
     });
     
@@ -2525,8 +2331,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chip) chip.classList.add('active');
             if (hiddenCheckbox) hiddenCheckbox.checked = true;
         });
+        updateFilterSummary();
         if (document.querySelector('.btn-preset.active')?.dataset.preset !== 'custom') {
             fetchLSRData();
+        } else {
+            refreshMapWithCurrentFilters();
         }
     });
     
@@ -2664,12 +2473,8 @@ document.addEventListener('DOMContentLoaded', () => {
             resetViewBtn.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Reset View clicked');
                 resetView();
             };
-            console.log('Reset View button attached');
-        } else {
-            console.error('Reset View button not found in DOM');
         }
         
         const myLocationBtn = document.getElementById('myLocation');
@@ -2677,12 +2482,8 @@ document.addEventListener('DOMContentLoaded', () => {
             myLocationBtn.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('My Location clicked');
                 centerOnMyLocation();
             };
-            console.log('My Location button attached');
-        } else {
-            console.error('My Location button not found in DOM');
         }
         
         const clearMapBtn = document.getElementById('clearMapBtn');
@@ -2690,12 +2491,8 @@ document.addEventListener('DOMContentLoaded', () => {
             clearMapBtn.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Clear Map clicked');
                 clearMap();
             };
-            console.log('Clear Map button attached');
-        } else {
-            console.error('Clear Map button not found in DOM');
         }
     }, 100);
     

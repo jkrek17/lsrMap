@@ -52,7 +52,10 @@ class OfflineDetector {
             try {
                 callback(isOnline);
             } catch (e) {
-                console.error('Error in offline detector listener:', e);
+                // Only log in development
+                if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                    console.error('Error in offline detector listener:', e);
+                }
             }
         });
     }

@@ -260,14 +260,6 @@
                         <div class="weather-type-chips" id="weatherTypeFilters">
                             <!-- Will be populated by JavaScript -->
                         </div>
-                        <div class="heat-map-control" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
-                            <button type="button" id="toggleHeatMap" class="btn-toggle-action" title="Switch to heat map view (requires exactly one weather type selected)">
-                                <i class="fas fa-fire"></i> Heat Map
-                            </button>
-                            <p class="heat-map-hint" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; margin-bottom: 0;">
-                                Heat map shows intensity weighted by magnitude. Requires exactly one weather type selected.
-                            </p>
-                        </div>
                     </div>
                 </div>
 
@@ -583,9 +575,6 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-    
-    <!-- Leaflet.heat Plugin -->
-    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     
     <!-- Configuration -->
     <script src="config.js"></script>

@@ -18,7 +18,7 @@ const CONFIG = {
         lon: -98.5795,
         zoom: 4
     },
-    WEATHER_TYPES: ['Rain', 'Flood', 'Snow', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Tropical', 'Other'],
+    WEATHER_TYPES: ['Rain', 'Flood', 'Snow', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Tropical', 'Temperature', 'Other'],
     // State and Region bounding boxes [south, north, east, west]
     STATES: {
         'AL': { name: 'Alabama', bounds: [30.14, 35.01, -84.89, -88.47] },
@@ -117,7 +117,8 @@ const REPORT_TYPE_MAP = {
     "O": "Wind", "N": "Wind",
     "D": "Thunderstorm", "G": "Thunderstorm", "M": "Thunderstorm",
     "T": "Tornado", "C": "Tornado", "W": "Tornado",
-    "0": "Tropical", "Q": "Tropical"
+    "0": "Tropical", "Q": "Tropical",
+    "X": "Temperature"
 };
 
 // Icon configuration by report type and magnitude thresholds
@@ -287,6 +288,21 @@ const ICON_CONFIG = {
         emoji: "🌊",
         fill: "#b2f7b3",
         stroke: "red"
+    },
+    "X": { // Temperature
+        type: "circle",
+        emoji: "🌡️",
+        thresholds: [
+            { max: -20, fill: "#1e3a8a", stroke: "#fff" },      // Very cold - dark blue
+            { max: 0, fill: "#3b82f6", stroke: "#fff" },        // Cold - blue
+            { max: 20, fill: "#60a5fa", stroke: "#333" },       // Cool - light blue
+            { max: 32, fill: "#93c5fd", stroke: "#333" },       // Freezing - pale blue
+            { max: 50, fill: "#86efac", stroke: "#333" },       // Mild - light green
+            { max: 70, fill: "#fde047", stroke: "#333" },       // Warm - yellow
+            { max: 85, fill: "#fb923c", stroke: "#333" },       // Hot - orange
+            { max: 100, fill: "#f87171", stroke: "#333" },      // Very hot - light red
+            { max: Infinity, fill: "#dc2626", stroke: "#fff" }  // Extreme hot - dark red
+        ]
     }
 };
 
@@ -300,5 +316,6 @@ const LEGEND_ITEMS = [
     { name: 'Thunderstorm', color: 'yellow', emoji: '⛈️', shape: 'square' },
     { name: 'Tornado', color: '#dc2626', emoji: '🌪️', shape: 'square' },
     { name: 'Tropical', color: '#FFFFFF', emoji: '🌀', shape: 'circle' },
+    { name: 'Temperature', color: '#60a5fa', emoji: '🌡️', shape: 'circle' },
     { name: 'Other', color: '#1f2937', emoji: '⚠️', shape: 'circle' }
 ];

@@ -115,7 +115,10 @@ class AppState {
             try {
                 callback(path, newValue, oldValue);
             } catch (e) {
-                console.error('Error in state listener:', e);
+                // Only log in development
+                if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                    console.error('Error in state listener:', e);
+                }
             }
         });
     }
