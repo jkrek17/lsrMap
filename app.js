@@ -648,10 +648,10 @@ async function fetchPNSData() {
     if (!pnsService) {
         pnsService = new PNSService();
     }
-    
+
     // Clear previous PNS reports
     allPNSReports = [];
-    
+
     if (!showPNS) {
         // If PNS is disabled, clear layer and update counts
         if (pnsLayer) {
@@ -662,27 +662,44 @@ async function fetchPNSData() {
         return;
     }
     
-    // Collect PNS marker data (without adding to layer yet)
-    const pnsMarkerData = [];
+    // Show loading indicator
+    showStatusToast('Processing PNS reports...', 'loading');
     
-    await pnsService.fetchPNSData(
-        showPNS, 
-        null, // Don't pass pnsLayer - we'll handle adding markers in filterPNSMarkers
-        openPnsModal,
-        getIconForReportWrapper,
-        getReportTypeName,
-        REPORT_TYPE_MAP,
-        (markerData) => {
-            // Callback to collect marker data instead of adding directly
-            pnsMarkerData.push(markerData);
+    try {
+        // Collect PNS marker data (without adding to layer yet)
+        const pnsMarkerData = [];
+        
+        await pnsService.fetchPNSData(
+            showPNS, 
+            null, // Don't pass pnsLayer - we'll handle adding markers in filterPNSMarkers
+            openPnsModal,
+            getIconForReportWrapper,
+            getReportTypeName,
+            REPORT_TYPE_MAP,
+            (markerData) => {
+                // Callback to collect marker data instead of adding directly
+                pnsMarkerData.push(markerData);
+            }
+        );
+        
+        // Store all PNS marker data for performance optimization
+        allPNSReports = pnsMarkerData;
+        
+        // After fetching, apply current filters and performance optimizations to PNS markers
+        filterPNSMarkers();
+        
+        // Show success message with count
+        const pnsCount = pnsMarkerData.length;
+        if (pnsCount > 0) {
+            showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
+        } else {
+            showStatusToast('No PNS reports found', 'info');
         }
-    );
-    
-    // Store all PNS marker data for performance optimization
-    allPNSReports = pnsMarkerData;
-    
-    // After fetching, apply current filters and performance optimizations to PNS markers
-    filterPNSMarkers();
+    } catch (error) {
+        // Error handling - show error message
+        const handledError = errorHandler.handleError(error, 'PNS Fetch');
+        showStatusToast(handledError.message, 'error');
+    }
 }
 
 /**
@@ -738,15 +755,24 @@ function updateReportCountWithPNS() {
     const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
         .map(cb => cb.value);
     const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
-    const hasAnyFilter = activeFilters.length > 0 && activeFilters.length < allWeatherTypes.length;
+    const allFiltersActive = activeFilters.length === allWeatherTypes.length;
+    const noFiltersActive = activeFilters.length === 0;
     
     // Filter PNS reports by active filters and viewport (before limits) - for total count
     let totalPNSReports = 0;
     if (showPNS && allPNSReports) {
         totalPNSReports = allPNSReports.filter(report => {
-            // Filter by weather type
-            if (hasAnyFilter && (!report.filterType || !activeFilters.includes(report.filterType))) {
+            // If no filters are active, hide all reports
+            if (noFiltersActive) {
                 return false;
+            }
+            
+            // If all filters are active, show all reports (skip type filtering)
+            // Otherwise, filter by weather type
+            if (!allFiltersActive) {
+                if (!report.filterType || !activeFilters.includes(report.filterType)) {
+                    return false;
+                }
             }
             
             // Filter by viewport if enabled

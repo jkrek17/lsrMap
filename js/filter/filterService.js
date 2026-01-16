@@ -47,16 +47,25 @@ class FilterService {
         const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
             .map(cb => cb.value);
         const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
-        const hasAnyFilter = activeFilters.length > 0 && activeFilters.length < allWeatherTypes.length;
+        const allFiltersActive = activeFilters.length === allWeatherTypes.length;
+        const noFiltersActive = activeFilters.length === 0;
         
         // Collect all PNS markers that pass filters
         const markersToAdd = [];
         
         // Iterate through all PNS reports
         for (const report of allPNSReports) {
-            // Filter by weather type
-            if (hasAnyFilter && (!report.filterType || !activeFilters.includes(report.filterType))) {
+            // If no filters are active, hide all markers
+            if (noFiltersActive) {
                 continue;
+            }
+            
+            // If all filters are active, show all markers (skip type filtering)
+            // Otherwise, filter by weather type
+            if (!allFiltersActive) {
+                if (!report.filterType || !activeFilters.includes(report.filterType)) {
+                    continue;
+                }
             }
             
             // Filter by viewport if enabled
@@ -149,13 +158,22 @@ class FilterService {
         const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
             .map(cb => cb.value);
         const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
-        const hasAnyFilter = activeFilters.length > 0 && activeFilters.length < allWeatherTypes.length;
+        const allFiltersActive = activeFilters.length === allWeatherTypes.length;
+        const noFiltersActive = activeFilters.length === 0;
         
         // Filter PNS reports by active filters and viewport
         let filteredPNSReports = allPNSReports.filter(report => {
-            // Filter by weather type
-            if (hasAnyFilter && (!report.filterType || !activeFilters.includes(report.filterType))) {
+            // If no filters are active, hide all reports
+            if (noFiltersActive) {
                 return false;
+            }
+            
+            // If all filters are active, show all reports (skip type filtering)
+            // Otherwise, filter by weather type
+            if (!allFiltersActive) {
+                if (!report.filterType || !activeFilters.includes(report.filterType)) {
+                    return false;
+                }
             }
             
             // Filter by viewport if enabled
