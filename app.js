@@ -1149,9 +1149,16 @@ function loadRadarTimestamps() {
     radarTimestamps = [];
     radarLayers = [];
     
+    // Round current time DOWN to the nearest 5-minute interval (radar updates at :00, :05, :10, etc.)
+    const currentMinutes = now.getUTCMinutes();
+    const roundedMinutes = Math.floor(currentMinutes / 5) * 5;
+    const roundedNow = new Date(now);
+    roundedNow.setUTCMinutes(roundedMinutes, 0, 0); // Set to rounded minutes, 0 seconds, 0 ms
+    
     // Generate timestamps going back 1 hour, every 5 minutes (12 frames total)
-    for (let i = 0; i <= 11; i++) {
-        const timestamp = new Date(now.getTime() - (i * 5 * 60 * 1000));
+    // Start from 5 minutes ago to ensure data is available (there's often a delay)
+    for (let i = 1; i <= 12; i++) {
+        const timestamp = new Date(roundedNow.getTime() - (i * 5 * 60 * 1000));
         radarTimestamps.push(timestamp);
     }
     
@@ -1159,14 +1166,15 @@ function loadRadarTimestamps() {
     radarTimestamps.reverse();
     
     // Create a tile layer for each timestamp using IEM's tile cache
+    // IMPORTANT: Use UTC time - IEM radar tiles use UTC timestamps
     radarTimestamps.forEach((timestamp, index) => {
-        const year = timestamp.getFullYear().toString();
-        const month = String(timestamp.getMonth() + 1).padStart(2, '0');
-        const day = String(timestamp.getDate()).padStart(2, '0');
-        const hour = String(timestamp.getHours()).padStart(2, '0');
-        const minute = String(timestamp.getMinutes()).padStart(2, '0');
+        const year = timestamp.getUTCFullYear().toString();
+        const month = String(timestamp.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(timestamp.getUTCDate()).padStart(2, '0');
+        const hour = String(timestamp.getUTCHours()).padStart(2, '0');
+        const minute = String(timestamp.getUTCMinutes()).padStart(2, '0');
         
-        // Format: YYYYMMDDHHmm (e.g., "202601141200")
+        // Format: YYYYMMDDHHmm (e.g., "202601141200") - UTC time
         const timeStr = year + month + day + hour + minute;
         
         // IEM radar tile URL format
