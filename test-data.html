@@ -16,6 +16,11 @@
 </head>
 <body>
     <h1>Data Fetch Diagnostic</h1>
+    
+    <!-- Load Libraries to test them -->
+    <script src="lib/leaflet/leaflet.js"></script>
+    <script src="config.js"></script>
+
     <div id="status">Initializing...</div>
     <div id="logs"></div>
 
@@ -52,6 +57,20 @@
         log('Checking CSP...');
         // We can't really "read" the effective CSP from JS, but we can verify we are running
         log('Script is running, so strict-dynamic (if used) or basic script-src is allowing inline scripts.');
+
+        // 1.5 Check if Libraries are loaded
+        log('Checking Libraries...');
+        if (typeof L !== 'undefined') {
+            pass('Leaflet (L) is loaded.');
+        } else {
+            fail('Leaflet (L) is NOT loaded. Check if lib/leaflet/leaflet.js exists and is accessible.');
+        }
+
+        if (typeof CONFIG !== 'undefined') {
+            pass('CONFIG is loaded.');
+        } else {
+            fail('CONFIG is NOT loaded. Check if config.js exists and is accessible.');
+        }
 
         // 2. Construct the URL (same as app uses)
         // Last 24 hours
