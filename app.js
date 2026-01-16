@@ -11,7 +11,7 @@ import { offlineDetector } from './js/utils/offlineDetector.js';
 import { appState } from './js/state/appState.js';
 import { createIcon, getIconForReport } from './js/map/iconService.js';
 import { addMarkersInBatches } from './js/map/markerService.js';
-import { showStatusToast } from './js/ui/toastService.js';
+import { showStatusToast, hideStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
 import PNSService from './js/api/pnsService.js';
 import StatisticsService from './js/ui/statisticsService.js';
@@ -249,10 +249,20 @@ async function fetchLSRData() {
         
         if (data && data.features) {
             displayReports(data, south, north, east, west);
-            showStatusToast(`Loaded ${data.features.length} reports`, 'success');
-            // Fetch PNS data if enabled
-            fetchPNSData();
+            
+            // Fetch PNS data if enabled, and wait for it to complete
+            const lsrCount = data.features.length;
+            const pnsCount = await fetchPNSDataAndGetCount();
+            
+            // Show combined success message after all loading is complete
+            hideStatusToast();
+            if (pnsCount > 0) {
+                showStatusToast(`Loaded ${lsrCount} LSR reports + ${pnsCount} PNS reports`, 'success');
+            } else {
+                showStatusToast(`Loaded ${lsrCount} reports`, 'success');
+            }
         } else {
+            hideStatusToast();
             showStatusToast('No reports found for the selected criteria', 'info');
             updateReportCount(0);
             showEmptyState('No reports found for the selected criteria. Try adjusting your date range or filters.');
@@ -262,6 +272,7 @@ async function fetchLSRData() {
         if (btnText) btnText.style.display = '';
         if (btnLoading) btnLoading.style.display = 'none';
         
+        hideStatusToast();
         const handledError = errorHandler.handleError(error, 'Fetch LSR Data');
         const retryAction = () => fetchLSRData();
         showStatusToast(handledError.message, 'error', retryAction);
@@ -644,7 +655,9 @@ async function fetchWarnings() {
  * Displays PNS at the issuing WFO office location with a formatted popup
  */
 // Fetch PNS data using the service
-async function fetchPNSData() {
+// @param {boolean} silent - If true, don't show toast notifications (for coordinated loading)
+// @returns {number} - Number of PNS reports loaded
+async function fetchPNSData(silent = false) {
     if (!pnsService) {
         pnsService = new PNSService();
     }
@@ -659,11 +672,13 @@ async function fetchPNSData() {
         }
         updateReportCountWithPNS();
         updateStatisticsWithPNS();
-        return;
+        return 0;
     }
     
-    // Show loading indicator
-    showStatusToast('Processing PNS reports...', 'loading');
+    // Show loading indicator only if not silent
+    if (!silent) {
+        showStatusToast('Processing PNS reports...', 'loading');
+    }
     
     try {
         // Collect PNS marker data (without adding to layer yet)
@@ -688,18 +703,35 @@ async function fetchPNSData() {
         // After fetching, apply current filters and performance optimizations to PNS markers
         filterPNSMarkers();
         
-        // Show success message with count
+        // Show success message with count only if not silent
         const pnsCount = pnsMarkerData.length;
-        if (pnsCount > 0) {
-            showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
-        } else {
-            showStatusToast('No PNS reports found', 'info');
+        if (!silent) {
+            if (pnsCount > 0) {
+                showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
+            } else {
+                showStatusToast('No PNS reports found', 'info');
+            }
         }
+        
+        return pnsCount;
     } catch (error) {
-        // Error handling - show error message
-        const handledError = errorHandler.handleError(error, 'PNS Fetch');
-        showStatusToast(handledError.message, 'error');
+        // Error handling - show error message only if not silent
+        if (!silent) {
+            const handledError = errorHandler.handleError(error, 'PNS Fetch');
+            showStatusToast(handledError.message, 'error');
+        } else {
+            errorHandler.log('PNS fetch failed during coordinated loading', error);
+        }
+        return 0;
     }
+}
+
+/**
+ * Fetch PNS data in silent mode (for coordinated loading with LSR data)
+ * @returns {number} - Number of PNS reports loaded
+ */
+async function fetchPNSDataAndGetCount() {
+    return fetchPNSData(true);
 }
 
 /**
