@@ -1,7 +1,7 @@
 <?php
 /**
  * Cleanup Cache Script
- * Removes cache files older than 7 days
+ * Removes cache files older than 30 days (configurable via CACHE_DAYS)
  * Should be run daily via cron
  */
 
