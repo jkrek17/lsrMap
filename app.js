@@ -1386,23 +1386,25 @@ function setDatePreset(preset) {
     const customDateFields = document.getElementById('customDateFields');
     const actionButtons = document.getElementById('actionButtons');
     
-    // Helper to format local date as YYYY-MM-DD
-    const formatLocalDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+    // Helper to format UTC date as YYYY-MM-DD
+    const formatUTCDate = (date) => {
+        return date.toISOString().split('T')[0];
+    };
+    
+    // Helper to format UTC time as HH:MM
+    const formatUTCTime = (date) => {
+        return date.toISOString().split('T')[1].substring(0, 5);
     };
 
-    endDateEl.value = formatLocalDate(today);
+    endDateEl.value = formatUTCDate(today);
     endHourEl.value = '23:59';
     
     switch(preset) {
         case '24h':
             const yesterday24h = new Date(today);
             yesterday24h.setHours(today.getHours() - 24);
-            startDateEl.value = formatLocalDate(yesterday24h);
-            startHourEl.value = yesterday24h.toTimeString().slice(0, 5);
+            startDateEl.value = formatUTCDate(yesterday24h);
+            startHourEl.value = formatUTCTime(yesterday24h);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Auto-load data (unless live mode is active, it will handle its own refresh)
@@ -1416,8 +1418,8 @@ function setDatePreset(preset) {
         case '48h':
             const yesterday48h = new Date(today);
             yesterday48h.setHours(today.getHours() - 48);
-            startDateEl.value = formatLocalDate(yesterday48h);
-            startHourEl.value = yesterday48h.toTimeString().slice(0, 5);
+            startDateEl.value = formatUTCDate(yesterday48h);
+            startHourEl.value = formatUTCTime(yesterday48h);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Disable live mode if switching to 48h
@@ -1433,7 +1435,7 @@ function setDatePreset(preset) {
         case 'week':
             const lastWeek = new Date(today);
             lastWeek.setDate(lastWeek.getDate() - 7);
-            startDateEl.value = formatLocalDate(lastWeek);
+            startDateEl.value = formatUTCDate(lastWeek);
             startHourEl.value = '00:00';
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
