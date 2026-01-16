@@ -8,17 +8,22 @@ A modern, interactive web application for visualizing National Weather Service (
 
 ## Features
 
-- 🗺️ **Interactive Map** - Explore storm reports on an interactive Leaflet map
-- 🔍 **Advanced Filtering** - Filter by report type, date range, and geographic region
+- 🗺️ **Interactive Map** - Explore storm reports on an interactive Leaflet map with multiple data layers
+- 🔍 **Advanced Filtering** - Filter by report type, date range, and geographic region with real-time map updates
 - 📊 **Real-time Data** - Live mode with automatic refresh for current conditions
 - 💾 **Client-side Caching** - Intelligent caching with localStorage for improved performance
 - 🔄 **Request Management** - Automatic retry logic with exponential backoff
 - 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
 - ⌨️ **Keyboard Shortcuts** - Power user features for quick navigation
-- 📤 **Data Export** - Export filtered data as CSV, JSON, or GeoJSON
+- 📤 **Data Export** - Export filtered data as CSV, JSON, or GeoJSON (includes both LSR and PNS reports)
 - 🌐 **Offline Detection** - Automatic detection and notification of network status
-- 🎯 **Performance Optimized** - Zoom-based marker limits and viewport filtering
-- 📋 **Public Information Statements** - View NWS PNS statements on the map
+- 🎯 **Performance Optimized** - Zoom-based marker limits, viewport filtering, and batch processing
+- 📋 **Public Information Statements (PNS)** - View and filter NWS PNS statements with metadata parsing
+- 🌡️ **Temperature Reports** - Specialized icons for temperature reports (extreme cold, heat index, wind chill)
+- ❄️ **Weather Differentiation** - Visual distinction between freezing rain (red border) and sleet
+- 📈 **Statistics & Insights** - View top reports by type, magnitude statistics, and comprehensive report counts
+- 🔄 **Unified Filtering** - Weather type filters work seamlessly with both LSR and PNS reports
+- ⏳ **Loading Indicators** - Clear feedback during data fetching and PNS processing
 
 ## Demo
 
@@ -162,10 +167,27 @@ Client-side caching is configured in `js/cache/cacheService.js`:
 
 ### Filtering
 
-1. **By Report Type**: Check/uncheck report type chips in the filter panel
-2. **By Date Range**: Use date pickers or preset buttons (Last 24h, Last 7 days, etc.)
-3. **By Region**: Select a state or region from the dropdown
-4. **Quick Filters**: Use preset buttons for Severe, Winter, or Precipitation reports
+1. **By Report Type**: Check/uncheck report type chips in the filter panel (applies to both LSR and PNS reports)
+   - Clicking a weather type button immediately updates the map without needing to click "Get Data"
+   - All filters active = show all reports
+   - No filters active = hide all reports
+   - Some filters active = show only matching reports
+2. **By Date Range**: Use date pickers or preset buttons (Last 24h, Last 48h, Last Week, Custom)
+3. **By Region**: Select a state or region from the dropdown to automatically filter and zoom
+4. **Quick Filters**: Use preset buttons for:
+   - **Severe**: Tornado, Hail, Wind, Thunderstorm
+   - **Winter**: Snow, Ice
+   - **Precipitation**: Rain, Flood
+
+### PNS (Public Information Statements)
+
+PNS reports are automatically parsed from NWS products:
+- **Metadata Parsing**: Automatically extracts location, type, magnitude, and description from PNS text
+- **Fallback Locations**: Uses WFO office coordinates when metadata is unavailable
+- **Type Matching**: Intelligently matches PNS types to weather filters (Snow, Rain, Wind, Temperature, etc.)
+- **Filtering**: PNS markers respect the same weather type filters as LSR reports
+- **Performance**: Same performance optimizations apply (viewport filtering, zoom limits, MAX_MARKERS)
+- **Integration**: Included in report counts, statistics, and data exports
 
 ### Keyboard Shortcuts
 
@@ -198,21 +220,27 @@ The application is built with a modular architecture using ES6 modules:
 ├── js/
 │   ├── api/                # API services
 │   │   ├── lsrService.js   # LSR API service
+│   │   ├── pnsService.js   # PNS (Public Information Statements) API service
+│   │   ├── warningsService.js # NWS warnings service
 │   │   └── requestManager.js # Request management & retry logic
 │   ├── cache/              # Caching services
 │   │   └── cacheService.js # Client-side caching
 │   ├── errors/             # Error handling
 │   │   └── errorHandler.js # Centralized error handling
+│   ├── filter/             # Filtering services
+│   │   └── filterService.js # Marker filtering & performance optimization
 │   ├── map/                # Map-related services
-│   │   ├── iconService.js  # Icon creation
+│   │   ├── iconService.js  # Icon creation with weather-specific styling
 │   │   ├── markerService.js # Marker management
 │   │   └── popupService.js # Popup content generation
 │   ├── state/              # State management
 │   │   └── appState.js     # Application state
 │   ├── ui/                 # UI services
-│   │   └── toastService.js # Status notifications
+│   │   ├── toastService.js # Status notifications
+│   │   ├── statisticsService.js # Statistics calculation and display
+│   │   └── reportCountService.js # Report count and performance messaging
 │   └── utils/              # Utilities
-│       ├── formatters.js    # Data formatting
+│       ├── formatters.js   # Data formatting and unit conversion
 │       └── offlineDetector.js # Network status detection
 └── api/                    # Server-side API (optional)
     ├── cache.php           # Cache API endpoint
@@ -222,20 +250,42 @@ The application is built with a modular architecture using ES6 modules:
 
 ### Key Components
 
-- **LSR Service**: Handles API communication with automatic caching and fallback
+- **LSR Service**: Handles LSR API communication with automatic caching and fallback
+- **PNS Service**: Fetches and parses NWS Public Information Statements with metadata extraction
+- **Warnings Service**: Manages NWS weather warnings overlay
 - **Request Manager**: Manages request deduplication, cancellation, and retry logic
+- **Filter Service**: Handles marker filtering for both LSR and PNS with performance optimizations
+- **Statistics Service**: Calculates and displays weather statistics and top reports
+- **Report Count Service**: Manages report counts and performance warnings
 - **Cache Service**: Client-side caching with localStorage
 - **Error Handler**: Centralized error handling with production-safe logging
 - **State Management**: Centralized application state with change listeners
+- **Icon Service**: Creates weather-specific icons with color coding and special borders
 
 ## API Documentation
 
 ### Data Sources
 
 The application fetches data from:
-- **Primary**: Iowa State Mesonet API (`https://mesonet.agron.iastate.edu/geojson/lsr.php`)
+- **LSR Primary**: Iowa State Mesonet API (`https://mesonet.agron.iastate.edu/geojson/lsr.php`)
 - **Cache API**: Local cache endpoint (`api/cache.php`) for recent data (last 7 days)
-- **PNS Data**: NWS API for Public Information Statements
+- **PNS Data**: NWS API for Public Information Statements (`https://api.weather.gov/products/types/PNS`)
+- **Warnings**: NWS API for active weather warnings (`https://api.weather.gov/alerts/active`)
+
+### Report Types Supported
+
+The application supports filtering and displaying the following report types:
+- **Rain** - Precipitation reports
+- **Flood** - Flooding events
+- **Snow** - Snowfall and snow accumulation (including snow squalls)
+- **Ice** - Ice accumulation, freezing rain (red border), sleet
+- **Hail** - Hail size reports
+- **Wind** - Wind speed and gust reports
+- **Thunderstorm** - Thunderstorm activity
+- **Tornado** - Tornado reports
+- **Tropical** - Tropical storm and hurricane reports
+- **Temperature** - Extreme cold, heat index, wind chill, temperature extremes
+- **Other** - Miscellaneous weather reports
 
 ### API Endpoints
 
@@ -413,13 +463,31 @@ For issues, questions, or contributions:
 
 ## Changelog
 
-### Version 2.0.0 (Current)
+### Version 2.1.0 (Current)
+- Added comprehensive PNS (Public Information Statements) support with metadata parsing
+- Refactored filtering, statistics, and report counting into dedicated services
+- Added temperature report detection (extreme cold, heat index, wind chill)
+- Added freezing rain visual differentiation (red border)
+- Added snow squall support with proper icon mapping
+- Improved weather type filtering with real-time map updates
+- Added loading indicators for PNS processing
+- Enhanced PNS type matching for better filter integration
+- Unified filtering system for LSR and PNS reports
+- Improved statistics and report count services
+- Better error handling and user feedback
+
+### Version 2.0.0
 - Refactored to ES6 modules
 - Added client-side caching
 - Implemented request management and retry logic
 - Added comprehensive error handling
 - Improved offline detection
 - Enhanced performance optimizations
+- Added PNS basic integration
+- Top 10 reports by type feature
+- Quick filter buttons
+- Date presets
+- Shareable URLs with state persistence
 
 ### Version 1.0.0
 - Initial release
