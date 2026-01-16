@@ -12,6 +12,7 @@ your-server-root/
 ├── app.js              # Main JavaScript (ES6 modules)
 ├── config.js           # Configuration
 ├── styles.css          # Styles
+├── lib/             # Local libraries (Leaflet, FontAwesome)
 ├── js/                 # JavaScript modules
 │   ├── api/
 │   ├── cache/

@@ -6,14 +6,15 @@
     <meta name="description" content="Interactive map of National Weather Service Local Storm Reports. View real-time and historical storm reports across the United States.">
     <meta name="keywords" content="NWS, weather, storm reports, tornado, hail, wind, interactive map">
     <meta name="author" content="NWS LSR Map">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; img-src 'self' data: https://unpkg.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://api.weather.gov;">
+    <!-- Content Security Policy: Local Assets -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://api.weather.gov;">
     <title>NWS Local Storm Reports - Interactive Map</title>
     
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
     
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="lib/fontawesome/css/all.min.css" />
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
@@ -575,7 +576,7 @@
     </div>
 
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script src="lib/leaflet/leaflet.js"></script>
     
     <!-- Configuration -->
     <script src="config.js"></script>

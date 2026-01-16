@@ -1,7 +1,6 @@
 <IfModule mod_headers.c>
-    # Attempt to override the strict server CSP
-    # We set a new policy that allows the external CDNs we need (Leaflet, FontAwesome, OpenStreetMap)
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; img-src 'self' data: https://unpkg.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://api.weather.gov;"
+    # Strict CSP: Local assets only (plus OSM tiles and Weather API)
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://api.weather.gov;"
 </IfModule>
 
 # Ensure correct MIME types are served
