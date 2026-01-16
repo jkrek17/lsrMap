@@ -1,8 +1,8 @@
 <?php
 /**
  * LSR Cache API Endpoint
- * Serves cached GeoJSON data for the last 30 days
- * Falls back to source API for older dates or missing cache
+ * Serves cached GeoJSON data for the last 30 days (configurable via CACHE_DAYS)
+ * Falls back to source API for real-time data (last 24h), older dates, or missing cache
  */
 
 header('Content-Type: application/json');
@@ -172,9 +172,11 @@ function isFeatureInTimeRange($feature, $filterStart, $filterEnd) {
  * Serve data from source API (fallback)
  */
 function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
-    // Format dates for API (YYYYMMDDHH)
-    $startFormatted = str_replace(['-', ':'], '', $startDate . $startHour) . '00';
-    $endFormatted = str_replace(['-', ':'], '', $endDate . $endHour) . '59';
+    // Format dates for API (YYYYMMDDHHMM - 12 characters)
+    // Input: startDate = "2026-01-14", startHour = "00:00"
+    // Output: "202601140000"
+    $startFormatted = str_replace(['-', ':'], '', $startDate . $startHour);
+    $endFormatted = str_replace(['-', ':'], '', $endDate . $endHour);
     
     $url = SOURCE_API_URL . '?sts=' . $startFormatted . '&ets=' . $endFormatted . '&wfos=';
     

@@ -137,12 +137,10 @@ class LSRService {
         const startDateTime = new Date(startDate + 'T' + startHour);
         const now = new Date();
         
-        // Calculate hours difference from start to now
-        const hoursDiff = (now.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
-        
-        // If query includes last 24 hours, use source API directly for real-time data
-        // This matches the cache.php logic and avoids unnecessary cache API calls
-        const includesLast24Hours = hoursDiff <= 24 && endDateTime >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        // Check if the query includes data from the last 24 hours
+        // If so, use source API directly for real-time data (cache.php does this anyway)
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const includesLast24Hours = endDateTime > twentyFourHoursAgo;
         
         // Use cache API only if:
         // 1. Cache is enabled
