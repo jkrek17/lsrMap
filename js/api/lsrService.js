@@ -97,11 +97,11 @@ class LSRService {
         
         // Use cache API only if:
         // 1. Cache is enabled
-        // 2. End date is within last 7 days
+        // 2. End date is within last 30 days (matches server cache retention)
         // 3. Query does NOT include last 24 hours (cache.php proxies to source anyway)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const shouldUseCache = useCache && endDateTime >= sevenDaysAgo && !includesLast24Hours;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const shouldUseCache = useCache && endDateTime >= thirtyDaysAgo && !includesLast24Hours;
 
         // Generate cache key
         const cacheKey = cacheService.generateCacheKey({
