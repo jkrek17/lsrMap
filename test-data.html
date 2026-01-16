@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Fetch Diagnostic</title>
+    <!-- Use the EXACT same CSP as index.html to test it -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mesonet.agron.iastate.edu; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu;">
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+        .log { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; border-radius: 4px; }
+        .error { color: red; border-color: red; }
+        .success { color: green; border-color: green; }
+        .info { color: blue; }
+        #status { font-weight: bold; font-size: 1.2em; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Data Fetch Diagnostic</h1>
+    <div id="status">Initializing...</div>
+    <div id="logs"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById('logs').appendChild(div);
+            console.log(message);
+        }
+
+        function fail(message) {
+            log(message, 'error');
+            document.getElementById('status').textContent = 'TEST FAILED';
+            document.getElementById('status').style.color = 'red';
+        }
+
+        function pass(message) {
+            log(message, 'success');
+            document.getElementById('status').textContent = 'TEST PASSED';
+            document.getElementById('status').style.color = 'green';
+        }
+
+        // Test global error handler
+        window.onerror = function(msg, url, line) {
+            fail(`Global Error: ${msg} (${url}:${line})`);
+            return false;
+        };
+
+        log('Starting diagnostic test...');
+
+        // 1. Verify CSP settings
+        log('Checking CSP...');
+        // We can't really "read" the effective CSP from JS, but we can verify we are running
+        log('Script is running, so strict-dynamic (if used) or basic script-src is allowing inline scripts.');
+
+        // 2. Construct the URL (same as app uses)
+        // Last 24 hours
+        const now = new Date();
+        const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+        
+        function pad(n) { return n < 10 ? '0' + n : n; }
+        function formatDate(d) {
+            return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 
+                   pad(d.getHours()) + pad(d.getMinutes());
+        }
+
+        const sts = formatDate(yesterday);
+        const ets = formatDate(now);
+        const callbackName = 'jsonp_test_' + Math.floor(Math.random() * 100000);
+        
+        const url = `https://mesonet.agron.iastate.edu/geojson/lsr.php?sts=${sts}&ets=${ets}&wfos=&callback=${callbackName}`;
+        
+        log(`Attempting to fetch data from: ${url}`);
+
+        // 3. Define the callback
+        window[callbackName] = function(data) {
+            log('Callback received!');
+            if (data && data.features) {
+                pass(`Success! Received ${data.features.length} reports.`);
+                log('First report: ' + JSON.stringify(data.features[0]));
+            } else {
+                fail('Received data but it has no features: ' + JSON.stringify(data));
+            }
+            cleanup();
+        };
+
+        // 4. Create the script tag
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = function(e) {
+            fail('Script load failed. This is likely a CSP violation or Network Error. Check browser console for details.');
+            cleanup();
+        };
+
+        function cleanup() {
+            if (script.parentNode) script.parentNode.removeChild(script);
+            delete window[callbackName];
+        }
+
+        try {
+            document.body.appendChild(script);
+            log('Script tag appended to body. Waiting for response...');
+        } catch (e) {
+            fail('Exception appending script: ' + e.message);
+        }
+
+        // Timeout
+        setTimeout(() => {
+            if (document.getElementById('status').textContent === 'Initializing...') {
+                fail('Timeout: No response after 10 seconds.');
+            }
+        }, 10000);
+
+    </script>
+</body>
+</html>
