@@ -1,6 +1,6 @@
 <IfModule mod_headers.c>
-    # Strict CSP: Local assets only (plus OSM tiles and Weather API)
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://api.weather.gov;"
+    # CSP: Local assets plus external services (OSM tiles, Weather API, Iowa State LSR data)
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mesonet.agron.iastate.edu; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu;"
 </IfModule>
 
 # Ensure correct MIME types are served
