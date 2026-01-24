@@ -7,7 +7,7 @@ import { createPopupContent } from './popupService.js';
 /**
  * Add markers in batches for better performance
  */
-export function addMarkersInBatches(reports, markersLayer, batchSize, onProgress) {
+export function addMarkersInBatches(reports, markersLayer, batchSize, onProgress, onPopupOpen) {
     let index = 0;
     const totalReports = reports.length;
     const progressEl = document.getElementById('loadingProgress');
@@ -24,11 +24,22 @@ export function addMarkersInBatches(reports, markersLayer, batchSize, onProgress
         
         for (let i = index; i < endIndex; i++) {
             const report = reports[i];
-            const marker = L.marker([report.lat, report.lon], {icon: report.icon});
-            marker.bindPopup(createPopupContent(report), {
-                maxWidth: 350,
-                className: 'custom-popup'
-            });
+            let marker = report.marker;
+            if (!marker) {
+                marker = L.marker([report.lat, report.lon], { icon: report.icon });
+                report.marker = marker;
+                marker.bindPopup(() => createPopupContent(report), {
+                    maxWidth: 350,
+                    className: 'custom-popup'
+                });
+                if (onPopupOpen) {
+                    marker.on('popupopen', () => {
+                        onPopupOpen(report);
+                    });
+                }
+            } else if (report.icon) {
+                marker.setIcon(report.icon);
+            }
             marker.addTo(markersLayer);
         }
         

@@ -24,7 +24,8 @@ class FilterService {
         CONFIG,
         getZoomBasedLimit,
         updateReportCountWithPNS,
-        updateStatisticsWithPNS
+        updateStatisticsWithPNS,
+        activeFiltersOverride
     ) {
         if (!pnsLayer || !showPNS) {
             // Update counts even when PNS is disabled
@@ -44,7 +45,7 @@ class FilterService {
             : null;
         
         // Get active filters
-        const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
+        const activeFilters = activeFiltersOverride || Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
             .map(cb => cb.value);
         const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
         const allFiltersActive = activeFilters.length === allWeatherTypes.length;
@@ -141,7 +142,8 @@ class FilterService {
         allFilteredReports,
         map,
         CONFIG,
-        getZoomBasedLimit
+        getZoomBasedLimit,
+        activeFiltersOverride
     ) {
         if (!showPNS) {
             return [];
@@ -155,7 +157,7 @@ class FilterService {
             : null;
         
         // Get active filters
-        const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
+        const activeFilters = activeFiltersOverride || Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
             .map(cb => cb.value);
         const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
         const allFiltersActive = activeFilters.length === allWeatherTypes.length;

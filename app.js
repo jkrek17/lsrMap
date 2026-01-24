@@ -2,7 +2,7 @@
 // MODULE IMPORTS
 // ============================================================================
 
-import { formatDateForAPI, extractWindSpeed, getUnitForReportType, getReportTypeName } from './js/utils/formatters.js';
+import { formatDateForAPI, extractWindSpeed, getUnitForReportType, getReportTypeName, isCoastalFlood } from './js/utils/formatters.js';
 import { errorHandler, ERROR_TYPES } from './js/errors/errorHandler.js';
 import { cacheService } from './js/cache/cacheService.js';
 import { requestManager } from './js/api/requestManager.js';
@@ -30,13 +30,19 @@ let pnsLayer = null; // Layer for Public Information Statements
 let showPNS = false; // Toggle for PNS display
 let warningsLayer = null; // Layer for NWS warnings/alerts
 let showWarnings = false; // Toggle for warnings display
+let showAllWarningsLayer = false;
+let showAllWatchesLayer = false;
 let warningsService = null; // Warnings service instance
+let allWarningsLayer = null;
+let allWatchesLayer = null;
+let warningsListenersAttached = false;
 let userArea = null;
 let radarLayer = null; // Legacy - keeping for compatibility
 let radarLayers = []; // Array of tile layers for animation
 let radarLayerGroup = null; // Layer group to hold all radar layers
 let liveModeActive = false;
 let liveModeInterval = null;
+let liveModeRangeHours = 24;
 let lastUpdateTime = null;
 let radarTimestamps = [];
 let radarAnimationIndex = 0;
@@ -97,6 +103,15 @@ function getIconForReportWrapper(rtype, magnitude, remark, typetext = '') {
 // FILTER SUMMARY
 // ============================================================================
 
+function getWeatherTypeId(type) {
+    return String(type).toLowerCase().replace(/\s+/g, '-');
+}
+
+function getActiveWeatherFilters() {
+    return Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
+        .map(cb => cb.value);
+}
+
 function updateFilterSummary() {
     const summary = document.getElementById('filterSummary');
     const summaryDate = document.getElementById('summaryDate');
@@ -106,19 +121,23 @@ function updateFilterSummary() {
     if (!summary || !summaryDate || !summaryLocation || !summaryTypes) return;
     
     // Update date summary
-    const activePreset = document.querySelector('.btn-preset.active');
-    if (activePreset) {
-        const preset = activePreset.dataset.preset;
-        if (preset === 'custom') {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            if (startDate && endDate) {
-                summaryDate.textContent = `${startDate} to ${endDate}`;
+    if (liveModeActive) {
+        summaryDate.textContent = `Live (Last ${liveModeRangeHours}h)`;
+    } else {
+        const activePreset = document.querySelector('.btn-preset.active');
+        if (activePreset) {
+            const preset = activePreset.dataset.preset;
+            if (preset === 'custom') {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                if (startDate && endDate) {
+                    summaryDate.textContent = `${startDate} to ${endDate}`;
+                } else {
+                    summaryDate.textContent = 'Custom';
+                }
             } else {
-                summaryDate.textContent = 'Custom';
+                summaryDate.textContent = activePreset.textContent.trim();
             }
-        } else {
-            summaryDate.textContent = activePreset.textContent.trim();
         }
     }
     
@@ -155,6 +174,90 @@ function updateFilterSummary() {
 // FETCH DATA
 // ============================================================================
 
+function normalizeTimeInputValue(value) {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    const trimmed = value.trim();
+    const match = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) {
+        return null;
+    }
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes)) {
+        return null;
+    }
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        return null;
+    }
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+function isValid24HourTime(value) {
+    return normalizeTimeInputValue(value) !== null;
+}
+
+function parseDateInputToUTC(dateStr) {
+    if (typeof dateStr !== 'string') {
+        return null;
+    }
+    const match = dateStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) {
+        return null;
+    }
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+        return null;
+    }
+    return new Date(Date.UTC(year, month - 1, day));
+}
+
+function formatDateInputValue(date) {
+    if (!(date instanceof Date)) {
+        return '';
+    }
+    return date.toISOString().split('T')[0];
+}
+
+function shiftCustomDateRange(days) {
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const startHourEl = document.getElementById('startHour');
+    const endHourEl = document.getElementById('endHour');
+
+    if (!startDateEl || !endDateEl || !startHourEl || !endHourEl) {
+        return;
+    }
+
+    const startDate = parseDateInputToUTC(startDateEl.value);
+    const endDate = parseDateInputToUTC(endDateEl.value);
+    if (!startDate || !endDate) {
+        showStatusToast('Please select a valid start and end date.', 'error');
+        return;
+    }
+
+    const normalizedStartHour = normalizeTimeInputValue(startHourEl.value);
+    const normalizedEndHour = normalizeTimeInputValue(endHourEl.value);
+    if (!normalizedStartHour || !normalizedEndHour) {
+        showStatusToast('Please enter time in 24-hour format (HH:MM).', 'error');
+        return;
+    }
+
+    startDate.setUTCDate(startDate.getUTCDate() + days);
+    endDate.setUTCDate(endDate.getUTCDate() + days);
+
+    startDateEl.value = formatDateInputValue(startDate);
+    endDateEl.value = formatDateInputValue(endDate);
+    startHourEl.value = normalizedStartHour;
+    endHourEl.value = normalizedEndHour;
+
+    updateFilterSummary();
+    fetchLSRData();
+}
+
 // Fetch NWS Local Storm Reports data
 async function fetchLSRData() {
     // Ensure CONFIG is available
@@ -173,6 +276,26 @@ async function fetchLSRData() {
         return;
     }
     
+    const startDate = document.getElementById('startDate').value;
+    const startHourInput = document.getElementById('startHour');
+    const startHourRaw = startHourInput ? startHourInput.value : '';
+    const endDate = document.getElementById('endDate').value;
+    const endHourInput = document.getElementById('endHour');
+    const endHourRaw = endHourInput ? endHourInput.value : '';
+
+    const normalizedStartHour = normalizeTimeInputValue(startHourRaw);
+    const normalizedEndHour = normalizeTimeInputValue(endHourRaw);
+
+    if (!normalizedStartHour || !normalizedEndHour) {
+        showStatusToast('Please enter time in 24-hour format (HH:MM).', 'error');
+        return;
+    }
+
+    if (startHourInput) startHourInput.value = normalizedStartHour;
+    if (endHourInput) endHourInput.value = normalizedEndHour;
+    const startHour = normalizedStartHour;
+    const endHour = normalizedEndHour;
+
     // Show loading state
     showStatusToast('Loading data...', 'loading');
     if (fetchBtn) fetchBtn.disabled = true;
@@ -181,11 +304,6 @@ async function fetchLSRData() {
     
     markersLayer.clearLayers();
     userArea.clearLayers();
-    
-    const startDate = document.getElementById('startDate').value;
-    const startHour = document.getElementById('startHour').value;
-    const endDate = document.getElementById('endDate').value;
-    const endHour = document.getElementById('endHour').value;
     
     // Get selected region/state
     const regionSelect = document.getElementById('regionSelect');
@@ -276,6 +394,8 @@ async function fetchLSRData() {
 // State is now managed through appState module, but keeping these for backward compatibility
 let allFilteredReports = [];
 let lastGeoJsonData = null; // Store last fetched data for viewport refresh
+let normalizedLsrReports = [];
+let lastNormalizedGeoJson = null;
 let topReportsByType = {}; // Store top 10 reports by type
 let allPNSReports = []; // All PNS reports (filtered and processed for performance)
 
@@ -284,7 +404,135 @@ appState.set('allFilteredReports', allFilteredReports);
 appState.set('lastGeoJsonData', lastGeoJsonData);
 appState.set('topReportsByType', topReportsByType);
 
-function displayReports(geoJsonData, south, north, east, west) {
+function normalizeLSRReports(geoJsonData) {
+    const features = geoJsonData?.features || [];
+    const normalized = [];
+
+    for (const feature of features) {
+        const props = feature.properties || {};
+        const lat = parseFloat(props.lat);
+        const lon = parseFloat(props.lon);
+
+        if (isNaN(lat) || isNaN(lon)) {
+            continue;
+        }
+
+        let rtype = props.type || props.rtype || '';
+        const typetext = props.typetext || '';
+        const remark = props.remark || '';
+
+        // Check if this is a snow squall - treat it as snow type for filtering and icon
+        const upperTypetext = typetext ? typetext.toUpperCase() : '';
+        const lowerTypetext = typetext ? typetext.toLowerCase() : '';
+        const isSnowSquall = upperTypetext.includes('SNOW SQUALL');
+        if (isSnowSquall) {
+            rtype = 'S'; // Force snow type for snow squalls
+        }
+
+        // Check if this is a temperature-related report - use temperature icon but keep original category name
+        // Look for temperature, extreme cold, wind chill, heat index, extreme heat, etc.
+        const isTemperature = upperTypetext && (
+            upperTypetext.includes('TEMPERATURE') ||
+            upperTypetext.includes('EXTREME TEMP') ||
+            upperTypetext.includes('EXTREME COLD') ||
+            upperTypetext.includes('WIND CHILL') ||
+            upperTypetext.includes('HEAT INDEX') ||
+            upperTypetext.includes('EXTREME HEAT') ||
+            (upperTypetext.includes('COLD') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY'))) ||
+            (upperTypetext.includes('HEAT') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY')))
+        );
+        const isFreezingRain = upperTypetext.includes('FREEZING RAIN') ||
+            upperTypetext.includes('FREEZING_RAIN') ||
+            upperTypetext.includes('FREEZING DRIZZLE') ||
+            upperTypetext.includes('FREEZING_DRIZZLE') ||
+            upperTypetext.includes('FZRA');
+        const isSleet = upperTypetext.includes('SLEET');
+        const isCoastalFloodReport = ['F', 'E', 'v'].includes(rtype) && isCoastalFlood(typetext, remark);
+
+        // Always use temperature icon (X) for temperature-related reports, regardless of original rtype
+        let iconRtype = rtype;
+        if (isSleet) {
+            iconRtype = 's';
+        }
+        if (isTemperature) {
+            iconRtype = 'X'; // Always use temperature icon configuration for temperature-related reports
+        }
+
+        // Determine filter type - use Temperature for filtering if it's a temperature-related report
+        let filterType;
+        if (isTemperature) {
+            filterType = 'Temperature'; // Filter as Temperature
+        } else if (isFreezingRain) {
+            filterType = 'Freezing Rain';
+        } else if (isSleet) {
+            filterType = 'Sleet';
+        } else if (isCoastalFloodReport) {
+            filterType = 'Coastal Flooding';
+        } else {
+            filterType = getReportTypeName(rtype, REPORT_TYPE_MAP);
+        }
+
+        let magnitude = parseFloat(props.magnitude) || 0;
+        const valid = (props.valid || '').replace('T', ' ');
+        const city = props.city || '';
+        const state = props.st || props.state || '';
+
+        // Use REPORT_TYPE_MAP for consistent naming, but prefer typetext if it's more descriptive
+        let category = getReportTypeName(rtype, REPORT_TYPE_MAP);
+        if (isFreezingRain) {
+            category = 'Freezing Rain';
+        } else if (isSleet) {
+            category = 'Sleet';
+        } else if (isCoastalFloodReport) {
+            category = 'Coastal Flooding';
+        }
+
+        // Check if this is a snow squall - set magnitude to 0 for display
+        if (isSnowSquall) {
+            magnitude = 0;
+        }
+
+        // Normalize "Tropical Cyclone" to "Tropical" for consistency
+        if (lowerTypetext.includes('tropical')) {
+            category = 'Tropical';
+        } else if (typetext && !lowerTypetext.includes('unknown') && !isFreezingRain && !isSleet && !isCoastalFloodReport) {
+            // Use typetext if it's meaningful and not "unknown"
+            // This keeps original names like "EXTREME COLD", "WIND CHILL", etc.
+            category = typetext;
+        }
+
+        // Use iconRtype for icon creation (allows temperature reports to use temp icon)
+        // but keep original rtype for unit and category purposes
+        const unit = getUnitForReportType(iconRtype);
+        const iconMagnitude = isSnowSquall ? 0 : magnitude;
+        const locationStr = city + (state ? ', ' + state : '');
+
+        normalized.push({
+            lat,
+            lon,
+            rtype,
+            iconRtype,
+            typetext,
+            remark,
+            magnitude,
+            iconMagnitude,
+            unit,
+            location: locationStr,
+            time: valid,
+            type: category,
+            category,
+            filterType,
+            isSnowSquall,
+            isFreezingRain,
+            isSleet,
+            isCoastalFloodReport
+        });
+    }
+
+    return normalized;
+}
+
+function displayReports(geoJsonData, south, north, east, west, activeFiltersOverride) {
     // Ensure CONFIG is available
     if (typeof CONFIG === 'undefined' || typeof REPORT_TYPE_MAP === 'undefined') {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -295,12 +543,26 @@ function displayReports(geoJsonData, south, north, east, west) {
     
     markersLayer.clearLayers();
     
-    // Store for viewport refresh
-    lastGeoJsonData = geoJsonData;
-    appState.set('lastGeoJsonData', geoJsonData);
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isNewData = geoJsonData !== lastGeoJsonData;
     
-    const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
-        .map(cb => cb.value);
+    // Store for viewport refresh
+    if (isNewData) {
+        lastGeoJsonData = geoJsonData;
+        appState.set('lastGeoJsonData', geoJsonData);
+    }
+    
+    let normalizeDuration = 0;
+    if (isNewData || lastNormalizedGeoJson !== geoJsonData || normalizedLsrReports.length === 0) {
+        const normalizeStart = isLocalhost ? performance.now() : 0;
+        normalizedLsrReports = normalizeLSRReports(geoJsonData);
+        lastNormalizedGeoJson = geoJsonData;
+        if (isLocalhost) {
+            normalizeDuration = performance.now() - normalizeStart;
+        }
+    }
+    
+    const activeFilters = activeFiltersOverride || getActiveWeatherFilters();
     
     allFilteredReports = [];
     topReportsByType = {}; // Reset top reports when loading new data
@@ -317,122 +579,46 @@ function displayReports(geoJsonData, south, north, east, west) {
         viewportBounds = map.getBounds();
     }
     
-    geoJsonData.features.forEach(feature => {
-        const props = feature.properties || {};
-        const lat = parseFloat(props.lat);
-        const lon = parseFloat(props.lon);
-        
-        if (isNaN(lat) || isNaN(lon)) return;
-        
+    const filterStart = isLocalhost ? performance.now() : 0;
+    for (const report of normalizedLsrReports) {
         // Filter by bounding box
         // Note: For US, west is more negative than east, so lon must be between west and east
-        if (lat < south || lat > north) return;
-        if (lon < west || lon > east) return; // west < east for US (both negative)
+        if (report.lat < south || report.lat > north) {
+            continue;
+        }
+        if (report.lon < west || report.lon > east) {
+            continue;
+        }
         
         // Filter by viewport if enabled and zoomed in
-        if (viewportBounds && !viewportBounds.contains([lat, lon])) {
-            return;
+        if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+            continue;
         }
         
-        let rtype = props.type || props.rtype || '';
-        const typetext = props.typetext || '';
-        
-        // Check if this is a snow squall - treat it as snow type for filtering and icon
-        const isSnowSquall = typetext && typetext.toUpperCase().includes('SNOW SQUALL');
-        if (isSnowSquall) {
-            rtype = 'S'; // Force snow type for snow squalls
+        if (!activeFilters.includes(report.filterType)) {
+            continue;
         }
         
-        // Check if this is a temperature-related report - use temperature icon but keep original category name
-        // Look for temperature, extreme cold, wind chill, heat index, extreme heat, etc.
-        const upperTypetext = typetext ? typetext.toUpperCase() : '';
-        const isTemperature = upperTypetext && (
-            upperTypetext.includes('TEMPERATURE') || 
-            upperTypetext.includes('EXTREME TEMP') ||
-            upperTypetext.includes('EXTREME COLD') ||
-            upperTypetext.includes('WIND CHILL') ||
-            upperTypetext.includes('HEAT INDEX') ||
-            upperTypetext.includes('EXTREME HEAT') ||
-            (upperTypetext.includes('COLD') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY'))) ||
-            (upperTypetext.includes('HEAT') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY')))
-        );
-        
-        // Always use temperature icon (X) for temperature-related reports, regardless of original rtype
-        let iconRtype = rtype;
-        if (isTemperature) {
-            iconRtype = 'X'; // Always use temperature icon configuration for temperature-related reports
+        if (!report.icon) {
+            report.icon = getIconForReportWrapper(report.iconRtype, report.iconMagnitude, report.remark, report.typetext);
         }
         
-        // Determine filter type - use Temperature for filtering if it's a temperature-related report
-        let filterType;
-        if (isTemperature) {
-            filterType = 'Temperature'; // Filter as Temperature
-        } else {
-            filterType = getReportTypeName(rtype, REPORT_TYPE_MAP);
-        }
-        
-        if (!activeFilters.includes(filterType)) return;
-        
-        let magnitude = props.magnitude || 0;
-        const remark = props.remark || '';
-        const valid = (props.valid || '').replace('T', ' ');
-        const city = props.city || '';
-        const state = props.st || props.state || '';
-        // Use REPORT_TYPE_MAP for consistent naming, but prefer typetext if it's more descriptive
-        let category = getReportTypeName(rtype, REPORT_TYPE_MAP);
-        
-        // Check if this is a snow squall - set magnitude to 0 for display
-        if (isSnowSquall) {
-            magnitude = 0;
-        }
-        
-        // Normalize "Tropical Cyclone" to "Tropical" for consistency
-        if (typetext.toLowerCase().includes('tropical')) {
-            category = 'Tropical';
-        } else if (typetext && !typetext.toLowerCase().includes('unknown')) {
-            // Use typetext if it's meaningful and not "unknown"
-            // This keeps original names like "EXTREME COLD", "WIND CHILL", etc.
-            category = typetext;
-        }
-        // Use iconRtype for icon creation (allows temperature reports to use temp icon)
-        // but keep original rtype for unit and category purposes
-        const unit = getUnitForReportType(iconRtype);
-        
-        // For snow squalls, pass 0 magnitude to icon service so it uses the base snow icon
-        const iconMagnitude = isSnowSquall ? 0 : magnitude;
-        const icon = getIconForReportWrapper(iconRtype, iconMagnitude, remark, typetext);
-        
-        const locationStr = city + (state ? ', ' + state : '');
-        
-        const reportData = {
-            lat: lat,
-            lon: lon,
-            icon: icon,
-            type: category,
-            magnitude: magnitude,
-            unit: unit,
-            location: locationStr,
-            time: valid,
-            remark: remark,
-            rtype: rtype, // Use modified rtype (e.g., 'S' for snow squalls)
-            category: category // For popup service
-        };
-        
-        allFilteredReports.push(reportData);
+        allFilteredReports.push(report);
         
         // Track top reports by type
-        if (magnitude > 0) {
-            if (!topReportsByType[category]) {
-                topReportsByType[category] = [];
+        if (report.magnitude > 0) {
+            if (!topReportsByType[report.category]) {
+                topReportsByType[report.category] = [];
             }
-            topReportsByType[category].push(reportData);
+            topReportsByType[report.category].push(report);
             // Keep only top 10 per type
-            topReportsByType[category].sort((a, b) => b.magnitude - a.magnitude);
-            if (topReportsByType[category].length > 10) {
-                topReportsByType[category] = topReportsByType[category].slice(0, 10);
+            topReportsByType[report.category].sort((a, b) => b.magnitude - a.magnitude);
+            if (topReportsByType[report.category].length > 10) {
+                topReportsByType[report.category] = topReportsByType[report.category].slice(0, 10);
             }
         }
-    });
+    }
+    const filterDuration = isLocalhost ? performance.now() - filterStart : 0;
     
     // Update appState after processing all reports
     appState.set('allFilteredReports', allFilteredReports);
@@ -453,6 +639,9 @@ function displayReports(geoJsonData, south, north, east, west) {
     }
     
     updateReportCount(reportsToDisplay.length, allFilteredReports.length, hiddenCount);
+    if (isLocalhost && (normalizeDuration || filterDuration)) {
+        console.log(`[Perf] LSR normalize ${normalizeDuration.toFixed(1)}ms, filter ${filterDuration.toFixed(1)}ms, filtered ${allFilteredReports.length}/${normalizedLsrReports.length}`);
+    }
     updateStatistics(allFilteredReports);
     updateFeatureBadges(); // Update feature discoverability badges
     updateFilterSummary();
@@ -462,7 +651,7 @@ function displayReports(geoJsonData, south, north, east, west) {
     }
     
     // Add markers
-    addMarkersInBatches(reportsToDisplay, markersLayer, CONFIG.BATCH_SIZE);
+    addMarkersInBatches(reportsToDisplay, markersLayer, CONFIG.BATCH_SIZE, null, updateMagnitudeLegendForReport);
     
     if (reportsToDisplay.length > 0) {
         setTimeout(() => {
@@ -500,11 +689,153 @@ function getZoomBasedLimit(zoom) {
 // WARNINGS DATA FETCHING
 // ============================================================================
 
+function getAlertCodes(props) {
+    const phSig = (props.ph_sig || '').split('.');
+    const phenomena = (props.phenomena || phSig[0] || '').toUpperCase();
+    const significance = (props.significance || phSig[1] || '').toUpperCase();
+    return { phenomena, significance };
+}
+
+function updateWarningsCount(elementId, count, show) {
+    const el = document.getElementById(elementId);
+    if (!el) {
+        return;
+    }
+    el.textContent = count.toString();
+    el.style.display = show ? 'inline' : 'none';
+}
+
+function renderAlertsToLayer(alerts, layer) {
+    if (!layer) {
+        return;
+    }
+    alerts.forEach(alert => {
+        const props = alert.properties || {};
+        const significanceMap = {
+            'W': 'Warning',
+            'A': 'Watch',
+            'Y': 'Advisory'
+        };
+        const severity = props.severity || (props.significance ? (significanceMap[props.significance] || props.significance) : 'Unknown');
+        const category = props.category || props.phenomena || 'Other';
+        const event = props.event || props.event_label || 'Alert';
+        const headline = props.headline || props.event_label || '';
+        const description = props.description || '';
+        const instruction = props.instruction || '';
+        const effectiveRaw = props.effective || props.utc_issue || props.utc_product_issue || '';
+        const expiresRaw = props.expires || props.utc_expire || '';
+        const effective = effectiveRaw ? new Date(effectiveRaw).toLocaleString() : '';
+        const expires = expiresRaw ? new Date(expiresRaw).toLocaleString() : '';
+        const areaDesc = props.areaDesc || props.ugc || '';
+        const wfo = props.wfo || '';
+        
+        const color = props.nws_color || warningsService.getSeverityColor(severity);
+        const icon = warningsService.getCategoryIcon(category);
+        
+        // Create popup content
+        const popupContent = `
+            <div class="warning-popup">
+                <div class="warning-header" style="border-left: 4px solid ${color};">
+                    <div class="warning-title">
+                        <span class="warning-icon">${icon}</span>
+                        <strong>${event}</strong>
+                    </div>
+                    <div class="warning-severity" style="color: ${color};">
+                        ${severity} - ${category}
+                    </div>
+                </div>
+                <div class="warning-body">
+                    ${headline ? `<div class="warning-headline"><strong>${headline}</strong></div>` : ''}
+                    ${areaDesc ? `<div class="warning-area"><i class="fas fa-map-marker-alt"></i> ${areaDesc}</div>` : ''}
+                    ${wfo ? `<div class="warning-area"><i class="fas fa-broadcast-tower"></i> WFO: ${wfo}</div>` : ''}
+                    ${effective ? `<div class="warning-time"><i class="fas fa-clock"></i> Effective: ${effective}</div>` : ''}
+                    ${expires ? `<div class="warning-time"><i class="fas fa-hourglass-end"></i> Expires: ${expires}</div>` : ''}
+                    ${description ? `<div class="warning-description">${description}</div>` : ''}
+                    ${instruction ? `<div class="warning-instruction"><strong>Instructions:</strong> ${instruction}</div>` : ''}
+                </div>
+            </div>
+        `;
+        
+        // Handle different geometry types
+        const geom = alert.geometry;
+        if (!geom) return;
+        
+        if (geom.type === 'Point') {
+            const [lon, lat] = geom.coordinates;
+            const marker = L.marker([lat, lon], {
+                pane: 'warningsPane',
+                icon: L.divIcon({
+                    className: 'warning-marker',
+                    html: `<div style="
+                        background-color: ${color};
+                        color: white;
+                        border-radius: 50%;
+                        width: 24px;
+                        height: 24px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 14px;
+                        opacity: 0.85;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    ">${icon}</div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                })
+            });
+            marker.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
+            marker.addTo(layer);
+        } else if (geom.type === 'Polygon') {
+            const coords = geom.coordinates[0].map(([lon, lat]) => [lat, lon]);
+            const polygon = L.polygon(coords, {
+                pane: 'warningsPane',
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.12,
+                weight: 2,
+                opacity: 0.5
+            });
+            polygon.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
+            polygon.addTo(layer);
+        } else if (geom.type === 'MultiPolygon') {
+            geom.coordinates.forEach(polygonCoords => {
+                const coords = polygonCoords[0].map(([lon, lat]) => [lat, lon]);
+                const polygon = L.polygon(coords, {
+                    pane: 'warningsPane',
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.12,
+                    weight: 2,
+                    opacity: 0.5
+                });
+                polygon.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
+                polygon.addTo(layer);
+            });
+        }
+    });
+}
+
+function updateWarningsRefreshListeners() {
+    if (!map) {
+        return;
+    }
+    const shouldAttach = showWarnings || showAllWarningsLayer || showAllWatchesLayer;
+    if (shouldAttach && !warningsListenersAttached) {
+        map.on('moveend', refreshWarningsOnMove);
+        map.on('zoomend', refreshWarningsOnMove);
+        warningsListenersAttached = true;
+    } else if (!shouldAttach && warningsListenersAttached) {
+        map.off('moveend', refreshWarningsOnMove);
+        map.off('zoomend', refreshWarningsOnMove);
+        warningsListenersAttached = false;
+    }
+}
+
 /**
  * Fetch active NWS warnings/alerts and display on map
  */
 async function fetchWarnings() {
-    if (!showWarnings || !warningsService || !map || !warningsLayer) {
+    if ((!showWarnings && !showAllWarningsLayer && !showAllWatchesLayer) || !warningsService || !map || !warningsLayer) {
         return;
     }
     
@@ -517,111 +848,49 @@ async function fetchWarnings() {
             west: bounds.getWest()
         });
         
-        // Clear existing warnings
-        warningsLayer.clearLayers();
-        
-        if (alerts.length === 0) {
-            // Update count to show zero
-            const warningsCountEl = document.getElementById('warningsCount');
-            if (warningsCountEl) {
-                warningsCountEl.textContent = '0';
-                warningsCountEl.style.display = 'inline';
-            }
-            return; // No active warnings
-        }
-        
-        // Add each alert to the map
+        const shortFusePhenomena = ['TO', 'SV', 'FF', 'SQ'];
+        const shortFuseAlerts = [];
+        const allWarnings = [];
+        const allWatches = [];
+
         alerts.forEach(alert => {
             const props = alert.properties || {};
-            const severity = props.severity || 'Unknown';
-            const category = props.category || 'Other';
-            const event = props.event || 'Alert';
-            const headline = props.headline || '';
-            const description = props.description || '';
-            const instruction = props.instruction || '';
-            const effective = props.effective ? new Date(props.effective).toLocaleString() : '';
-            const expires = props.expires ? new Date(props.expires).toLocaleString() : '';
-            const areaDesc = props.areaDesc || '';
-            
-            const color = warningsService.getSeverityColor(severity);
-            const icon = warningsService.getCategoryIcon(category);
-            
-            // Create popup content
-            const popupContent = `
-                <div class="warning-popup">
-                    <div class="warning-header" style="border-left: 4px solid ${color};">
-                        <div class="warning-title">
-                            <span class="warning-icon">${icon}</span>
-                            <strong>${event}</strong>
-                        </div>
-                        <div class="warning-severity" style="color: ${color};">
-                            ${severity} - ${category}
-                        </div>
-                    </div>
-                    <div class="warning-body">
-                        ${headline ? `<div class="warning-headline"><strong>${headline}</strong></div>` : ''}
-                        ${areaDesc ? `<div class="warning-area"><i class="fas fa-map-marker-alt"></i> ${areaDesc}</div>` : ''}
-                        ${effective ? `<div class="warning-time"><i class="fas fa-clock"></i> Effective: ${effective}</div>` : ''}
-                        ${expires ? `<div class="warning-time"><i class="fas fa-hourglass-end"></i> Expires: ${expires}</div>` : ''}
-                        ${description ? `<div class="warning-description">${description}</div>` : ''}
-                        ${instruction ? `<div class="warning-instruction"><strong>Instructions:</strong> ${instruction}</div>` : ''}
-                    </div>
-                </div>
-            `;
-            
-            // Handle different geometry types
-            const geom = alert.geometry;
-            if (!geom) return;
-            
-            if (geom.type === 'Point') {
-                const [lon, lat] = geom.coordinates;
-                const marker = L.marker([lat, lon], {
-                    icon: L.divIcon({
-                        className: 'warning-marker',
-                        html: `<div style="
-                            background-color: ${color};
-                            color: white;
-                            border-radius: 50%;
-                            width: 24px;
-                            height: 24px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 14px;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                        ">${icon}</div>`,
-                        iconSize: [24, 24],
-                        iconAnchor: [12, 12]
-                    })
-                });
-                marker.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
-                marker.addTo(warningsLayer);
-            } else if (geom.type === 'Polygon') {
-                const coords = geom.coordinates[0].map(([lon, lat]) => [lat, lon]);
-                const polygon = L.polygon(coords, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.2,
-                    weight: 2,
-                    opacity: 0.7
-                });
-                polygon.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
-                polygon.addTo(warningsLayer);
-            } else if (geom.type === 'MultiPolygon') {
-                geom.coordinates.forEach(polygonCoords => {
-                    const coords = polygonCoords[0].map(([lon, lat]) => [lat, lon]);
-                    const polygon = L.polygon(coords, {
-                        color: color,
-                        fillColor: color,
-                        fillOpacity: 0.2,
-                        weight: 2,
-                        opacity: 0.7
-                    });
-                    polygon.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
-                    polygon.addTo(warningsLayer);
-                });
+            const { phenomena, significance } = getAlertCodes(props);
+            if (significance === 'W') {
+                allWarnings.push(alert);
+                if (shortFusePhenomena.includes(phenomena)) {
+                    shortFuseAlerts.push(alert);
+                }
+            } else if (significance === 'A') {
+                allWatches.push(alert);
             }
         });
+
+        // Clear existing warnings
+        warningsLayer.clearLayers();
+        if (allWarningsLayer) allWarningsLayer.clearLayers();
+        if (allWatchesLayer) allWatchesLayer.clearLayers();
+        
+        if (alerts.length === 0) {
+            updateWarningsCount('warningsCount', 0, showWarnings);
+            updateWarningsCount('allWarningsCount', 0, showAllWarningsLayer);
+            updateWarningsCount('allWatchesCount', 0, showAllWatchesLayer);
+            return; // No active warnings
+        }
+
+        if (showWarnings) {
+            renderAlertsToLayer(shortFuseAlerts, warningsLayer);
+        }
+        if (showAllWarningsLayer) {
+            renderAlertsToLayer(allWarnings, allWarningsLayer);
+        }
+        if (showAllWatchesLayer) {
+            renderAlertsToLayer(allWatches, allWatchesLayer);
+        }
+
+        updateWarningsCount('warningsCount', shortFuseAlerts.length, showWarnings);
+        updateWarningsCount('allWarningsCount', allWarnings.length, showAllWarningsLayer);
+        updateWarningsCount('allWatchesCount', allWatches.length, showAllWatchesLayer);
         
         // Update warnings count if element exists
         const warningsCountEl = document.getElementById('warningsCount');
@@ -679,7 +948,8 @@ async function fetchPNSData() {
             (markerData) => {
                 // Callback to collect marker data instead of adding directly
                 pnsMarkerData.push(markerData);
-            }
+            },
+            updateMagnitudeLegendForReport
         );
         
         // Store all PNS marker data for performance optimization
@@ -705,7 +975,7 @@ async function fetchPNSData() {
 /**
  * Collect PNS reports from visible markers for statistics and counting
  */
-function getPNSReports() {
+function getPNSReports(activeFiltersOverride) {
     if (!filterService) {
         return [];
     }
@@ -715,14 +985,15 @@ function getPNSReports() {
         allFilteredReports,
         map,
         CONFIG,
-        getZoomBasedLimit
+        getZoomBasedLimit,
+        activeFiltersOverride
     );
 }
 
 /**
  * Apply performance optimizations and filter PNS markers
  */
-function filterPNSMarkers() {
+function filterPNSMarkers(activeFiltersOverride) {
     if (!filterService) {
         return;
     }
@@ -736,7 +1007,8 @@ function filterPNSMarkers() {
         CONFIG,
         getZoomBasedLimit,
         updateReportCountWithPNS,
-        updateStatisticsWithPNS
+        updateStatisticsWithPNS,
+        activeFiltersOverride
     );
 }
 
@@ -752,8 +1024,7 @@ function updateReportCountWithPNS() {
         : null;
     
     // Get active filters
-    const activeFilters = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
-        .map(cb => cb.value);
+    const activeFilters = getActiveWeatherFilters();
     const allWeatherTypes = CONFIG.WEATHER_TYPES || [];
     const allFiltersActive = activeFilters.length === allWeatherTypes.length;
     const noFiltersActive = activeFilters.length === 0;
@@ -785,7 +1056,7 @@ function updateReportCountWithPNS() {
     }
     
     // Get displayed PNS reports (after limits)
-    const displayedPNSReports = getPNSReports();
+    const displayedPNSReports = getPNSReports(activeFilters);
     
     // Calculate totals
     const totalReports = allFilteredReports.length + totalPNSReports;
@@ -1043,6 +1314,56 @@ function centerOnMyLocation() {
 // LIVE MODE
 // ============================================================================
 
+function getUtcDateString(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function getUtcTimeString(date) {
+    return date.toISOString().slice(11, 16);
+}
+
+function applyLiveModeRange(hours) {
+    const startDateEl = document.getElementById('startDate');
+    const startHourEl = document.getElementById('startHour');
+    const endDateEl = document.getElementById('endDate');
+    const endHourEl = document.getElementById('endHour');
+    if (!startDateEl || !startHourEl || !endDateEl || !endHourEl) {
+        return;
+    }
+
+    const now = new Date();
+    const start = new Date(now.getTime() - (hours * 60 * 60 * 1000));
+
+    startDateEl.value = getUtcDateString(start);
+    startHourEl.value = getUtcTimeString(start);
+    endDateEl.value = getUtcDateString(now);
+    endHourEl.value = getUtcTimeString(now);
+}
+
+function setLiveModeRange(hours, shouldFetch = true) {
+    if (!Number.isFinite(hours) || hours <= 0) {
+        return;
+    }
+    liveModeRangeHours = hours;
+    const rangeButtons = document.querySelectorAll('.btn-live-range');
+    rangeButtons.forEach(btn => {
+        const btnHours = Number(btn.dataset.hours);
+        const isActive = btnHours === hours;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+
+    if (!liveModeActive) {
+        return;
+    }
+
+    applyLiveModeRange(hours);
+    updateFilterSummary();
+    if (shouldFetch) {
+        fetchLSRData();
+    }
+}
+
 function toggleLiveMode() {
     liveModeActive = !liveModeActive;
     const toggleBtn = document.getElementById('toggleLiveMode');
@@ -1056,15 +1377,38 @@ function toggleLiveMode() {
         if (liveIndicator) liveIndicator.style.display = 'flex';
         if (liveInfo) liveInfo.style.display = 'block';
         
-        // Set date to last 24h and fetch current data
-        setDatePreset('24h');
+        // Set date range for live mode window
+        setLiveModeRange(liveModeRangeHours, false);
         
         // Add radar layer (NWS WMS - will refresh automatically)
         addRadarLayer();
         
         // Enable and fetch warnings
+        const shortFuseToggle = document.getElementById('toggleShortFuseWarnings');
+        if (shortFuseToggle) {
+            shortFuseToggle.checked = true;
+        }
+        const allWarningsToggle = document.getElementById('toggleAllWarnings');
+        if (allWarningsToggle) {
+            allWarningsToggle.checked = false;
+        }
+        const allWatchesToggle = document.getElementById('toggleAllWatches');
+        if (allWatchesToggle) {
+            allWatchesToggle.checked = false;
+        }
         showWarnings = true;
+        showAllWarningsLayer = false;
+        showAllWatchesLayer = false;
+        if (map.hasLayer(allWarningsLayer)) {
+            map.removeLayer(allWarningsLayer);
+        }
+        if (map.hasLayer(allWatchesLayer)) {
+            map.removeLayer(allWatchesLayer);
+        }
+        if (allWarningsLayer) allWarningsLayer.clearLayers();
+        if (allWatchesLayer) allWatchesLayer.clearLayers();
         fetchWarnings();
+        updateWarningsRefreshListeners();
         
         // Start auto-refresh
         startLiveModeRefresh();
@@ -1083,6 +1427,30 @@ function toggleLiveMode() {
         // Clear warnings
         showWarnings = false;
         if (warningsLayer) warningsLayer.clearLayers();
+        if (allWarningsLayer) {
+            allWarningsLayer.clearLayers();
+            if (map.hasLayer(allWarningsLayer)) {
+                map.removeLayer(allWarningsLayer);
+            }
+        }
+        if (allWatchesLayer) {
+            allWatchesLayer.clearLayers();
+            if (map.hasLayer(allWatchesLayer)) {
+                map.removeLayer(allWatchesLayer);
+            }
+        }
+        showAllWarningsLayer = false;
+        showAllWatchesLayer = false;
+        const shortFuseToggle = document.getElementById('toggleShortFuseWarnings');
+        if (shortFuseToggle) shortFuseToggle.checked = false;
+        const allWarningsToggle = document.getElementById('toggleAllWarnings');
+        if (allWarningsToggle) allWarningsToggle.checked = false;
+        const allWatchesToggle = document.getElementById('toggleAllWatches');
+        if (allWatchesToggle) allWatchesToggle.checked = false;
+        updateWarningsCount('warningsCount', 0, false);
+        updateWarningsCount('allWarningsCount', 0, false);
+        updateWarningsCount('allWatchesCount', 0, false);
+        updateWarningsRefreshListeners();
         
         // Stop auto-refresh
         stopLiveModeRefresh();
@@ -1142,6 +1510,7 @@ function loadRadarTimestamps() {
         
         // Create tile layer for this timestamp
         const layer = L.tileLayer(tileUrl, {
+            pane: 'radarPane',
             opacity: 0, // Start hidden
             attribution: 'Radar data &copy; <a href="https://mesonet.agron.iastate.edu">Iowa Environmental Mesonet / NWS</a>',
             maxZoom: 10
@@ -1296,6 +1665,8 @@ function startLiveModeRefresh() {
     }
     
     // Fetch immediately
+    applyLiveModeRange(liveModeRangeHours);
+    updateFilterSummary();
     fetchLSRData();
     if (showWarnings) {
         fetchWarnings();
@@ -1305,6 +1676,8 @@ function startLiveModeRefresh() {
     // Set up interval
     liveModeInterval = setInterval(() => {
         if (liveModeActive) {
+            applyLiveModeRange(liveModeRangeHours);
+            updateFilterSummary();
             fetchLSRData();
             if (showWarnings) {
                 fetchWarnings();
@@ -1313,11 +1686,7 @@ function startLiveModeRefresh() {
         }
     }, interval);
     
-    // Also refresh warnings when map moves/zooms in live mode
-    if (showWarnings) {
-        map.on('moveend', refreshWarningsOnMove);
-        map.on('zoomend', refreshWarningsOnMove);
-    }
+    updateWarningsRefreshListeners();
 }
 
 function stopLiveModeRefresh() {
@@ -1326,15 +1695,11 @@ function stopLiveModeRefresh() {
         liveModeInterval = null;
     }
     
-    // Remove move/zoom listeners
-    if (map) {
-        map.off('moveend', refreshWarningsOnMove);
-        map.off('zoomend', refreshWarningsOnMove);
-    }
+    updateWarningsRefreshListeners();
 }
 
 function refreshWarningsOnMove() {
-    if (liveModeActive && showWarnings) {
+    if (showWarnings || showAllWarningsLayer || showAllWatchesLayer) {
         fetchWarnings();
     }
 }
@@ -1563,6 +1928,7 @@ function clearBounds() {
 function refreshMapWithCurrentFilters() {
     // Use a small timeout to ensure checkbox state is updated
     setTimeout(() => {
+        const activeFilters = getActiveWeatherFilters();
         if (lastGeoJsonData) {
             // Get current bounds from selected region/state
             const regionSelect = document.getElementById('regionSelect');
@@ -1590,12 +1956,74 @@ function refreshMapWithCurrentFilters() {
             }
             
             // Re-display with current filters
-            displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon);
+            displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon, activeFilters);
         }
         
         // Also filter PNS markers (this updates counts and statistics)
-        filterPNSMarkers();
+        filterPNSMarkers(activeFilters);
     }, 10);
+}
+
+// ============================================================================
+// MAGNITUDE LEGEND
+// ============================================================================
+
+function formatMagnitudeValue(value) {
+    if (!Number.isFinite(value)) {
+        return '';
+    }
+    const rounded = Math.round(value * 100) / 100;
+    return Number.isInteger(rounded) ? `${rounded}` : `${rounded}`;
+}
+
+function formatMagnitudeRangeLabel(prevMax, max, unit) {
+    const unitLabel = unit || '';
+    if (max === Infinity) {
+        return `> ${formatMagnitudeValue(prevMax)}${unitLabel}`;
+    }
+    if (prevMax === null) {
+        return `\u2264 ${formatMagnitudeValue(max)}${unitLabel}`;
+    }
+    return `${formatMagnitudeValue(prevMax)}\u2013${formatMagnitudeValue(max)}${unitLabel}`;
+}
+
+function updateMagnitudeLegendForReport(report) {
+    const legendBody = document.getElementById('magnitudeLegend');
+    const legendTitle = document.getElementById('magnitudeLegendTitle');
+    if (!legendBody) {
+        return;
+    }
+
+    const rtype = report?.iconRtype || report?.rtype || '';
+    const category = report?.category || getReportTypeName(rtype, REPORT_TYPE_MAP);
+    const config = ICON_CONFIG[rtype];
+
+    if (legendTitle) {
+        legendTitle.textContent = category ? `Magnitude Scale - ${category}` : 'Magnitude Scale';
+    }
+
+    if (!config || !config.thresholds) {
+        legendBody.innerHTML = `<div class="legend-magnitude-note">No magnitude scale available for this report type.</div>`;
+        return;
+    }
+
+    const unit = getUnitForReportType(rtype);
+    const borderRadius = config.type === 'rect' ? '0%' : '50%';
+    let prevMax = null;
+
+    const itemsHtml = config.thresholds.map((threshold) => {
+        const label = formatMagnitudeRangeLabel(prevMax, threshold.max, unit);
+        prevMax = threshold.max;
+        const swatchBorder = threshold.stroke || '#333';
+        return `
+            <div class="legend-magnitude-item">
+                <div class="legend-magnitude-swatch" style="background-color: ${threshold.fill}; border-color: ${swatchBorder}; border-radius: ${borderRadius};"></div>
+                <div class="legend-magnitude-label">${label}</div>
+            </div>
+        `;
+    }).join('');
+
+    legendBody.innerHTML = itemsHtml;
 }
 
 function initializeUI() {
@@ -1609,11 +2037,28 @@ function initializeUI() {
     document.getElementById('endDate').value = today.toISOString().split('T')[0];
     document.getElementById('endHour').value = '23:59';
     
+    const startHourInput = document.getElementById('startHour');
+    const endHourInput = document.getElementById('endHour');
+    [startHourInput, endHourInput].forEach(input => {
+        if (!input) {
+            return;
+        }
+        input.addEventListener('blur', () => {
+            const normalized = normalizeTimeInputValue(input.value);
+            if (normalized) {
+                input.value = normalized;
+            }
+        });
+    });
+    
     const filterContainer = document.getElementById('weatherTypeFilters');
     const typeIcons = {
         'Rain': 'fa-cloud-rain',
         'Flood': 'fa-water',
+        'Coastal Flooding': 'fa-water',
         'Snow': 'fa-snowflake',
+        'Sleet': 'fa-snowflake',
+        'Freezing Rain': 'fa-cloud-rain',
         'Ice': 'fa-icicles',
         'Hail': 'fa-circle',
         'Wind': 'fa-wind',
@@ -1625,10 +2070,11 @@ function initializeUI() {
     };
     
     CONFIG.WEATHER_TYPES.forEach(type => {
+        const typeId = getWeatherTypeId(type);
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'weather-chip active';
-        chip.id = `filter-${type}`;
+        chip.id = `filter-${typeId}`;
         chip.dataset.type = type;
         chip.innerHTML = `
             <i class="fas ${typeIcons[type] || 'fa-cloud'}"></i>
@@ -1638,7 +2084,7 @@ function initializeUI() {
             e.stopPropagation(); // Prevent event bubbling
             chip.classList.toggle('active');
             // Update hidden checkbox for compatibility
-            const hiddenCheckbox = document.getElementById(`hidden-filter-${type}`);
+            const hiddenCheckbox = document.getElementById(`hidden-filter-${typeId}`);
             if (hiddenCheckbox) {
                 hiddenCheckbox.checked = chip.classList.contains('active');
             }
@@ -1652,7 +2098,7 @@ function initializeUI() {
         // Create hidden checkbox for compatibility with existing code
         const hiddenCheckbox = document.createElement('input');
         hiddenCheckbox.type = 'checkbox';
-        hiddenCheckbox.id = `hidden-filter-${type}`;
+        hiddenCheckbox.id = `hidden-filter-${typeId}`;
         hiddenCheckbox.value = type;
         hiddenCheckbox.checked = true;
         hiddenCheckbox.style.display = 'none';
@@ -1672,14 +2118,18 @@ function initializeUI() {
     const legendContainer = document.getElementById('legend');
     const legendTooltips = {
         'Rain': 'Rainfall reports measured in inches. Color intensity indicates amount.',
-        'Flood': 'Flooding reports. Green indicates flood conditions.',
+        'Flood': 'Flooding reports (non-coastal). Green indicates flood conditions.',
+        'Coastal Flooding': 'Coastal flooding reports. Green indicates coastal flood conditions.',
         'Snow': 'Snowfall reports measured in inches. Color changes with accumulation.',
+        'Sleet': 'Sleet reports measured in inches. Colors show 1-6 inches of accumulation.',
+        'Freezing Rain': 'Freezing rain reports measured in inches. Blue outline distinguishes freezing rain.',
         'Ice': 'Ice accumulation reports. Gray to purple indicates severity.',
         'Hail': 'Hail size reports in inches. Pink to purple indicates larger hail.',
         'Wind': 'Wind speed reports in mph. Yellow to brown indicates stronger winds.',
         'Thunderstorm': 'Thunderstorm wind reports. Yellow to red indicates severity.',
         'Tornado': 'Tornado reports. Red markers indicate confirmed tornadoes.',
         'Tropical': 'Tropical storm/hurricane reports. White to black indicates intensity.',
+        'Temperature': 'Temperature reports in °F. Blue to red indicates cold to hot.',
         'Other': 'Other weather phenomena not categorized above.'
     };
     
@@ -1769,7 +2219,7 @@ function loadStateFromURL() {
         document.querySelectorAll('input[id^="hidden-filter-"]').forEach(cb => {
             const isActive = types.includes(cb.value);
             cb.checked = isActive;
-            const chip = document.getElementById(`filter-${cb.value}`);
+            const chip = document.getElementById(`filter-${getWeatherTypeId(cb.value)}`);
             if (chip) {
                 if (isActive) {
                     chip.classList.add('active');
@@ -2000,6 +2450,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize map first
     map = L.map('map').setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
+
+    // Custom panes to control overlay stacking
+    map.createPane('warningsPane');
+    map.getPane('warningsPane').style.zIndex = 450;
+    map.createPane('radarPane');
+    map.getPane('radarPane').style.zIndex = 550;
+    map.getPane('radarPane').style.pointerEvents = 'none';
     
     // Add base tile layer immediately
     updateMapTileLayer();
@@ -2010,6 +2467,8 @@ document.addEventListener('DOMContentLoaded', () => {
     markersLayer = L.layerGroup().addTo(map);
     pnsLayer = L.layerGroup().addTo(map);
     warningsLayer = L.layerGroup().addTo(map);
+    allWarningsLayer = L.layerGroup();
+    allWatchesLayer = L.layerGroup();
     userArea = L.layerGroup().addTo(map);
     
     // Initialize warnings service
@@ -2098,6 +2557,75 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleLiveModeBtn) {
         toggleLiveModeBtn.addEventListener('click', toggleLiveMode);
     }
+
+    const toggleShortFuseWarnings = document.getElementById('toggleShortFuseWarnings');
+    if (toggleShortFuseWarnings) {
+        toggleShortFuseWarnings.addEventListener('change', (e) => {
+            showWarnings = e.target.checked;
+            if (showWarnings && showAllWarningsLayer) {
+                showAllWarningsLayer = false;
+                const allWarningsToggle = document.getElementById('toggleAllWarnings');
+                if (allWarningsToggle) allWarningsToggle.checked = false;
+                if (map.hasLayer(allWarningsLayer)) {
+                    map.removeLayer(allWarningsLayer);
+                    allWarningsLayer.clearLayers();
+                    updateWarningsCount('allWarningsCount', 0, false);
+                }
+            }
+            if (!showWarnings && warningsLayer) {
+                warningsLayer.clearLayers();
+                updateWarningsCount('warningsCount', 0, false);
+            }
+            fetchWarnings();
+            updateWarningsRefreshListeners();
+        });
+    }
+
+    const toggleAllWarnings = document.getElementById('toggleAllWarnings');
+    if (toggleAllWarnings) {
+        toggleAllWarnings.addEventListener('change', (e) => {
+            showAllWarningsLayer = e.target.checked;
+            if (showAllWarningsLayer) {
+                allWarningsLayer.addTo(map);
+                showWarnings = false;
+                const shortFuseToggle = document.getElementById('toggleShortFuseWarnings');
+                if (shortFuseToggle) shortFuseToggle.checked = false;
+                if (warningsLayer) {
+                    warningsLayer.clearLayers();
+                    updateWarningsCount('warningsCount', 0, false);
+                }
+            } else if (map.hasLayer(allWarningsLayer)) {
+                map.removeLayer(allWarningsLayer);
+                allWarningsLayer.clearLayers();
+                updateWarningsCount('allWarningsCount', 0, false);
+            }
+            fetchWarnings();
+            updateWarningsRefreshListeners();
+        });
+    }
+
+    const toggleAllWatches = document.getElementById('toggleAllWatches');
+    if (toggleAllWatches) {
+        toggleAllWatches.addEventListener('change', (e) => {
+            showAllWatchesLayer = e.target.checked;
+            if (showAllWatchesLayer) {
+                allWatchesLayer.addTo(map);
+            } else if (map.hasLayer(allWatchesLayer)) {
+                map.removeLayer(allWatchesLayer);
+                allWatchesLayer.clearLayers();
+                updateWarningsCount('allWatchesCount', 0, false);
+            }
+            fetchWarnings();
+            updateWarningsRefreshListeners();
+        });
+    }
+
+    document.querySelectorAll('.btn-live-range').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const hours = Number(btn.dataset.hours);
+            setLiveModeRange(hours);
+        });
+    });
     
     // Status toast close
     const closeStatusToastBtn = document.getElementById('closeStatusToast');
@@ -2118,6 +2646,20 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFilterSummary();
         });
     });
+
+    const shiftDateBackwardBtn = document.getElementById('shiftDateBackward');
+    if (shiftDateBackwardBtn) {
+        shiftDateBackwardBtn.addEventListener('click', () => {
+            shiftCustomDateRange(-1);
+        });
+    }
+
+    const shiftDateForwardBtn = document.getElementById('shiftDateForward');
+    if (shiftDateForwardBtn) {
+        shiftDateForwardBtn.addEventListener('click', () => {
+            shiftCustomDateRange(1);
+        });
+    }
     
     // Weather type toggles
     const selectAllTypesBtn = document.getElementById('selectAllTypes');
@@ -2320,8 +2862,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quickFilterSevere').addEventListener('click', () => {
         toggleAllWeatherTypes(false);
         WEATHER_CATEGORIES.SEVERE.forEach(type => {
-            const chip = document.getElementById(`filter-${type}`);
-            const hiddenCheckbox = document.getElementById(`hidden-filter-${type}`);
+            const typeId = getWeatherTypeId(type);
+            const chip = document.getElementById(`filter-${typeId}`);
+            const hiddenCheckbox = document.getElementById(`hidden-filter-${typeId}`);
             if (chip) chip.classList.add('active');
             if (hiddenCheckbox) hiddenCheckbox.checked = true;
         });
@@ -2336,8 +2879,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quickFilterWinter').addEventListener('click', () => {
         toggleAllWeatherTypes(false);
         WEATHER_CATEGORIES.WINTER.forEach(type => {
-            const chip = document.getElementById(`filter-${type}`);
-            const hiddenCheckbox = document.getElementById(`hidden-filter-${type}`);
+            const typeId = getWeatherTypeId(type);
+            const chip = document.getElementById(`filter-${typeId}`);
+            const hiddenCheckbox = document.getElementById(`hidden-filter-${typeId}`);
             if (chip) chip.classList.add('active');
             if (hiddenCheckbox) hiddenCheckbox.checked = true;
         });
@@ -2352,8 +2896,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quickFilterPrecip').addEventListener('click', () => {
         toggleAllWeatherTypes(false);
         WEATHER_CATEGORIES.PRECIP.forEach(type => {
-            const chip = document.getElementById(`filter-${type}`);
-            const hiddenCheckbox = document.getElementById(`hidden-filter-${type}`);
+            const typeId = getWeatherTypeId(type);
+            const chip = document.getElementById(`filter-${typeId}`);
+            const hiddenCheckbox = document.getElementById(`hidden-filter-${typeId}`);
             if (chip) chip.classList.add('active');
             if (hiddenCheckbox) hiddenCheckbox.checked = true;
         });

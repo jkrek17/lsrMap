@@ -177,7 +177,7 @@ Client-side caching is configured in `js/cache/cacheService.js`:
 4. **Quick Filters**: Use preset buttons for:
    - **Severe**: Tornado, Hail, Wind, Thunderstorm
    - **Winter**: Snow, Ice
-   - **Precipitation**: Rain, Flood
+   - **Precipitation**: Rain, Flood, Coastal Flooding
 
 ### PNS (Public Information Statements)
 
@@ -276,7 +276,8 @@ The application fetches data from:
 
 The application supports filtering and displaying the following report types:
 - **Rain** - Precipitation reports
-- **Flood** - Flooding events
+- **Flood** - Flooding events (non-coastal)
+- **Coastal Flooding** - Coastal flood and storm surge events
 - **Snow** - Snowfall and snow accumulation (including snow squalls)
 - **Ice** - Ice accumulation, freezing rain (red border), sleet
 - **Hail** - Hail size reports

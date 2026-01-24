@@ -203,9 +203,12 @@ class StatisticsService {
             'Hail': '<i class="fas fa-circle" style="color: #3b82f6;"></i>',
             'Wind': '<i class="fas fa-wind" style="color: #8b5cf6;"></i>',
             'Snow': '<i class="fas fa-snowflake" style="color: #60a5fa;"></i>',
+            'Sleet': '<i class="fas fa-snowflake" style="color: #38bdf8;"></i>',
+            'Freezing Rain': '<i class="fas fa-cloud-rain" style="color: #2563eb;"></i>',
             'Ice': '<i class="fas fa-icicles" style="color: #34d399;"></i>',
             'Rain': '<i class="fas fa-cloud-rain" style="color: #3b82f6;"></i>',
             'Flood': '<i class="fas fa-water" style="color: #2563eb;"></i>',
+            'Coastal Flooding': '<i class="fas fa-water" style="color: #2563eb;"></i>',
             'Tropical': '<i class="fas fa-hurricane" style="color: #ef4444;"></i>',
             'Other': '<i class="fas fa-cloud" style="color: #6b7280;"></i>'
         };

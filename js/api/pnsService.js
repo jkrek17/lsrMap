@@ -26,13 +26,19 @@ const PNS_TYPE_MAP = {
     // Ice types
     'ICE': { filterType: 'Ice', rtype: '5' },
     'ICING': { filterType: 'Ice', rtype: '5' },
-    'FREEZING_RAIN': { filterType: 'Ice', rtype: '5' },
-    'FREEZING': { filterType: 'Ice', rtype: '5' },
-    'SLEET': { filterType: 'Ice', rtype: '5' },
+    'FREEZING_RAIN': { filterType: 'Freezing Rain', rtype: '5' },
+    'FREEZING': { filterType: 'Freezing Rain', rtype: '5' },
+    'FREEZING_DRIZZLE': { filterType: 'Freezing Rain', rtype: '5' },
+    'FZRA': { filterType: 'Freezing Rain', rtype: '5' },
+    'SLEET': { filterType: 'Sleet', rtype: 's' },
     
     // Flood types
     'FLOOD': { filterType: 'Flood', rtype: 'F' },
     'FLOODING': { filterType: 'Flood', rtype: 'F' },
+    'COASTAL FLOOD': { filterType: 'Coastal Flooding', rtype: 'F' },
+    'COASTAL_FLOOD': { filterType: 'Coastal Flooding', rtype: 'F' },
+    'COASTAL FLOODING': { filterType: 'Coastal Flooding', rtype: 'F' },
+    'COASTAL_FLOODING': { filterType: 'Coastal Flooding', rtype: 'F' },
     
     // Temperature types
     'TEMPERATURE': { filterType: 'Temperature', rtype: 'X' },
@@ -181,7 +187,7 @@ class PNSService {
      * @param {Object} reportTypeMap - Report type mapping object
      * @param {Function} onMarkerCreated - Optional callback when marker is created (receives marker data object)
      */
-    async fetchPNSData(showPNS, pnsLayer, onMarkerClick, getIconFn, getReportTypeNameFn, reportTypeMap, onMarkerCreated) {
+    async fetchPNSData(showPNS, pnsLayer, onMarkerClick, getIconFn, getReportTypeNameFn, reportTypeMap, onMarkerCreated, onPopupOpen) {
         if (!showPNS) {
             if (pnsLayer) {
                 pnsLayer.clearLayers();
@@ -295,7 +301,7 @@ class PNSService {
                                 const rtype = typeMapping.rtype;
                                 
                                 // Get category name for display
-                                const category = getReportTypeNameFn ? getReportTypeNameFn(rtype, reportTypeMap) : filterType;
+                                const category = filterType || (getReportTypeNameFn ? getReportTypeNameFn(rtype, reportTypeMap) : 'Other');
                                 
                                 // Parse magnitude and get unit
                                 const magnitude = parseFloat(entry.magnitude) || 0;
@@ -373,6 +379,9 @@ class PNSService {
                                 
                                 // Handle popup button clicks (after popup is opened and DOM is available)
                                 marker.on('popupopen', function() {
+                                    if (onPopupOpen) {
+                                        onPopupOpen(reportData);
+                                    }
                                     setTimeout(() => {
                                         const popup = this.getPopup();
                                         if (popup && popup.getElement) {

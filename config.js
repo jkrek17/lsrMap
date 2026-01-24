@@ -18,7 +18,7 @@ const CONFIG = {
         lon: -98.5795,
         zoom: 4
     },
-    WEATHER_TYPES: ['Rain', 'Flood', 'Snow', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Tropical', 'Temperature', 'Other'],
+    WEATHER_TYPES: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Sleet', 'Freezing Rain', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Tropical', 'Temperature', 'Other'],
     // State and Region bounding boxes [south, north, east, west]
     STATES: {
         'AL': { name: 'Alabama', bounds: [30.14, 35.01, -84.89, -88.47] },
@@ -102,9 +102,9 @@ const CONFIG = {
 
 // Weather category mappings
 const WEATHER_CATEGORIES = {
-    WINTER: ['Snow', 'Ice'],
+    WINTER: ['Snow', 'Sleet', 'Freezing Rain', 'Ice'],
     SEVERE: ['Tornado', 'Thunderstorm', 'Hail'],
-    PRECIP: ['Rain', 'Snow', 'Ice']
+    PRECIP: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Sleet', 'Freezing Rain', 'Ice']
 };
 
 // Report type mapping: rtype codes -> display names
@@ -112,7 +112,7 @@ const REPORT_TYPE_MAP = {
     "R": "Rain",
     "F": "Flood", "E": "Flood", "v": "Flood",
     "S": "Snow", "Z": "Snow",
-    "5": "Ice", "s": "Ice",
+    "5": "Ice", "s": "Sleet",
     "H": "Hail",
     "O": "Wind", "N": "Wind",
     "D": "Thunderstorm", "G": "Thunderstorm", "M": "Thunderstorm",
@@ -161,18 +161,22 @@ const ICON_CONFIG = {
         type: "circle",
         emoji: "❄️",
         thresholds: [
-            { max: 2, fill: "#e5e8ff", stroke: "black" },
-            { max: 4, fill: "#b2bbff", stroke: "black" },
-            { max: 6, fill: "#6678ff", stroke: "black" },
-            { max: 8, fill: "#1934ff", stroke: "black" },
-            { max: 12, fill: "#001eff", stroke: "black" },
-            { max: 18, fill: "#37007f", stroke: "black" },
-            { max: 24, fill: "#7d19ff", stroke: "black" },
-            { max: 30, fill: "#c900ff", stroke: "black" },
-            { max: 36, fill: "#ff00db", stroke: "black" },
-            { max: 48, fill: "#ff0000", stroke: "black" },
-            { max: 60, fill: "#ff9999", stroke: "black" },
-            { max: Infinity, fill: "#000000", stroke: "white" }
+            { max: 0.1, fill: "#bdd7e7", stroke: "black" },
+            { max: 1, fill: "#6baed6", stroke: "black" },
+            { max: 2, fill: "#3182bd", stroke: "black" },
+            { max: 3, fill: "#005199", stroke: "black" },
+            { max: 4, fill: "#002694", stroke: "black" },
+            { max: 6, fill: "#ffff96", stroke: "black" },
+            { max: 8, fill: "#ffc400", stroke: "black" },
+            { max: 12, fill: "#ff8700", stroke: "black" },
+            { max: 18, fill: "#db1400", stroke: "black" },
+            { max: 24, fill: "#9e0000", stroke: "black" },
+            { max: 30, fill: "#690000", stroke: "black" },
+            { max: 36, fill: "#360000", stroke: "black" },
+            { max: 48, fill: "#ccccff", stroke: "black" },
+            { max: 60, fill: "#9f8cd8", stroke: "black" },
+            { max: 72, fill: "#7c52a5", stroke: "black" },
+            { max: Infinity, fill: "#7c52a5", stroke: "white" }
         ]
     },
     "Z": { // Blizzard
@@ -248,7 +252,7 @@ const ICON_CONFIG = {
     },
     "H": { // Hail
         type: "rect", // Rectangle/square to match severe thunderstorm style
-        emoji: "💎", // Diamond/gem to represent hailstones
+        emoji: "⚪️", // Hailstone
         thresholds: [
             { max: 1, fill: "#FF99FF", stroke: "#333" },
             { max: 2, fill: "#FF3399", stroke: "#333" },
@@ -265,27 +269,34 @@ const ICON_CONFIG = {
             { max: Infinity, fill: "#990099", stroke: "#333" }
         ]
     },
-    "s": { // Ice
+    "s": { // Sleet
         type: "circle",
-        emoji: "🧊",
-        fill: "#93c5fd",
-        stroke: "#fff"
+        emoji: "🌨️",
+        thresholds: [
+            { max: 1, fill: "#ffffd4", stroke: "#333" },
+            { max: 2, fill: "#ffe8a1", stroke: "#333" },
+            { max: 3, fill: "#fed98e", stroke: "#333" },
+            { max: 4, fill: "#fe9929", stroke: "#333" },
+            { max: 5, fill: "#ec7014", stroke: "#333" },
+            { max: 6, fill: "#cc4c02", stroke: "#333" },
+            { max: Infinity, fill: "#8c2d04", stroke: "#333" }
+        ]
     },
     "F": { // Flood
         type: "circle",
-        emoji: "🌊",
+        emoji: "💧",
         fill: "#b2f7b3",
         stroke: "red"
     },
     "E": { // Flood
         type: "circle",
-        emoji: "🌊",
+        emoji: "💧",
         fill: "#b2f7b3",
         stroke: "red"
     },
     "v": { // Flood
         type: "circle",
-        emoji: "🌊",
+        emoji: "💧",
         fill: "#b2f7b3",
         stroke: "red"
     },
@@ -308,10 +319,13 @@ const ICON_CONFIG = {
 
 const LEGEND_ITEMS = [
     { name: 'Rain', color: '#5CBD5F', emoji: '🌧️', shape: 'circle' },
-    { name: 'Flood', color: '#b2f7b3', emoji: '🌊', shape: 'circle' },
-    { name: 'Snow', color: '#e5e8ff', emoji: '❄️', shape: 'circle' },
+    { name: 'Flood', color: '#b2f7b3', emoji: '💧', shape: 'circle' },
+    { name: 'Coastal Flooding', color: '#b2f7b3', emoji: '🌊', shape: 'circle' },
+    { name: 'Snow', color: '#6baed6', emoji: '❄️', shape: 'circle' },
+    { name: 'Sleet', color: '#fed98e', emoji: '🌨️', shape: 'circle' },
+    { name: 'Freezing Rain', color: '#999999', emoji: '🌧️', shape: 'square' },
     { name: 'Ice', color: '#999999', emoji: '🧊', shape: 'circle' },
-    { name: 'Hail', color: '#FF99FF', emoji: '💎', shape: 'square' },
+    { name: 'Hail', color: '#FF99FF', emoji: '⚪️', shape: 'square' },
     { name: 'Wind', color: '#FFEDCC', emoji: '💨', shape: 'circle' },
     { name: 'Thunderstorm', color: 'yellow', emoji: '⛈️', shape: 'square' },
     { name: 'Tornado', color: '#dc2626', emoji: '🌪️', shape: 'square' },

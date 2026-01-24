@@ -7,7 +7,7 @@
     <meta name="keywords" content="NWS, weather, storm reports, tornado, hail, wind, interactive map">
     <meta name="author" content="NWS LSR Map">
     <!-- Content Security Policy: Local Assets -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://api.weather.gov;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mesonet.agron.iastate.edu; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu;">
     <title>NWS Local Storm Reports - Interactive Map</title>
     
     <!-- Leaflet CSS -->
@@ -106,11 +106,19 @@
                             <i class="fas fa-sync-alt fa-spin"></i>
                             <span>Auto-refreshing every <span id="refreshInterval">60</span>s</span>
                         </div>
+                        <div class="live-mode-range">
+                            <span class="live-mode-range-label">Range:</span>
+                            <div class="live-mode-range-buttons">
+                                <button type="button" class="btn btn-secondary btn-live-range active" data-hours="24" aria-pressed="true">
+                                    Last 24h
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-live-range" data-hours="6" aria-pressed="false">
+                                    Last 6h
+                                </button>
+                            </div>
+                        </div>
                         <div class="live-mode-last-update">
                             Last update: <span id="lastUpdateTime">--</span>
-                        </div>
-                        <div class="live-mode-warnings">
-                            Active warnings: <span id="warningsCount" style="display: none;">0</span>
                         </div>
                         <div class="radar-animation-info">
                             <i class="fas fa-video"></i>
@@ -121,11 +129,19 @@
                         <label for="startDate">Start Date:</label>
                         <input type="date" id="startDate" class="form-control">
                         <label for="startHour">Start Hour:</label>
-                        <input type="time" id="startHour" class="form-control">
+                        <input type="text" id="startHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HH:MM" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="24-hour time (HH:MM)">
                         <label for="endDate">End Date:</label>
                         <input type="date" id="endDate" class="form-control">
                         <label for="endHour">End Hour:</label>
-                        <input type="time" id="endHour" class="form-control">
+                        <input type="text" id="endHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HH:MM" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="24-hour time (HH:MM)">
+                        <div class="date-shift-buttons">
+                            <button type="button" id="shiftDateBackward" class="btn btn-secondary" title="Move date range back one day">
+                                <i class="fas fa-chevron-left"></i> -1 Day
+                            </button>
+                            <button type="button" id="shiftDateForward" class="btn btn-secondary" title="Move date range forward one day">
+                                +1 Day <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                     <div id="actionButtons" style="display: none; margin-top: 1rem;">
                         <button id="fetchData" class="btn btn-primary" title="Fetch storm reports for selected date range and filters (Shortcut: G)">
@@ -252,15 +268,44 @@
                             <button type="button" id="quickFilterSevere" class="btn-quick-filter" title="Filter to show only severe weather: Tornado, Thunderstorm, Hail">
                                 <i class="fas fa-exclamation-triangle"></i> Severe
                             </button>
-                            <button type="button" id="quickFilterWinter" class="btn-quick-filter" title="Filter to show only winter weather: Snow, Ice">
+                            <button type="button" id="quickFilterWinter" class="btn-quick-filter" title="Filter to show only winter weather: Snow, Sleet, Freezing Rain, Ice">
                                 <i class="fas fa-snowflake"></i> Winter
                             </button>
-                            <button type="button" id="quickFilterPrecip" class="btn-quick-filter" title="Filter to show only precipitation: Rain, Snow, Ice">
+                            <button type="button" id="quickFilterPrecip" class="btn-quick-filter" title="Filter to show only precipitation: Rain, Flood, Coastal Flooding, Snow, Sleet, Freezing Rain, Ice">
                                 <i class="fas fa-cloud-rain"></i> Precip
                             </button>
                         </div>
                         <div class="weather-type-chips" id="weatherTypeFilters">
                             <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warnings Layers -->
+                <div class="control-group collapsible" data-section="warnings">
+                    <div class="control-group-header">
+                        <h4><i class="fas fa-exclamation-circle"></i> Warnings</h4>
+                        <button type="button" class="collapse-toggle" aria-label="Toggle section">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="control-group-content">
+                        <div class="warnings-layer-toggles">
+                            <label class="warnings-layer-toggle">
+                                <input type="checkbox" id="toggleShortFuseWarnings">
+                                <span>Short-Fuse Warnings</span>
+                                <span id="warningsCount" class="warnings-layer-count">0</span>
+                            </label>
+                            <label class="warnings-layer-toggle">
+                                <input type="checkbox" id="toggleAllWarnings">
+                                <span>All Active Warnings</span>
+                                <span id="allWarningsCount" class="warnings-layer-count">0</span>
+                            </label>
+                            <label class="warnings-layer-toggle">
+                                <input type="checkbox" id="toggleAllWatches">
+                                <span>All Active Watches</span>
+                                <span id="allWatchesCount" class="warnings-layer-count">0</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -358,6 +403,12 @@
                 <div class="section-content">
                     <div id="legend" class="legend">
                         <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div class="legend-magnitude">
+                        <div class="legend-magnitude-title" id="magnitudeLegendTitle">Magnitude Scale</div>
+                        <div id="magnitudeLegend" class="legend-magnitude-body">
+                            <div class="legend-magnitude-empty">Click a report marker to see the magnitude scale.</div>
+                        </div>
                     </div>
                 </div>
             </div>

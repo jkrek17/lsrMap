@@ -28,6 +28,14 @@ export function extractWindSpeed(remark, defaultMag) {
 }
 
 /**
+ * Detect coastal flooding based on type text or remark content
+ */
+export function isCoastalFlood(typetext = '', remark = '') {
+    const combined = `${typetext || ''} ${remark || ''}`.toUpperCase();
+    return combined.includes('COASTAL FLOOD');
+}
+
+/**
  * Get unit for report type
  */
 export function getUnitForReportType(rtype) {

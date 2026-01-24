@@ -7,9 +7,10 @@ import { errorHandler, ERROR_TYPES } from '../errors/errorHandler.js';
 
 class WarningsService {
     constructor() {
-        this.apiBase = 'https://api.weather.gov/alerts/active';
+        this.apiBase = 'https://mesonet.agron.iastate.edu/api/1/vtec/county_zone.geojson';
         this.cache = new Map(); // Simple in-memory cache
         this.cacheTTL = 30000; // 30 seconds
+        this.pending = new Map(); // Deduplicate in-flight requests
     }
 
     /**
@@ -29,38 +30,48 @@ class WarningsService {
             return cached.data;
         }
 
-        try {
-            // Query by point (center of viewport)
-            const url = `${this.apiBase}?point=${centerLat},${centerLon}`;
-            
-            const response = await requestManager.fetchWithRetry(url, {
-                headers: {
-                    'Accept': 'application/geo+json',
-                    'User-Agent': '(LSR Map App, contact@example.com)'
-                }
-            });
+        if (this.pending.has(cacheKey)) {
+            return this.pending.get(cacheKey);
+        }
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+        const fetchPromise = (async () => {
+            try {
+            // Fetch current county/zone warnings (IEM VTEC service)
+            const url = this.apiBase;
+                
+                const response = await requestManager.fetchWithRetry(url, {
+                headers: {
+                    'Accept': 'application/geo+json'
+                }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
             const data = await response.json();
-            
+                
             // Filter alerts to only those within viewport bounds
             const filteredAlerts = this.filterAlertsByBounds(data.features || [], bounds);
-            
-            // Cache the result
-            this.cache.set(cacheKey, {
-                data: filteredAlerts,
-                timestamp: Date.now()
-            });
-            
-            return filteredAlerts;
-        } catch (error) {
-            const handledError = errorHandler.handleError(error, 'Fetch NWS Warnings');
-            errorHandler.log('Failed to fetch NWS warnings', handledError.originalError);
-            return [];
-        }
+                
+                // Cache the result
+                this.cache.set(cacheKey, {
+                    data: filteredAlerts,
+                    timestamp: Date.now()
+                });
+                
+                return filteredAlerts;
+            } catch (error) {
+            const handledError = errorHandler.handleError(error, 'Fetch IEM Warnings');
+            errorHandler.log('Failed to fetch IEM warnings', handledError.originalError);
+                return [];
+            } finally {
+                this.pending.delete(cacheKey);
+            }
+        })();
+
+        this.pending.set(cacheKey, fetchPromise);
+        return fetchPromise;
     }
 
     /**

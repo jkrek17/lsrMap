@@ -61,7 +61,8 @@ class RequestManager {
         
         // Check for duplicate request
         if (this.pendingRequests.has(requestKey)) {
-            return this.pendingRequests.get(requestKey).promise;
+            const pending = this.pendingRequests.get(requestKey);
+            return pending.promise.then(response => response.clone());
         }
 
         const fetchPromise = (async () => {
@@ -106,7 +107,7 @@ class RequestManager {
             promise: fetchPromise
         });
 
-        return fetchPromise;
+        return fetchPromise.then(response => response.clone());
     }
 
     /**

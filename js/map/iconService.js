@@ -2,6 +2,10 @@
 // ICON SERVICE - Map marker icon creation
 // ============================================================================
 
+import { isCoastalFlood } from '../utils/formatters.js';
+
+const iconCache = new Map();
+
 /**
  * Create a generic icon based on configuration
  */
@@ -38,37 +42,97 @@ export function createIcon(config, fillColor, strokeColor, emoji = null, iconSiz
 export function getIconForReport(rtype, magnitude, remark, iconConfig, iconSize, extractWindSpeedFn, typetext = '') {
     const mag = parseFloat(magnitude) || 0;
     const config = iconConfig[rtype];
+    const upperTypetext = (typetext || '').toUpperCase();
+    const isCoastalFloodReport = ['F', 'E', 'v'].includes(rtype) && isCoastalFlood(typetext, remark);
+    const emojiOverride = isCoastalFloodReport ? '🌊' : null;
     
-    // Check if this is freezing rain (differentiate from sleet)
-    const isFreezingRain = typetext && typetext.toUpperCase().includes('FREEZING RAIN');
-    const borderColor = isFreezingRain ? '#dc2626' : null; // Red border for freezing rain
+    // Differentiate freezing rain from ice/sleet
+    const isFreezingRain = upperTypetext.includes('FREEZING RAIN') ||
+        upperTypetext.includes('FREEZING_RAIN') ||
+        upperTypetext.includes('FREEZING DRIZZLE') ||
+        upperTypetext.includes('FREEZING_DRIZZLE') ||
+        upperTypetext.includes('FZRA');
+    const borderColor = isFreezingRain ? '#2563eb' : null; // Blue border for freezing rain
+    const configToUse = isFreezingRain && config
+        ? { ...config, type: 'rect', emoji: '🌧️' }
+        : config;
     
-    if (!config) {
-        return createIcon({ type: "circle" }, "#1f2937", "#fff", "⚠️", iconSize, borderColor);
+    if (!configToUse) {
+        const fallbackKey = `unknown|${iconSize}|${borderColor || 'none'}|circle|⚠️`;
+        if (iconCache.has(fallbackKey)) {
+            return iconCache.get(fallbackKey);
+        }
+        const fallbackIcon = createIcon({ type: "circle" }, "#1f2937", "#fff", "⚠️", iconSize, borderColor);
+        iconCache.set(fallbackKey, fallbackIcon);
+        return fallbackIcon;
     }
+
+    const emojiToUse = emojiOverride || configToUse.emoji;
     
     // Special cases with fixed icons
-    if (config.fill && !config.thresholds) {
-        return createIcon(config, config.fill, config.stroke, config.emoji, iconSize, borderColor);
+    if (configToUse.fill && !configToUse.thresholds) {
+        const fixedKey = [
+            rtype || 'unknown',
+            iconSize,
+            borderColor || 'none',
+            configToUse.type,
+            configToUse.fill,
+            configToUse.stroke,
+            emojiToUse || ''
+        ].join('|');
+        if (iconCache.has(fixedKey)) {
+            return iconCache.get(fixedKey);
+        }
+        const fixedIcon = createIcon(configToUse, configToUse.fill, configToUse.stroke, emojiToUse, iconSize, borderColor);
+        iconCache.set(fixedKey, fixedIcon);
+        return fixedIcon;
     }
     
     // Cases with magnitude-based thresholds
-    if (config.thresholds) {
+    if (configToUse.thresholds) {
         let magnitudeToUse = mag;
         
         // Extract wind speed from remark for tropical storms
-        if (config.extractWindFromRemark) {
+        if (configToUse.extractWindFromRemark) {
             magnitudeToUse = extractWindSpeedFn(remark, mag);
         }
         
         // Find the appropriate threshold
-        for (const threshold of config.thresholds) {
+        for (let i = 0; i < configToUse.thresholds.length; i++) {
+            const threshold = configToUse.thresholds[i];
             if (magnitudeToUse < threshold.max) {
-                return createIcon(config, threshold.fill, threshold.stroke, config.emoji, iconSize, borderColor);
+                const thresholdKey = [
+                    rtype || 'unknown',
+                    iconSize,
+                    borderColor || 'none',
+                    configToUse.type,
+                    emojiToUse || '',
+                    i,
+                    threshold.fill,
+                    threshold.stroke
+                ].join('|');
+                if (iconCache.has(thresholdKey)) {
+                    return iconCache.get(thresholdKey);
+                }
+                const thresholdIcon = createIcon(configToUse, threshold.fill, threshold.stroke, emojiToUse, iconSize, borderColor);
+                iconCache.set(thresholdKey, thresholdIcon);
+                return thresholdIcon;
             }
         }
     }
     
     // Fallback
-    return createIcon(config, "#1f2937", "#fff", "⚠️", iconSize, borderColor);
+    const fallbackKey = [
+        rtype || 'unknown',
+        iconSize,
+        borderColor || 'none',
+        configToUse.type,
+        'fallback'
+    ].join('|');
+    if (iconCache.has(fallbackKey)) {
+        return iconCache.get(fallbackKey);
+    }
+    const fallbackIcon = createIcon(configToUse, "#1f2937", "#fff", "⚠️", iconSize, borderColor);
+    iconCache.set(fallbackKey, fallbackIcon);
+    return fallbackIcon;
 }
