@@ -3,6 +3,10 @@
 // ============================================================================
 
 const CONFIG = {
+    // Set to false to bypass cache.php and always use JSONP directly from Iowa State
+    // Useful when server PHP cannot make outbound HTTP requests (firewall/policy)
+    USE_SERVER_CACHE: false,
+    
     CACHE_DAYS: 30, // Must match api/config.php CACHE_DAYS; used for cache API window
     ICON_SIZE: 28,
     BATCH_SIZE: 200,

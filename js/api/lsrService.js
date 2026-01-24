@@ -96,13 +96,15 @@ class LSRService {
         const includesLast24Hours = hoursDiff <= 24 && endDateTime >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
         
         // Use cache API only if:
-        // 1. Cache is enabled
-        // 2. End date is within last CACHE_DAYS (matches api/config.php and cache.php)
-        // 3. Query does NOT include last 24 hours (cache.php proxies to source anyway)
+        // 1. Server cache is enabled in config (USE_SERVER_CACHE)
+        // 2. Cache is enabled for this request
+        // 3. End date is within last CACHE_DAYS (matches api/config.php and cache.php)
+        // 4. Query does NOT include last 24 hours (cache.php proxies to source anyway)
+        const serverCacheEnabled = typeof CONFIG !== 'undefined' && CONFIG.USE_SERVER_CACHE !== false;
         const cacheDays = (this.config && this.config.CACHE_DAYS) || 30;
         const cacheCutoff = new Date();
         cacheCutoff.setDate(cacheCutoff.getDate() - cacheDays);
-        const shouldUseCache = useCache && endDateTime >= cacheCutoff && !includesLast24Hours;
+        const shouldUseCache = serverCacheEnabled && useCache && endDateTime >= cacheCutoff && !includesLast24Hours;
 
         // Generate cache key
         const cacheKey = cacheService.generateCacheKey({
