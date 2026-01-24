@@ -150,12 +150,14 @@ function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
     $response = fetchUrl($url);
     
     if ($response === false) {
-        http_response_code(502);
+        // Return 200 with useJsonp flag instead of 502
+        // This tells the client to use JSONP fallback without triggering error retries
         echo json_encode([
             'type' => 'FeatureCollection',
             'features' => [],
-            'error' => 'Failed to fetch from source API',
-            'url' => $url
+            'useJsonp' => true,
+            'error' => 'Server cannot proxy to source API - use JSONP fallback',
+            'sourceUrl' => $url
         ]);
         return;
     }

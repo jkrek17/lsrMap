@@ -44,8 +44,13 @@ class RequestManager {
             return true;
         }
         
-        // Retry on 5xx server errors
+        // Retry on 5xx server errors, but NOT 502 Bad Gateway
+        // 502 means upstream is unavailable - retrying won't help, fallback instead
         if (error.originalError && error.originalError.status >= 500) {
+            // Don't retry 502 (Bad Gateway) or 503 (Service Unavailable) - fail fast to trigger fallback
+            if (error.originalError.status === 502 || error.originalError.status === 503) {
+                return false;
+            }
             return true;
         }
         

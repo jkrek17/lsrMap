@@ -142,6 +142,18 @@ class LSRService {
                 }
 
                 data = JSON.parse(text);
+                
+                // Check if server is telling us to use JSONP fallback
+                if (data.useJsonp) {
+                    errorHandler.log('Cache API recommends JSONP fallback', data.error);
+                    return this.fetchFromSourceAPI(startString, endString, cacheKey);
+                }
+                
+                // Check if response has an error but no features
+                if (data.error && (!data.features || data.features.length === 0)) {
+                    errorHandler.log('Cache API error, using JSONP fallback', data.error);
+                    return this.fetchFromSourceAPI(startString, endString, cacheKey);
+                }
             } catch (error) {
                 // Fallback to source API
                 // Silently fall back - this is expected behavior when cache isn't available
