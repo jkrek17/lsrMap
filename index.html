@@ -134,14 +134,14 @@
                         <input type="date" id="endDate" class="form-control">
                         <label for="endHour">End Hour:</label>
                         <input type="text" id="endHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HH:MM" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="24-hour time (HH:MM)">
-                        <div class="date-shift-buttons">
-                            <button type="button" id="shiftDateBackward" class="btn btn-secondary" title="Move date range back one day">
-                                <i class="fas fa-chevron-left"></i> -1 Day
-                            </button>
-                            <button type="button" id="shiftDateForward" class="btn btn-secondary" title="Move date range forward one day">
-                                +1 Day <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
+                    </div>
+                    <div class="date-shift-buttons">
+                        <button type="button" id="shiftDateBackward" class="btn btn-secondary" title="Move date range back one day">
+                            <i class="fas fa-chevron-left"></i> -1 Day
+                        </button>
+                        <button type="button" id="shiftDateForward" class="btn btn-secondary" title="Move date range forward one day">
+                            +1 Day <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
                     <div id="actionButtons" style="display: none; margin-top: 1rem;">
                         <button id="fetchData" class="btn btn-primary" title="Fetch storm reports for selected date range and filters (Shortcut: G)">
@@ -186,8 +186,23 @@
                             <option value="southwest">Southwest</option>
                             <option value="west">West</option>
                             <option value="pacific">Pacific</option>
+                            <option value="pacific_northwest">Pacific Northwest</option>
+                            <option value="southwest_desert">Southwest Desert</option>
+                            <option value="rockies_intermountain">Rockies / Intermountain</option>
+                            <option value="southern_plains">Southern Plains</option>
+                            <option value="northern_plains">Northern Plains</option>
+                            <option value="great_lakes">Great Lakes</option>
+                            <option value="gulf_coast">Gulf Coast</option>
                             <option value="central">Central</option>
                             <option value="east">East</option>
+                        </optgroup>
+                        <optgroup label="NWS Administrative Regions">
+                            <option value="nws_eastern">NWS Eastern</option>
+                            <option value="nws_southern">NWS Southern</option>
+                            <option value="nws_central">NWS Central</option>
+                            <option value="nws_western">NWS Western</option>
+                            <option value="nws_alaska">NWS Alaska</option>
+                            <option value="nws_pacific">NWS Pacific</option>
                         </optgroup>
                         <optgroup label="States">
                             <option value="AL">Alabama</option>
@@ -246,6 +261,10 @@
                     <button type="button" id="clearBounds" class="btn btn-small" style="margin-top: 0.5rem;" title="Clear location filter and reset to full United States">
                         <i class="fas fa-times"></i> Clear Location
                     </button>
+                    <label for="wfoSelect" style="margin-top: 0.75rem;">Select WFO:</label>
+                    <select id="wfoSelect" class="form-control">
+                        <option value="">Select WFO...</option>
+                    </select>
                     </div>
                 </div>
 
@@ -274,6 +293,9 @@
                             <button type="button" id="quickFilterPrecip" class="btn-quick-filter" title="Filter to show only precipitation: Rain, Flood, Coastal Flooding, Snow, Sleet, Freezing Rain, Ice">
                                 <i class="fas fa-cloud-rain"></i> Precip
                             </button>
+                            <button type="button" id="quickFilterTropical" class="btn-quick-filter" title="Filter to show only tropical impacts: Rain, Flood, Coastal Flooding, Tropical">
+                                <i class="fas fa-hurricane"></i> Tropical
+                            </button>
                         </div>
                         <div class="weather-type-chips" id="weatherTypeFilters">
                             <!-- Will be populated by JavaScript -->
@@ -294,17 +316,14 @@
                             <label class="warnings-layer-toggle">
                                 <input type="checkbox" id="toggleShortFuseWarnings">
                                 <span>Short-Fuse Warnings</span>
-                                <span id="warningsCount" class="warnings-layer-count">0</span>
                             </label>
                             <label class="warnings-layer-toggle">
                                 <input type="checkbox" id="toggleAllWarnings">
                                 <span>All Active Warnings</span>
-                                <span id="allWarningsCount" class="warnings-layer-count">0</span>
                             </label>
                             <label class="warnings-layer-toggle">
                                 <input type="checkbox" id="toggleAllWatches">
                                 <span>All Active Watches</span>
-                                <span id="allWatchesCount" class="warnings-layer-count">0</span>
                             </label>
                         </div>
                     </div>
@@ -457,7 +476,7 @@
                         <h4><i class="fas fa-lightbulb"></i> Tips</h4>
                         <ul class="tips-list">
                             <li>Use date presets (24h, 48h, Week) for quick data loading</li>
-                            <li>Quick filters (Severe, Winter) help focus on specific weather types</li>
+                            <li>Quick filters (Severe, Winter, Precip, Tropical) help focus on specific weather types</li>
                             <li>Zoom in to see more markers when limited by performance</li>
                             <li>Click markers to view detailed report information</li>
                             <li>Use the Top 10 Reports feature to see highest magnitude events</li>
@@ -499,7 +518,7 @@
                     <div class="tutorial-step" data-step="4">
                         <div class="tutorial-icon">🌩️</div>
                         <h3>Weather Type Filters</h3>
-                        <p>Filter by specific weather types (Rain, Snow, Hail, Tornado, etc.) or use quick filters like "Severe" or "Winter".</p>
+                        <p>Filter by specific weather types (Rain, Snow, Hail, Tornado, etc.) or use quick filters like "Severe", "Winter", "Precip", or "Tropical".</p>
                         <p><strong>Tip:</strong> Click "All" or "None" buttons to quickly toggle all weather types.</p>
                     </div>
                     <div class="tutorial-step" data-step="5">

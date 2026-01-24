@@ -7,6 +7,13 @@ import { showStatusToast } from '../ui/toastService.js';
 import { createPopupContent } from '../map/popupService.js';
 import { getUnitForReportType } from '../utils/formatters.js';
 
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const logPNS = (...args) => {
+    if (isLocalhost && window.DEBUG_PNS === true) {
+        console.log(...args);
+    }
+};
+
 /**
  * Map PNS metadata type codes to weather type filter names and rtype codes
  * PNS types like "SNOW", "SNOW_24", "RAIN" map to filter types like "Snow", "Rain"

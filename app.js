@@ -44,6 +44,8 @@ let liveModeActive = false;
 let liveModeInterval = null;
 let liveModeRangeHours = 24;
 let lastUpdateTime = null;
+let lastWarningsToastTime = 0;
+let selectedWFO = null;
 let radarTimestamps = [];
 let radarAnimationIndex = 0;
 let radarAnimationInterval = null;
@@ -120,40 +122,42 @@ function updateFilterSummary() {
     
     if (!summary || !summaryDate || !summaryLocation || !summaryTypes) return;
     
-    // Update date summary
-    if (liveModeActive) {
-        summaryDate.textContent = `Live (Last ${liveModeRangeHours}h)`;
+    // Update date summary with exact range
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const startHourEl = document.getElementById('startHour');
+    const endHourEl = document.getElementById('endHour');
+    const startDate = startDateEl?.value || '';
+    const endDate = endDateEl?.value || '';
+    const startHour = normalizeTimeInputValue(startHourEl?.value || '') || (startHourEl?.value || '').trim();
+    const endHour = normalizeTimeInputValue(endHourEl?.value || '') || (endHourEl?.value || '').trim();
+    
+    if (startDate && endDate) {
+        const startSuffix = startHour ? ` ${startHour}` : '';
+        const endSuffix = endHour ? ` ${endHour}` : '';
+        summaryDate.textContent = `${startDate}${startSuffix} to ${endDate}${endSuffix}`;
     } else {
         const activePreset = document.querySelector('.btn-preset.active');
-        if (activePreset) {
-            const preset = activePreset.dataset.preset;
-            if (preset === 'custom') {
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                if (startDate && endDate) {
-                    summaryDate.textContent = `${startDate} to ${endDate}`;
-                } else {
-                    summaryDate.textContent = 'Custom';
-                }
-            } else {
-                summaryDate.textContent = activePreset.textContent.trim();
-            }
-        }
+        summaryDate.textContent = activePreset?.textContent?.trim() || 'Custom';
     }
     
     // Update location summary
-    const regionSelect = document.getElementById('regionSelect');
-    const selectedRegion = regionSelect.value;
-    if (selectedRegion) {
-        if (CONFIG.STATES[selectedRegion]) {
-            summaryLocation.textContent = CONFIG.STATES[selectedRegion].name;
-        } else if (CONFIG.REGIONS[selectedRegion]) {
-            summaryLocation.textContent = CONFIG.REGIONS[selectedRegion].name;
-        } else {
-            summaryLocation.textContent = selectedRegion;
-        }
+    if (selectedWFO) {
+        summaryLocation.textContent = getWfoDisplayName(selectedWFO);
     } else {
-        summaryLocation.textContent = 'All US';
+        const regionSelect = document.getElementById('regionSelect');
+        const selectedRegion = regionSelect.value;
+        if (selectedRegion) {
+            if (CONFIG.STATES[selectedRegion]) {
+                summaryLocation.textContent = CONFIG.STATES[selectedRegion].name;
+            } else if (CONFIG.REGIONS[selectedRegion]) {
+                summaryLocation.textContent = CONFIG.REGIONS[selectedRegion].name;
+            } else {
+                summaryLocation.textContent = selectedRegion;
+            }
+        } else {
+            summaryLocation.textContent = 'All US';
+        }
     }
     
     // Update types summary
@@ -396,6 +400,7 @@ let allFilteredReports = [];
 let lastGeoJsonData = null; // Store last fetched data for viewport refresh
 let normalizedLsrReports = [];
 let lastNormalizedGeoJson = null;
+let lastNormalizationStats = null;
 let topReportsByType = {}; // Store top 10 reports by type
 let allPNSReports = []; // All PNS reports (filtered and processed for performance)
 
@@ -407,6 +412,12 @@ appState.set('topReportsByType', topReportsByType);
 function normalizeLSRReports(geoJsonData) {
     const features = geoJsonData?.features || [];
     const normalized = [];
+    const stats = {
+        total: features.length,
+        invalidCoords: 0,
+        invalidSamples: []
+    };
+    const invalidSampleLimit = 50;
 
     for (const feature of features) {
         const props = feature.properties || {};
@@ -414,6 +425,18 @@ function normalizeLSRReports(geoJsonData) {
         const lon = parseFloat(props.lon);
 
         if (isNaN(lat) || isNaN(lon)) {
+            stats.invalidCoords++;
+            if (stats.invalidSamples.length < invalidSampleLimit) {
+                stats.invalidSamples.push({
+                    type: props.typetext || getReportTypeName(props.type || props.rtype || '', REPORT_TYPE_MAP),
+                    rtype: props.type || props.rtype || '',
+                    magnitude: props.magnitude || 0,
+                    location: [props.city, props.st || props.state].filter(Boolean).join(', '),
+                    time: props.valid || '',
+                    lat: props.lat,
+                    lon: props.lon
+                });
+            }
             continue;
         }
 
@@ -529,6 +552,13 @@ function normalizeLSRReports(geoJsonData) {
         });
     }
 
+    lastNormalizationStats = {
+        total: stats.total,
+        invalidCoords: stats.invalidCoords,
+        normalized: normalized.length,
+        invalidSamples: stats.invalidSamples
+    };
+
     return normalized;
 }
 
@@ -579,23 +609,68 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         viewportBounds = map.getBounds();
     }
     
+    const shouldLogMissingMarkers = isLocalhost;
+    const includeAllMissing = shouldLogMissingMarkers && window.DEBUG_LSR_MISSING === true;
+    const missingLogLimit = 50;
+    const missingCounts = includeAllMissing ? {
+        bounds: 0,
+        viewport: 0,
+        filter: 0
+    } : null;
+    const missingSamples = includeAllMissing ? {
+        bounds: [],
+        viewport: [],
+        filter: []
+    } : null;
+    const formatMissingReport = (report) => ({
+        type: report.filterType,
+        rtype: report.rtype,
+        magnitude: report.magnitude,
+        location: report.location,
+        time: report.time
+    });
+    const addMissingSample = (bucket, report) => {
+        if (!shouldLogMissingMarkers || !missingSamples) {
+            return;
+        }
+        if (missingSamples[bucket].length < missingLogLimit) {
+            missingSamples[bucket].push(formatMissingReport(report));
+        }
+    };
+
     const filterStart = isLocalhost ? performance.now() : 0;
     for (const report of normalizedLsrReports) {
         // Filter by bounding box
         // Note: For US, west is more negative than east, so lon must be between west and east
         if (report.lat < south || report.lat > north) {
+            if (missingCounts) {
+                missingCounts.bounds++;
+                addMissingSample('bounds', report);
+            }
             continue;
         }
         if (report.lon < west || report.lon > east) {
+            if (missingCounts) {
+                missingCounts.bounds++;
+                addMissingSample('bounds', report);
+            }
             continue;
         }
         
         // Filter by viewport if enabled and zoomed in
         if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+            if (missingCounts) {
+                missingCounts.viewport++;
+                addMissingSample('viewport', report);
+            }
             continue;
         }
         
         if (!activeFilters.includes(report.filterType)) {
+            if (missingCounts) {
+                missingCounts.filter++;
+                addMissingSample('filter', report);
+            }
             continue;
         }
         
@@ -638,6 +713,45 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         hiddenCount = allFilteredReports.length - CONFIG.MAX_MARKERS;
     }
     
+    if (shouldLogMissingMarkers) {
+        const invalidCoords = lastNormalizationStats?.invalidCoords || 0;
+        const limitedCount = allFilteredReports.length - reportsToDisplay.length;
+        const missingTotal = invalidCoords + limitedCount;
+        if (missingTotal > 0) {
+            console.log('[LSR] Reports with marker issues:', {
+                total: missingTotal,
+                invalidCoords,
+                limited: limitedCount
+            });
+            const limitedSamples = limitedCount > 0
+                ? allFilteredReports.slice(reportsToDisplay.length, reportsToDisplay.length + missingLogLimit)
+                    .map(formatMissingReport)
+                : [];
+            if (invalidCoords > 0 || limitedCount > 0) {
+                console.log('[LSR] Issue samples:', {
+                    invalidCoords: lastNormalizationStats?.invalidSamples || [],
+                    limited: limitedSamples
+                });
+            }
+            if (includeAllMissing && missingCounts && missingSamples) {
+                const missingTotalAll = missingTotal + missingCounts.bounds + missingCounts.viewport + missingCounts.filter;
+                console.log('[LSR] Full missing breakdown:', {
+                    total: missingTotalAll,
+                    invalidCoords,
+                    outOfBounds: missingCounts.bounds,
+                    outOfViewport: missingCounts.viewport,
+                    filteredOut: missingCounts.filter,
+                    limited: limitedCount
+                });
+                console.log('[LSR] Full missing samples:', {
+                    outOfBounds: missingSamples.bounds,
+                    outOfViewport: missingSamples.viewport,
+                    filteredOut: missingSamples.filter
+                });
+            }
+        }
+    }
+
     updateReportCount(reportsToDisplay.length, allFilteredReports.length, hiddenCount);
     if (isLocalhost && (normalizeDuration || filterDuration)) {
         console.log(`[Perf] LSR normalize ${normalizeDuration.toFixed(1)}ms, filter ${filterDuration.toFixed(1)}ms, filtered ${allFilteredReports.length}/${normalizedLsrReports.length}`);
@@ -831,6 +945,102 @@ function updateWarningsRefreshListeners() {
     }
 }
 
+function showWarningsLoadingToast() {
+    const now = Date.now();
+    if (now - lastWarningsToastTime < 15000) {
+        return;
+    }
+    const parts = [];
+    if (showWarnings) parts.push('short-fuse warnings');
+    if (showAllWarningsLayer) parts.push('all warnings');
+    if (showAllWatchesLayer) parts.push('watches');
+    if (parts.length === 0) {
+        return;
+    }
+    lastWarningsToastTime = now;
+    const label = parts.length > 1 ? parts.join(', ') : parts[0];
+    showStatusToast(`Loading ${label}...`, 'loading');
+}
+
+function getWfoDisplayName(code) {
+    if (!code) {
+        return '';
+    }
+    const shortCode = code.startsWith('K') ? code.slice(1) : code;
+    return (CONFIG.WFO_NAMES && CONFIG.WFO_NAMES[shortCode]) ? CONFIG.WFO_NAMES[shortCode] : code;
+}
+
+function getNwsRegionKeyForCoord(lat, lon) {
+    const keys = CONFIG.NWS_ADMIN_REGION_KEYS || [];
+    for (const key of keys) {
+        const region = CONFIG.REGIONS[key];
+        if (!region || !region.bounds) {
+            continue;
+        }
+        const [south, north, east, west] = region.bounds;
+        if (lat >= south && lat <= north && lon >= west && lon <= east) {
+            return key;
+        }
+    }
+    return null;
+}
+
+function buildWfoSelectOptions() {
+    const wfoSelect = document.getElementById('wfoSelect');
+    if (!wfoSelect || !CONFIG.WFO_NAMES) {
+        return;
+    }
+
+    wfoSelect.innerHTML = '<option value="">Select WFO...</option>';
+    const regionKeys = CONFIG.NWS_ADMIN_REGION_KEYS || [];
+    const regionGroups = {};
+    const unassigned = [];
+
+    Object.keys(CONFIG.WFO_NAMES).forEach((code) => {
+        const regionKey = CONFIG.WFO_REGION_MAP?.[code];
+        if (!regionKey) {
+            unassigned.push(code);
+            return;
+        }
+        if (!regionGroups[regionKey]) {
+            regionGroups[regionKey] = [];
+        }
+        regionGroups[regionKey].push(code);
+    });
+
+    regionKeys.forEach((regionKey) => {
+        const offices = regionGroups[regionKey];
+        if (!offices || offices.length === 0) {
+            return;
+        }
+        offices.sort();
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = CONFIG.REGIONS[regionKey]?.name || regionKey;
+        offices.forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = getWfoDisplayName(code);
+            option.title = code;
+            optgroup.appendChild(option);
+        });
+        wfoSelect.appendChild(optgroup);
+    });
+
+    if (unassigned.length > 0) {
+        unassigned.sort();
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = 'Unassigned';
+        unassigned.forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = getWfoDisplayName(code);
+            option.title = code;
+            optgroup.appendChild(option);
+        });
+        wfoSelect.appendChild(optgroup);
+    }
+}
+
 /**
  * Fetch active NWS warnings/alerts and display on map
  */
@@ -840,6 +1050,7 @@ async function fetchWarnings() {
     }
     
     try {
+        showWarningsLoadingToast();
         const bounds = map.getBounds();
         const alerts = await warningsService.fetchActiveWarnings({
             north: bounds.getNorth(),
@@ -1912,6 +2123,11 @@ function clearBounds() {
     if (regionSelect) {
         regionSelect.value = '';
     }
+    const wfoSelect = document.getElementById('wfoSelect');
+    if (wfoSelect) {
+        wfoSelect.value = '';
+    }
+    selectedWFO = null;
     userArea.clearLayers();
     disableBoundsClickMode();
     
@@ -2475,9 +2691,14 @@ document.addEventListener('DOMContentLoaded', () => {
     warningsService = new WarningsService();
     
     // Initialize services
+    if (!pnsService) {
+        pnsService = new PNSService();
+    }
     statisticsService = new StatisticsService();
     reportCountService = new ReportCountService();
     filterService = new FilterService();
+
+    buildWfoSelectOptions();
 
     // Initialize radar layer (will be added when live mode is enabled)
     radarLayer = null;
@@ -2755,6 +2976,11 @@ document.addEventListener('DOMContentLoaded', () => {
         regionSelect.addEventListener('change', (e) => {
         const selectedRegion = e.target.value;
         userArea.clearLayers();
+        const wfoSelect = document.getElementById('wfoSelect');
+        if (wfoSelect) {
+            wfoSelect.value = '';
+        }
+        selectedWFO = null;
         
         if (selectedRegion) {
             let bounds;
@@ -2790,6 +3016,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateFilterSummary();
             }, 300);
         }
+        });
+    }
+
+    const wfoSelect = document.getElementById('wfoSelect');
+    if (wfoSelect) {
+        wfoSelect.addEventListener('change', (e) => {
+            const code = e.target.value;
+            selectedWFO = code || null;
+            userArea.clearLayers();
+            const regionSelectEl = document.getElementById('regionSelect');
+            if (regionSelectEl) {
+                regionSelectEl.value = '';
+            }
+            if (!code) {
+                updateFilterSummary();
+                return;
+            }
+            const wfoKey = code.startsWith('K') ? code : `K${code}`;
+            const coords = pnsService?.wfoCoords?.[code] || pnsService?.wfoCoords?.[wfoKey];
+            if (!coords) {
+                const regionKey = CONFIG.WFO_REGION_MAP?.[code];
+                const region = regionKey ? CONFIG.REGIONS[regionKey] : null;
+                if (region) {
+                    const [south, north, east, west] = region.bounds;
+                    const centerLat = (south + north) / 2;
+                    const centerLon = (east + west) / 2;
+                    map.setView([centerLat, centerLon], 6);
+                    showStatusToast('WFO coordinates not available; showing region bounds', 'info');
+                    setTimeout(() => {
+                        fetchLSRData();
+                        updateFilterSummary();
+                    }, 300);
+                    return;
+                }
+                showStatusToast('WFO coordinates not available', 'error');
+                return;
+            }
+            map.setView([coords[0], coords[1]], 7);
+            setTimeout(() => {
+                fetchLSRData();
+                updateFilterSummary();
+            }, 300);
         });
     }
     
@@ -2896,6 +3164,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quickFilterPrecip').addEventListener('click', () => {
         toggleAllWeatherTypes(false);
         WEATHER_CATEGORIES.PRECIP.forEach(type => {
+            const typeId = getWeatherTypeId(type);
+            const chip = document.getElementById(`filter-${typeId}`);
+            const hiddenCheckbox = document.getElementById(`hidden-filter-${typeId}`);
+            if (chip) chip.classList.add('active');
+            if (hiddenCheckbox) hiddenCheckbox.checked = true;
+        });
+        updateFilterSummary();
+        if (document.querySelector('.btn-preset.active')?.dataset.preset !== 'custom') {
+            fetchLSRData();
+        } else {
+            refreshMapWithCurrentFilters();
+        }
+    });
+    
+    document.getElementById('quickFilterTropical').addEventListener('click', () => {
+        toggleAllWeatherTypes(false);
+        WEATHER_CATEGORIES.TROPICAL.forEach(type => {
             const typeId = getWeatherTypeId(type);
             const chip = document.getElementById(`filter-${typeId}`);
             const hiddenCheckbox = document.getElementById(`hidden-filter-${typeId}`);

@@ -178,6 +178,7 @@ Client-side caching is configured in `js/cache/cacheService.js`:
    - **Severe**: Tornado, Hail, Wind, Thunderstorm
    - **Winter**: Snow, Ice
    - **Precipitation**: Rain, Flood, Coastal Flooding
+   - **Tropical**: Rain, Flood, Coastal Flooding, Tropical
 
 ### PNS (Public Information Statements)
 
