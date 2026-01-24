@@ -10,3 +10,21 @@
     AddType application/json .json
     AddType application/vnd.geo+json .geojson
 </IfModule>
+
+# Fix ERR_CONTENT_LENGTH_MISMATCH errors
+# This occurs when server compression creates a mismatch between Content-Length header and actual body size
+<IfModule mod_deflate.c>
+    # Disable compression for JS files to prevent Content-Length mismatch
+    # The server may be double-compressing or incorrectly calculating Content-Length
+    SetEnvIfNoCase Request_URI "\.js$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.css$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.json$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.geojson$" no-gzip dont-vary
+</IfModule>
+
+# Alternative: If you want compression but need to fix the header issue
+# Uncomment below and comment out the SetEnvIfNoCase lines above
+# <IfModule mod_headers.c>
+#     # Unset Content-Length for compressed responses (forces chunked encoding)
+#     Header unset Content-Length
+# </IfModule>
