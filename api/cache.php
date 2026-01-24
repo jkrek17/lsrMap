@@ -5,60 +5,83 @@
  * Falls back to source API for older dates or missing cache
  */
 
+// Error handling - convert errors to exceptions for cleaner handling
+set_error_handler(function($severity, $message, $file, $line) {
+    // Don't throw for suppressed errors (@)
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 
-require_once 'config.php';
+try {
+    require_once 'config.php';
 
-// Get parameters
-$startDate = isset($_GET['start']) ? $_GET['start'] : null;
-$startHour = isset($_GET['startHour']) ? $_GET['startHour'] : '00:00';
-$endDate = isset($_GET['end']) ? $_GET['end'] : null;
-$endHour = isset($_GET['endHour']) ? $_GET['endHour'] : '23:59';
+    // Get parameters with sanitization
+    $startDate = isset($_GET['start']) ? preg_replace('/[^0-9\-]/', '', $_GET['start']) : null;
+    $startHour = isset($_GET['startHour']) ? preg_replace('/[^0-9:]/', '', $_GET['startHour']) : '00:00';
+    $endDate = isset($_GET['end']) ? preg_replace('/[^0-9\-]/', '', $_GET['end']) : null;
+    $endHour = isset($_GET['endHour']) ? preg_replace('/[^0-9:]/', '', $_GET['endHour']) : '23:59';
 
-// Default to last 24 hours if not specified
-if (!$startDate || !$endDate) {
-    $endDate = date('Y-m-d');
-    $endHour = '23:59';
-    $startDateObj = new DateTime($endDate);
-    $startDateObj->modify('-1 day');
-    $startDate = $startDateObj->format('Y-m-d');
-    $startHour = '00:00';
-}
+    // Default to last 24 hours if not specified
+    if (!$startDate || !$endDate) {
+        $endDate = date('Y-m-d');
+        $endHour = '23:59';
+        $startDateObj = new DateTime($endDate);
+        $startDateObj->modify('-1 day');
+        $startDate = $startDateObj->format('Y-m-d');
+        $startHour = '00:00';
+    }
 
-// Check if this is a "last 24 hours" query (real-time data needed)
-$now = new DateTime();
-$endDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $endDate . ' ' . $endHour . ':00');
-$startDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $startDate . ' ' . $startHour . ':00');
+    // Parse date/time with validation
+    $now = new DateTime();
+    $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $endDate . ' ' . $endHour);
+    $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $startDate . ' ' . $startHour);
 
-// Calculate hours difference
-$hoursDiff = ($now->getTimestamp() - $startDateTime->getTimestamp()) / 3600;
+    // Validate date parsing
+    if (!$endDateTime || !$startDateTime) {
+        throw new Exception('Invalid date format');
+    }
 
-// If query is within last 24 hours, fetch from source API for real-time data
-if ($hoursDiff <= 24 && $endDateTime >= (clone $now)->modify('-1 day')) {
-    serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
-    exit;
-}
+    // Calculate hours difference
+    $hoursDiff = ($now->getTimestamp() - $startDateTime->getTimestamp()) / 3600;
 
-// Check if query is within cacheable range (last 30 days, but not last 24 hours)
-$cacheCutoff = new DateTime();
-$cacheCutoff->modify('-' . CACHE_DAYS . ' days');
+    // If query is within last 24 hours, fetch from source API for real-time data
+    if ($hoursDiff <= 24 && $endDateTime >= (clone $now)->modify('-1 day')) {
+        serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
+        exit;
+    }
 
-// If query is older than cache period, fall back to source API
-if ($endDateTime < $cacheCutoff) {
-    serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
-    exit;
-}
+    // Check if query is within cacheable range (last 30 days, but not last 24 hours)
+    $cacheCutoff = new DateTime();
+    $cacheCutoff->modify('-' . CACHE_DAYS . ' days');
 
-// Try to serve from cache
-$cachedData = loadFromCache($startDate, $endDate);
+    // If query is older than cache period, fall back to source API
+    if ($endDateTime < $cacheCutoff) {
+        serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
+        exit;
+    }
 
-if ($cachedData !== null) {
-    echo json_encode($cachedData);
-} else {
-    // Fallback to source API if cache is missing
-    serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
+    // Try to serve from cache
+    $cachedData = loadFromCache($startDate, $endDate);
+
+    if ($cachedData !== null) {
+        echo json_encode($cachedData);
+    } else {
+        // Fallback to source API if cache is missing
+        serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'type' => 'FeatureCollection',
+        'features' => [],
+        'error' => 'Server error: ' . $e->getMessage()
+    ]);
 }
 
 /**
@@ -115,21 +138,24 @@ function loadFromCache($startDate, $endDate) {
  * Serve data from source API (fallback)
  */
 function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
-    // Format dates for API (YYYYMMDDHH)
-    $startFormatted = str_replace(['-', ':'], '', $startDate . $startHour) . '00';
-    $endFormatted = str_replace(['-', ':'], '', $endDate . $endHour) . '59';
+    // Format dates for API (YYYYMMDDHHMM - 12 characters)
+    // Input: $startDate = "2026-01-17", $startHour = "00:00"
+    // Output: "202601170000"
+    $startFormatted = str_replace(['-', ':'], '', $startDate . $startHour);
+    $endFormatted = str_replace(['-', ':'], '', $endDate . $endHour);
     
     $url = SOURCE_API_URL . '?sts=' . $startFormatted . '&ets=' . $endFormatted . '&wfos=';
     
-    // Fetch from source API
-    $response = @file_get_contents($url);
+    // Try to fetch using cURL first (more reliable), then fall back to file_get_contents
+    $response = fetchUrl($url);
     
     if ($response === false) {
-        http_response_code(500);
+        http_response_code(502);
         echo json_encode([
             'type' => 'FeatureCollection',
             'features' => [],
-            'error' => 'Failed to fetch from source API'
+            'error' => 'Failed to fetch from source API',
+            'url' => $url
         ]);
         return;
     }
@@ -141,5 +167,53 @@ function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
     } else {
         echo $response;
     }
+}
+
+/**
+ * Fetch URL content using cURL (preferred) or file_get_contents (fallback)
+ */
+function fetchUrl($url) {
+    // Try cURL first (more reliable, doesn't require allow_url_fopen)
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_USERAGENT => 'LSR-Cache-API/1.0'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($response !== false && $httpCode >= 200 && $httpCode < 300) {
+            return $response;
+        }
+        
+        // Log cURL error for debugging but continue to fallback
+        error_log("cURL fetch failed: $error (HTTP $httpCode)");
+    }
+    
+    // Fallback to file_get_contents
+    if (ini_get('allow_url_fopen')) {
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 30,
+                'ignore_errors' => false,
+                'user_agent' => 'LSR-Cache-API/1.0'
+            ]
+        ]);
+        
+        $response = @file_get_contents($url, false, $context);
+        if ($response !== false) {
+            return $response;
+        }
+    }
+    
+    return false;
 }
 ?>
