@@ -28,10 +28,16 @@ This caching system stores the last 30 days of NWS Local Storm Reports data in d
    chmod 755 data/
    ```
 
-2. **Initial cache population:**
-   Run the update script to fetch the last 30 days of data:
+2. **Initial cache population (e.g. one month of data):**
+   From the project root, run:
    ```bash
    php api/update-cache.php --all
+   ```
+   This fetches the last **30 days** (or `CACHE_DAYS` in `api/config.php`) and writes one GeoJSON file per day under `data/`.
+
+   To fetch an explicit number of days:
+   ```bash
+   php api/update-cache.php --days 30
    ```
 
 3. **Set up cron jobs:**
@@ -90,6 +96,34 @@ This caching system stores the last 30 days of NWS Local Storm Reports data in d
    curl "http://localhost/api/cache.php?start=2024-01-20&end=2024-01-21"
    ```
 
+## Troubleshooting
+
+### "Having to fall back to JSONP" / cache API not used
+
+The app uses the **cache API** (`api/cache.php`) when the query is within the last 30 days and not "last 24h". The cache API either serves from `data/*.geojson` or **proxies** to the Iowa State Mesonet API. If the server **cannot proxy** (no cURL, `allow_url_fopen` off, firewall, SSL issues), `cache.php` returns `useJsonp: true` and the **browser** fetches directly from Mesonet via JSONP.
+
+**To reduce JSONP fallback:**
+
+1. **Populate the cache** so 2–30 day queries are served from files (no proxy):
+   ```bash
+   php api/update-cache.php --all
+   # or: php api/update-cache.php --days 30
+   ```
+
+2. **Ensure the server can proxy** when cache files are missing or for "last 24h":
+   - **cURL:** `php -r "var_dump(function_exists('curl_init'));"` → should be `true`.
+   - **allow_url_fopen:** if cURL is missing, `php -r "var_dump(ini_get('allow_url_fopen'));"` should be `1` or `On`.
+   - **Connectivity:** from the server, `curl -sI "https://mesonet.agron.iastate.edu/geojson/lsr.php?sts=202601010000&ets=202601012359&wfos="` should return `200`.
+
+3. **Confirm `api/cache.php` is reachable** from the app (correct path, PHP executed, no 404/500). If the cache API fails, the app falls back to JSONP.
+
+4. **Subdirectory deploy:** If the app lives in e.g. `/lsr/`, the app requests `api/cache.php` relative to the page, so the API must be at `/lsr/api/cache.php`.
+
+### Cache API returns HTML or "PHP not executing"
+
+- Verify the web server runs PHP for `api/*.php` and that the document root (or subdirectory) contains the `api/` folder.
+- Check file permissions: `api/` 755, `data/` 755 or 777 if PHP writes cache files there.
+
 ## Notes
 
 - Cache files are in GeoJSON format (same as source API)
@@ -97,3 +131,4 @@ This caching system stores the last 30 days of NWS Local Storm Reports data in d
 - Automatic cleanup maintains 30-day rolling window
 - Storage: ~12 MB for 30 days (~13,000 reports, ~434 reports/day average)
 - Frontend automatically uses cache for last 30 days, falls back to source API for older dates
+- `update-cache.php` fetches from the Mesonet API via **cURL** (preferred) or **allow_url_fopen**. Ensure at least one is available on the server when running `--all` or `--days N`.

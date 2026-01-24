@@ -3,6 +3,7 @@
 // ============================================================================
 
 const CONFIG = {
+    CACHE_DAYS: 30, // Must match api/config.php CACHE_DAYS; used for cache API window
     ICON_SIZE: 28,
     BATCH_SIZE: 200,
     AUTO_REFRESH_INTERVAL: 300000, // 5 minutes
