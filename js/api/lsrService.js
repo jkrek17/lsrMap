@@ -19,7 +19,10 @@ class LSRService {
      */
     jsonp(url, timeout = 30000) {
         return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            // Use crypto.getRandomValues() for secure random callback name generation
+            const randomArray = new Uint32Array(1);
+            crypto.getRandomValues(randomArray);
+            const callbackName = 'jsonp_callback_' + randomArray[0];
             const script = document.createElement('script');
             let timeoutId;
 

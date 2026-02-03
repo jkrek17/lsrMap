@@ -66,8 +66,11 @@ class RequestManager {
             this.retryConfig.baseDelay * Math.pow(2, attempt),
             this.retryConfig.maxDelay
         );
-        // Add jitter
-        return delay + Math.random() * 1000;
+        // Add jitter using crypto.getRandomValues() for secure randomness
+        const randomArray = new Uint32Array(1);
+        crypto.getRandomValues(randomArray);
+        const jitter = (randomArray[0] / 0xFFFFFFFF) * 1000; // Normalize to 0-1000ms
+        return delay + jitter;
     }
 
     /**
