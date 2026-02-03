@@ -12,6 +12,43 @@ class RequestManager {
             baseDelay: 1000, // 1 second
             maxDelay: 10000 // 10 seconds
         };
+        
+        // SSRF Protection: Allowlist of permitted URL patterns
+        // Only these patterns are allowed for fetch requests
+        this.allowedUrlPatterns = [
+            // Local API endpoints (relative URLs)
+            /^api\/cache\.php(\?.*)?$/,
+            /^api\/cleanup-cache\.php(\?.*)?$/,
+            /^api\/update-cache\.php(\?.*)?$/,
+            // Local data files
+            /^data\/[a-zA-Z0-9_-]+\.geojson$/,
+            // Trusted external APIs
+            /^https:\/\/mesonet\.agron\.iastate\.edu\/geojson\/lsr\.php(\?.*)?$/, // Iowa State Mesonet
+            /^https:\/\/api\.weather\.gov\/products(\/types\/PNS|\/[A-Za-z0-9-]+)?$/ // NWS Weather API
+        ];
+    }
+
+    /**
+     * Validate URL against allowlist to prevent SSRF attacks
+     * @param {string} url - The URL to validate
+     * @returns {boolean} - True if URL is allowed, false otherwise
+     */
+    isUrlAllowed(url) {
+        // Normalize URL - remove leading slash if present for relative URLs
+        const normalizedUrl = url.startsWith('/') ? url.slice(1) : url;
+        
+        // Check against allowlist patterns
+        return this.allowedUrlPatterns.some(pattern => pattern.test(normalizedUrl));
+    }
+
+    /**
+     * Add a URL pattern to the allowlist
+     * @param {RegExp} pattern - The regex pattern to allow
+     */
+    addAllowedPattern(pattern) {
+        if (pattern instanceof RegExp) {
+            this.allowedUrlPatterns.push(pattern);
+        }
     }
 
     /**
@@ -61,6 +98,13 @@ class RequestManager {
      * Fetch with retry logic
      */
     async fetchWithRetry(url, options = {}, attempt = 0) {
+        // SSRF Protection: Validate URL against allowlist before making request
+        if (!this.isUrlAllowed(url)) {
+            const error = new Error(`Request blocked: URL not in allowlist - ${url}`);
+            error.type = 'SSRF_BLOCKED';
+            throw errorHandler.handleError(error, 'SSRF Protection');
+        }
+        
         const abortController = new AbortController();
         const requestKey = this.generateRequestKey(url, options);
         
