@@ -382,6 +382,6 @@ function getFeatureId($feature) {
         $idParts[] = $props['magnitude'];
     }
     
-    return !empty($idParts) ? md5(implode('|', $idParts)) : null;
+    return !empty($idParts) ? hash('sha256', implode('|', $idParts)) : null;
 }
 ?>
