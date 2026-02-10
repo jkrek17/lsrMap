@@ -47,16 +47,15 @@ try {
         throw new Exception('Invalid date format');
     }
 
-    // Calculate hours difference
-    $hoursDiff = ($now->getTimestamp() - $startDateTime->getTimestamp()) / 3600;
-
-    // If query is within last 24 hours, fetch from source API for real-time data
-    if ($hoursDiff <= 24 && $endDateTime >= (clone $now)->modify('-1 day')) {
+    // If query includes today or future dates, fetch from source API for real-time data
+    // Today's data won't be in the cache (it's still accumulating)
+    $today = $now->format('Y-m-d');
+    if ($endDate >= $today) {
         serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
         exit;
     }
 
-    // Check if query is within cacheable range (last 30 days, but not last 24 hours)
+    // Check if query is within cacheable range (last 30 days)
     $cacheCutoff = new DateTime();
     $cacheCutoff->modify('-' . CACHE_DAYS . ' days');
 
@@ -177,27 +176,35 @@ function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
 function fetchUrl($url) {
     // Try cURL first (more reliable, doesn't require allow_url_fopen)
     if (function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_USERAGENT => 'LSR-Cache-API/1.0'
-        ]);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-        
-        if ($response !== false && $httpCode >= 200 && $httpCode < 300) {
-            return $response;
+        try {
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_USERAGENT => 'LSR-Cache-API/1.0'
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($response !== false && $httpCode >= 200 && $httpCode < 300) {
+                return $response;
+            }
+
+            // Log cURL error for debugging but continue to fallback
+            error_log("cURL fetch failed: $error (HTTP $httpCode)");
+        } catch (Exception $e) {
+            // Catch warnings converted to exceptions (e.g. CURLOPT_FOLLOWLOCATION with open_basedir)
+            error_log("cURL exception in fetchUrl: " . $e->getMessage());
+            if (isset($ch) && (is_resource($ch) || $ch instanceof \CurlHandle)) {
+                curl_close($ch);
+            }
         }
-        
-        // Log cURL error for debugging but continue to fallback
-        error_log("cURL fetch failed: $error (HTTP $httpCode)");
     }
     
     // Fallback to file_get_contents
