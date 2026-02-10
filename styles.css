@@ -829,6 +829,32 @@ body {
     opacity: 0;
 }
 
+#actionButtons {
+    margin-top: 1rem;
+}
+
+label[for="wfoSelect"] {
+    margin-top: 0.75rem;
+}
+
+.pns-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.pns-description p {
+    margin-bottom: 0.5rem;
+}
+
+.pns-description p:last-child {
+    margin-bottom: 0;
+}
+
+#showTopReports {
+    margin-top: 1rem;
+}
+
 /* Section Collapsible */
 .collapsible-section {
     border-bottom: 1px solid var(--border-color);
@@ -2778,9 +2804,11 @@ body {
 
 .export-option-content {
     flex: 1;
+    display: block;
 }
 
 .export-option-title {
+    display: block;
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -2788,7 +2816,13 @@ body {
 }
 
 .export-option-desc {
+    display: block;
     font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.export-description {
+    margin-bottom: 1.5rem;
     color: var(--text-secondary);
 }
 
