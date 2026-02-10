@@ -86,26 +86,28 @@ class LSRService {
         const startString = formatDateForAPI(startDate, startHour);
         const endString = formatDateForAPI(endDate, endHour);
 
+        // Insert colon into HHMM format for ISO Date parsing (e.g. "1044" -> "10:44")
+        const fmtHour = (h) => h.includes(':') ? h : h.slice(0, 2) + ':' + h.slice(2);
+
         // Determine which API to use
-        const endDateTime = new Date(endDate + 'T' + endHour);
-        const startDateTime = new Date(startDate + 'T' + startHour);
+        const endDateTime = new Date(endDate + 'T' + fmtHour(endHour));
+        const startDateTime = new Date(startDate + 'T' + fmtHour(startHour));
         const now = new Date();
         
-        // Calculate hours difference from start to now
-        const hoursDiff = (now.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
-        
-        // If query includes last 24 hours, use source API directly for real-time data
-        // This matches the cache.php logic and avoids unnecessary cache API calls
-        const includesLast24Hours = hoursDiff <= 24 && endDateTime >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        
+        // If query includes today or future dates, use source API directly for real-time data
+        // Today's data won't be in the cache (it's still accumulating)
+        // This matches the cache.php routing logic
+        const today = now.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+        const includesCurrentDay = endDate >= today;
+
         // Use cache API only if:
         // 1. Cache is enabled
         // 2. End date is within last CACHE_DAYS (matches api/config.php and cache.php)
-        // 3. Query does NOT include last 24 hours (cache.php proxies to source anyway)
+        // 3. Query does NOT include today (cache.php proxies to source anyway)
         const cacheDays = (this.config && this.config.CACHE_DAYS) || 30;
         const cacheCutoff = new Date();
         cacheCutoff.setDate(cacheCutoff.getDate() - cacheDays);
-        const shouldUseCache = useCache && endDateTime >= cacheCutoff && !includesLast24Hours;
+        const shouldUseCache = useCache && endDateTime >= cacheCutoff && !includesCurrentDay;
 
         // Generate cache key
         const cacheKey = cacheService.generateCacheKey({
