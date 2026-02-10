@@ -2740,6 +2740,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    // Override Leaflet's data: URI with an actual file to avoid CSP img-src violations
+    // when a parent server CSP uses "img-src *" (which doesn't match data: URIs)
+    L.Util.emptyImageUrl = 'lib/leaflet/images/empty.gif';
+
     // Initialize map first
     map = L.map('map').setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
 
