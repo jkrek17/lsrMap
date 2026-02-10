@@ -62,63 +62,6 @@ class LSRService {
     }
 
     /**
-     * JSONP implementation with error handling
-     */
-    jsonp(url, timeout = 30000) {
-        return new Promise((resolve, reject) => {
-            // Use crypto.getRandomValues() for secure random callback name generation
-            const randomArray = new Uint32Array(1);
-            crypto.getRandomValues(randomArray);
-            const callbackName = 'jsonp_callback_' + randomArray[0];
-            const script = document.createElement('script');
-            let timeoutId;
-
-            // Set up timeout
-            timeoutId = setTimeout(() => {
-                cleanup();
-                reject(errorHandler.handleError(
-                    new Error('Request timeout'),
-                    'JSONP request'
-                ));
-            }, timeout);
-
-            // Cleanup function
-            const cleanup = () => {
-                if (window[callbackName]) {
-                    delete window[callbackName];
-                }
-                if (script.parentNode) {
-                    document.body.removeChild(script);
-                }
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                }
-            };
-
-            // Success callback
-            window[callbackName] = (data) => {
-                cleanup();
-                resolve(data);
-            };
-
-            // Error handling
-            script.onerror = () => {
-                cleanup();
-                reject(errorHandler.handleError(
-                    new Error('JSONP script load failed'),
-                    'JSONP request'
-                ));
-            };
-
-            // Build URL
-            const separator = url.indexOf('?') >= 0 ? '&' : '?';
-            script.src = `${url}${separator}callback=${callbackName}`;
-            
-            document.body.appendChild(script);
-        });
-    }
-
-    /**
      * Fetch LSR data with caching and retry logic
      */
     async fetchLSRData(params) {
@@ -220,15 +163,15 @@ class LSRService {
 
                 data = JSON.parse(text);
                 
-                // Check if server is telling us to use JSONP fallback
+                // Check if server is telling us to use source API fallback
                 if (data.useJsonp) {
-                    errorHandler.log('Cache API recommends JSONP fallback', data.error);
+                    errorHandler.log('Cache API recommends source API fallback', data.error);
                     return this.fetchFromSourceAPI(startString, endString, cacheKey);
                 }
 
                 // Check if response has an error but no features
                 if (data.error && (!data.features || data.features.length === 0)) {
-                    errorHandler.log('Cache API error, using JSONP fallback', data.error);
+                    errorHandler.log('Cache API error, using source API fallback', data.error);
                     return this.fetchFromSourceAPI(startString, endString, cacheKey);
                 }
             } catch (error) {
@@ -260,14 +203,17 @@ class LSRService {
     }
 
     /**
-     * Fetch from source API using JSONP
+     * Fetch from source API using fetch()
      */
     async fetchFromSourceAPI(startString, endString, cacheKey, logDetails = {}) {
         const url = `${this.sourceAPIBase}?sts=${startString}&ets=${endString}&wfos=`;
         const startTime = performance.now();
-        
+
         try {
-            const data = await this.jsonp(url, 30000);
+            const response = await requestManager.fetchWithRetry(url, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await response.json();
             const duration = Math.round(performance.now() - startTime);
             
             // Log the fetch
