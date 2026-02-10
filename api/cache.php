@@ -1,25 +1,15 @@
 <?php
 /**
  * LSR Cache API Endpoint
- * Serves cached GeoJSON data for the last 7 days
+ * Serves cached GeoJSON data for the last 30 days
  * Falls back to source API for older dates or missing cache
  */
-
-// Error handling - convert errors to exceptions for cleaner handling
-set_error_handler(function($severity, $message, $file, $line) {
-    // Don't throw for suppressed errors (@)
-    if (!(error_reporting() & $severity)) {
-        return false;
-    }
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 
-try {
-    require_once 'config.php';
+require_once 'config.php';
 
     // Get parameters with sanitization
     // Strip all non-digits from hour params (handles both HHMM and HH:MM input)
@@ -47,10 +37,8 @@ try {
     $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $endDate . ' ' . substr($endHour, 0, 2) . ':' . substr($endHour, 2, 2));
     $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $startDate . ' ' . substr($startHour, 0, 2) . ':' . substr($startHour, 2, 2));
 
-    // Validate date parsing
-    if (!$endDateTime || !$startDateTime) {
-        throw new Exception('Invalid date format');
-    }
+// Calculate hours difference
+$hoursDiff = ($now->getTimestamp() - $startDateTime->getTimestamp()) / 3600;
 
     // If query includes today or future dates, fetch from source API for real-time data
     // Today's data won't be in the cache (it's still accumulating)
@@ -64,37 +52,27 @@ try {
     $cacheCutoff = new DateTime();
     $cacheCutoff->modify('-' . CACHE_DAYS . ' days');
 
-    // If query is older than cache period, fall back to source API
-    if ($endDateTime < $cacheCutoff) {
-        serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
-        exit;
-    }
+// Try to serve from cache
+$cachedData = loadFromCache($startDate, $startHour, $endDate, $endHour);
 
-    // Try to serve from cache
-    $cachedData = loadFromCache($startDate, $endDate);
-
-    if ($cachedData !== null) {
-        echo json_encode($cachedData);
-    } else {
-        // Fallback to source API if cache is missing
-        serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
-    }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'type' => 'FeatureCollection',
-        'features' => [],
-        'error' => 'Server error: ' . $e->getMessage()
-    ]);
+if ($cachedData !== null) {
+    echo json_encode($cachedData);
+} else {
+    // Fallback to source API if cache is missing
+    serveFromSourceAPI($startDate, $startHour, $endDate, $endHour);
 }
 
 /**
- * Load GeoJSON data from cache files
+ * Load GeoJSON data from cache files with time filtering
  */
-function loadFromCache($startDate, $endDate) {
+function loadFromCache($startDate, $startHour, $endDate, $endHour) {
     $allFeatures = [];
     $current = new DateTime($startDate);
     $end = new DateTime($endDate);
+    
+    // Build full datetime range for filtering
+    $filterStart = DateTime::createFromFormat('Y-m-d H:i', $startDate . ' ' . $startHour);
+    $filterEnd = DateTime::createFromFormat('Y-m-d H:i', $endDate . ' ' . $endHour);
     
     // Check if we have all required files
     $missingFiles = [];
@@ -125,7 +103,12 @@ function loadFromCache($startDate, $endDate) {
             $dayData = json_decode($fileContent, true);
             
             if ($dayData && isset($dayData['features']) && is_array($dayData['features'])) {
-                $allFeatures = array_merge($allFeatures, $dayData['features']);
+                // Filter features by time range
+                foreach ($dayData['features'] as $feature) {
+                    if (isFeatureInTimeRange($feature, $filterStart, $filterEnd)) {
+                        $allFeatures[] = $feature;
+                    }
+                }
             }
         }
         
@@ -136,6 +119,34 @@ function loadFromCache($startDate, $endDate) {
         'type' => 'FeatureCollection',
         'features' => $allFeatures
     ];
+}
+
+/**
+ * Check if a feature falls within the requested time range
+ */
+function isFeatureInTimeRange($feature, $filterStart, $filterEnd) {
+    // If no valid timestamp, include the feature (conservative approach)
+    if (!isset($feature['properties']['valid'])) {
+        return true;
+    }
+    
+    $validTime = $feature['properties']['valid'];
+    
+    // Parse the valid timestamp (format: 2026-01-14T01:22:00Z)
+    $featureTime = DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $validTime);
+    
+    // Try alternate format without Z suffix
+    if (!$featureTime) {
+        $featureTime = DateTime::createFromFormat('Y-m-d\TH:i:s', $validTime);
+    }
+    
+    // If we can't parse the time, include the feature
+    if (!$featureTime) {
+        return true;
+    }
+    
+    // Check if feature time is within the requested range
+    return $featureTime >= $filterStart && $featureTime <= $filterEnd;
 }
 
 /**
@@ -150,18 +161,15 @@ function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
     
     $url = SOURCE_API_URL . '?sts=' . $startFormatted . '&ets=' . $endFormatted . '&wfos=';
     
-    // Try to fetch using cURL first (more reliable), then fall back to file_get_contents
-    $response = fetchUrl($url);
+    // Fetch from source API
+    $response = @file_get_contents($url);
     
     if ($response === false) {
-        // Return 200 with useJsonp flag instead of 502
-        // This tells the client to use JSONP fallback without triggering error retries
+        http_response_code(500);
         echo json_encode([
             'type' => 'FeatureCollection',
             'features' => [],
-            'useJsonp' => true,
-            'error' => 'Server cannot proxy to source API - use JSONP fallback',
-            'sourceUrl' => $url
+            'error' => 'Failed to fetch from source API'
         ]);
         return;
     }
@@ -211,7 +219,7 @@ function fetchUrl($url) {
             }
         }
     }
-    
+
     // Fallback to file_get_contents
     if (ini_get('allow_url_fopen')) {
         $context = stream_context_create([
@@ -221,13 +229,13 @@ function fetchUrl($url) {
                 'user_agent' => 'LSR-Cache-API/1.0'
             ]
         ]);
-        
+
         $response = @file_get_contents($url, false, $context);
         if ($response !== false) {
             return $response;
         }
     }
-    
+
     return false;
 }
 ?>
