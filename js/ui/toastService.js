@@ -3,12 +3,19 @@
 // ============================================================================
 
 let lastErrorAction = null;
+let currentToastTimeout = null;
 
 export function showStatusToast(message, type = 'info', retryAction = null) {
     const toast = document.getElementById('statusToast');
     const toastMessage = document.getElementById('statusToastMessage');
     
     if (!toast || !toastMessage) return;
+    
+    // Clear any existing timeout to prevent premature hide
+    if (currentToastTimeout) {
+        clearTimeout(currentToastTimeout);
+        currentToastTimeout = null;
+    }
     
     // Clear any existing retry button
     const existingRetry = toast.querySelector('.toast-retry');
@@ -31,11 +38,29 @@ export function showStatusToast(message, type = 'info', retryAction = null) {
         toastMessage.parentNode.insertBefore(retryBtn, toastMessage.nextSibling);
     }
     
-    // Auto-hide after 5 seconds for success/info, 10 seconds for errors
-    const timeout = (type === 'error' || type === 'loading') ? 10000 : 5000;
-    setTimeout(() => {
-        if (toast.style.display !== 'none') {
-            toast.style.display = 'none';
-        }
-    }, timeout);
+    // For loading type, don't auto-hide - let it be hidden explicitly
+    // For other types, auto-hide after timeout
+    if (type !== 'loading') {
+        const timeout = type === 'error' ? 10000 : 5000;
+        currentToastTimeout = setTimeout(() => {
+            if (toast.style.display !== 'none') {
+                toast.style.display = 'none';
+            }
+            currentToastTimeout = null;
+        }, timeout);
+    }
+}
+
+/**
+ * Explicitly hide the status toast
+ */
+export function hideStatusToast() {
+    const toast = document.getElementById('statusToast');
+    if (toast) {
+        toast.style.display = 'none';
+    }
+    if (currentToastTimeout) {
+        clearTimeout(currentToastTimeout);
+        currentToastTimeout = null;
+    }
 }

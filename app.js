@@ -11,7 +11,7 @@ import { offlineDetector } from './js/utils/offlineDetector.js';
 import { appState } from './js/state/appState.js';
 import { createIcon, getIconForReport } from './js/map/iconService.js';
 import { addMarkersInBatches } from './js/map/markerService.js';
-import { showStatusToast } from './js/ui/toastService.js';
+import { showStatusToast, hideStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
 import PNSService from './js/api/pnsService.js';
 import StatisticsService from './js/ui/statisticsService.js';
@@ -183,7 +183,8 @@ function normalizeTimeInputValue(value) {
         return null;
     }
     const trimmed = value.trim();
-    const match = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+    // Accept both HHMM (no colon) and HH:MM (with colon)
+    const match = trimmed.match(/^(\d{1,2}):?(\d{2})$/);
     if (!match) {
         return null;
     }
@@ -195,7 +196,7 @@ function normalizeTimeInputValue(value) {
     if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
         return null;
     }
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, '0')}${minutes.toString().padStart(2, '0')}`;
 }
 
 function isValid24HourTime(value) {
@@ -246,7 +247,7 @@ function shiftCustomDateRange(days) {
     const normalizedStartHour = normalizeTimeInputValue(startHourEl.value);
     const normalizedEndHour = normalizeTimeInputValue(endHourEl.value);
     if (!normalizedStartHour || !normalizedEndHour) {
-        showStatusToast('Please enter time in 24-hour format (HH:MM).', 'error');
+        showStatusToast('Please enter time in 24-hour UTC format (HHMM).', 'error');
         return;
     }
 
@@ -291,7 +292,7 @@ async function fetchLSRData() {
     const normalizedEndHour = normalizeTimeInputValue(endHourRaw);
 
     if (!normalizedStartHour || !normalizedEndHour) {
-        showStatusToast('Please enter time in 24-hour format (HH:MM).', 'error');
+        showStatusToast('Please enter time in 24-hour UTC format (HHMM).', 'error');
         return;
     }
 
@@ -371,10 +372,20 @@ async function fetchLSRData() {
         
         if (data && data.features) {
             displayReports(data, south, north, east, west);
-            showStatusToast(`Loaded ${data.features.length} reports`, 'success');
-            // Fetch PNS data if enabled
-            fetchPNSData();
+            
+            // Fetch PNS data if enabled, and wait for it to complete
+            const lsrCount = data.features.length;
+            const pnsCount = await fetchPNSDataAndGetCount();
+            
+            // Show combined success message after all loading is complete
+            hideStatusToast();
+            if (pnsCount > 0) {
+                showStatusToast(`Loaded ${lsrCount} LSR reports + ${pnsCount} PNS reports`, 'success');
+            } else {
+                showStatusToast(`Loaded ${lsrCount} reports`, 'success');
+            }
         } else {
+            hideStatusToast();
             showStatusToast('No reports found for the selected criteria', 'info');
             updateReportCount(0);
             showEmptyState('No reports found for the selected criteria. Try adjusting your date range or filters.');
@@ -384,6 +395,7 @@ async function fetchLSRData() {
         if (btnText) btnText.style.display = '';
         if (btnLoading) btnLoading.style.display = 'none';
         
+        hideStatusToast();
         const handledError = errorHandler.handleError(error, 'Fetch LSR Data');
         const retryAction = () => fetchLSRData();
         showStatusToast(handledError.message, 'error', retryAction);
@@ -444,13 +456,10 @@ function normalizeLSRReports(geoJsonData) {
         const typetext = props.typetext || '';
         const remark = props.remark || '';
 
-        // Check if this is a snow squall - treat it as snow type for filtering and icon
+        // Check if this is a snow squall - separate category from snow
         const upperTypetext = typetext ? typetext.toUpperCase() : '';
         const lowerTypetext = typetext ? typetext.toLowerCase() : '';
         const isSnowSquall = upperTypetext.includes('SNOW SQUALL');
-        if (isSnowSquall) {
-            rtype = 'S'; // Force snow type for snow squalls
-        }
 
         // Check if this is a temperature-related report - use temperature icon but keep original category name
         // Look for temperature, extreme cold, wind chill, heat index, extreme heat, etc.
@@ -474,6 +483,9 @@ function normalizeLSRReports(geoJsonData) {
 
         // Always use temperature icon (X) for temperature-related reports, regardless of original rtype
         let iconRtype = rtype;
+        if (isSnowSquall) {
+            iconRtype = 'SQ';
+        }
         if (isSleet) {
             iconRtype = 's';
         }
@@ -485,6 +497,8 @@ function normalizeLSRReports(geoJsonData) {
         let filterType;
         if (isTemperature) {
             filterType = 'Temperature'; // Filter as Temperature
+        } else if (isSnowSquall) {
+            filterType = 'Snow Squall';
         } else if (isFreezingRain) {
             filterType = 'Freezing Rain';
         } else if (isSleet) {
@@ -502,7 +516,9 @@ function normalizeLSRReports(geoJsonData) {
 
         // Use REPORT_TYPE_MAP for consistent naming, but prefer typetext if it's more descriptive
         let category = getReportTypeName(rtype, REPORT_TYPE_MAP);
-        if (isFreezingRain) {
+        if (isSnowSquall) {
+            category = 'Snow Squall';
+        } else if (isFreezingRain) {
             category = 'Freezing Rain';
         } else if (isSleet) {
             category = 'Sleet';
@@ -510,7 +526,7 @@ function normalizeLSRReports(geoJsonData) {
             category = 'Coastal Flooding';
         }
 
-        // Check if this is a snow squall - set magnitude to 0 for display
+        // Snow squalls don't have a meaningful magnitude
         if (isSnowSquall) {
             magnitude = 0;
         }
@@ -518,7 +534,7 @@ function normalizeLSRReports(geoJsonData) {
         // Normalize "Tropical Cyclone" to "Tropical" for consistency
         if (lowerTypetext.includes('tropical')) {
             category = 'Tropical';
-        } else if (typetext && !lowerTypetext.includes('unknown') && !isFreezingRain && !isSleet && !isCoastalFloodReport) {
+        } else if (typetext && !lowerTypetext.includes('unknown') && !isFreezingRain && !isSleet && !isCoastalFloodReport && !isSnowSquall) {
             // Use typetext if it's meaningful and not "unknown"
             // This keeps original names like "EXTREME COLD", "WIND CHILL", etc.
             category = typetext;
@@ -1124,7 +1140,9 @@ async function fetchWarnings() {
  * Displays PNS at the issuing WFO office location with a formatted popup
  */
 // Fetch PNS data using the service
-async function fetchPNSData() {
+// @param {boolean} silent - If true, don't show toast notifications (for coordinated loading)
+// @returns {number} - Number of PNS reports loaded
+async function fetchPNSData(silent = false) {
     if (!pnsService) {
         pnsService = new PNSService();
     }
@@ -1139,11 +1157,13 @@ async function fetchPNSData() {
         }
         updateReportCountWithPNS();
         updateStatisticsWithPNS();
-        return;
+        return 0;
     }
     
-    // Show loading indicator
-    showStatusToast('Processing PNS reports...', 'loading');
+    // Show loading indicator only if not silent
+    if (!silent) {
+        showStatusToast('Processing PNS reports...', 'loading');
+    }
     
     try {
         // Collect PNS marker data (without adding to layer yet)
@@ -1169,18 +1189,35 @@ async function fetchPNSData() {
         // After fetching, apply current filters and performance optimizations to PNS markers
         filterPNSMarkers();
         
-        // Show success message with count
+        // Show success message with count only if not silent
         const pnsCount = pnsMarkerData.length;
-        if (pnsCount > 0) {
-            showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
-        } else {
-            showStatusToast('No PNS reports found', 'info');
+        if (!silent) {
+            if (pnsCount > 0) {
+                showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
+            } else {
+                showStatusToast('No PNS reports found', 'info');
+            }
         }
+        
+        return pnsCount;
     } catch (error) {
-        // Error handling - show error message
-        const handledError = errorHandler.handleError(error, 'PNS Fetch');
-        showStatusToast(handledError.message, 'error');
+        // Error handling - show error message only if not silent
+        if (!silent) {
+            const handledError = errorHandler.handleError(error, 'PNS Fetch');
+            showStatusToast(handledError.message, 'error');
+        } else {
+            errorHandler.log('PNS fetch failed during coordinated loading', error);
+        }
+        return 0;
     }
+}
+
+/**
+ * Fetch PNS data in silent mode (for coordinated loading with LSR data)
+ * @returns {number} - Number of PNS reports loaded
+ */
+async function fetchPNSDataAndGetCount() {
+    return fetchPNSData(true);
 }
 
 /**
@@ -1530,7 +1567,7 @@ function getUtcDateString(date) {
 }
 
 function getUtcTimeString(date) {
-    return date.toISOString().slice(11, 16);
+    return date.toISOString().slice(11, 16).replace(':', '');
 }
 
 function applyLiveModeRange(hours) {
@@ -1696,9 +1733,16 @@ function loadRadarTimestamps() {
     radarTimestamps = [];
     radarLayers = [];
     
+    // Round current time DOWN to the nearest 5-minute interval (radar updates at :00, :05, :10, etc.)
+    const currentMinutes = now.getUTCMinutes();
+    const roundedMinutes = Math.floor(currentMinutes / 5) * 5;
+    const roundedNow = new Date(now);
+    roundedNow.setUTCMinutes(roundedMinutes, 0, 0); // Set to rounded minutes, 0 seconds, 0 ms
+    
     // Generate timestamps going back 1 hour, every 5 minutes (12 frames total)
-    for (let i = 0; i <= 11; i++) {
-        const timestamp = new Date(now.getTime() - (i * 5 * 60 * 1000));
+    // Start from 5 minutes ago to ensure data is available (there's often a delay)
+    for (let i = 1; i <= 12; i++) {
+        const timestamp = new Date(roundedNow.getTime() - (i * 5 * 60 * 1000));
         radarTimestamps.push(timestamp);
     }
     
@@ -1706,14 +1750,15 @@ function loadRadarTimestamps() {
     radarTimestamps.reverse();
     
     // Create a tile layer for each timestamp using IEM's tile cache
+    // IMPORTANT: Use UTC time - IEM radar tiles use UTC timestamps
     radarTimestamps.forEach((timestamp, index) => {
-        const year = timestamp.getFullYear().toString();
-        const month = String(timestamp.getMonth() + 1).padStart(2, '0');
-        const day = String(timestamp.getDate()).padStart(2, '0');
-        const hour = String(timestamp.getHours()).padStart(2, '0');
-        const minute = String(timestamp.getMinutes()).padStart(2, '0');
+        const year = timestamp.getUTCFullYear().toString();
+        const month = String(timestamp.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(timestamp.getUTCDate()).padStart(2, '0');
+        const hour = String(timestamp.getUTCHours()).padStart(2, '0');
+        const minute = String(timestamp.getUTCMinutes()).padStart(2, '0');
         
-        // Format: YYYYMMDDHHmm (e.g., "202601141200")
+        // Format: YYYYMMDDHHmm (e.g., "202601141200") - UTC time
         const timeStr = year + month + day + hour + minute;
         
         // IEM radar tile URL format
@@ -1961,16 +2006,44 @@ function setDatePreset(preset) {
     const endHourEl = document.getElementById('endHour');
     const customDateFields = document.getElementById('customDateFields');
     const actionButtons = document.getElementById('actionButtons');
-    
+
     endDateEl.value = today.toISOString().split('T')[0];
-    endHourEl.value = '23:59';
-    
+    endHourEl.value = '2359';
+
     switch(preset) {
-        case '24h':
-            const yesterday24h = new Date(today);
-            yesterday24h.setHours(today.getHours() - 24);
-            startDateEl.value = yesterday24h.toISOString().split('T')[0];
-            startHourEl.value = yesterday24h.toTimeString().slice(0, 5);
+        case '6h': {
+            const start6h = new Date(today.getTime() - 6 * 60 * 60 * 1000);
+            startDateEl.value = getUtcDateString(start6h);
+            startHourEl.value = getUtcTimeString(start6h);
+            customDateFields.style.display = 'none';
+            actionButtons.style.display = 'none';
+            if (!liveModeActive) {
+                setTimeout(() => {
+                    fetchLSRData();
+                    updateFilterSummary();
+                }, 100);
+            }
+            break;
+        }
+        case '12h': {
+            const start12h = new Date(today.getTime() - 12 * 60 * 60 * 1000);
+            startDateEl.value = getUtcDateString(start12h);
+            startHourEl.value = getUtcTimeString(start12h);
+            customDateFields.style.display = 'none';
+            actionButtons.style.display = 'none';
+            if (liveModeActive) {
+                toggleLiveMode();
+            }
+            setTimeout(() => {
+                fetchLSRData();
+                updateFilterSummary();
+            }, 100);
+            break;
+        }
+        case '24h': {
+            const start24h = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+            startDateEl.value = getUtcDateString(start24h);
+            startHourEl.value = getUtcTimeString(start24h);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Auto-load data (unless live mode is active, it will handle its own refresh)
@@ -1981,11 +2054,11 @@ function setDatePreset(preset) {
                 }, 100);
             }
             break;
-        case '48h':
-            const yesterday48h = new Date(today);
-            yesterday48h.setHours(today.getHours() - 48);
-            startDateEl.value = yesterday48h.toISOString().split('T')[0];
-            startHourEl.value = yesterday48h.toTimeString().slice(0, 5);
+        }
+        case '48h': {
+            const start48h = new Date(today.getTime() - 48 * 60 * 60 * 1000);
+            startDateEl.value = getUtcDateString(start48h);
+            startHourEl.value = getUtcTimeString(start48h);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Disable live mode if switching to 48h
@@ -1998,11 +2071,12 @@ function setDatePreset(preset) {
                 updateFilterSummary();
             }, 100);
             break;
-        case 'week':
+        }
+        case 'week': {
             const lastWeek = new Date(today);
             lastWeek.setDate(lastWeek.getDate() - 7);
             startDateEl.value = lastWeek.toISOString().split('T')[0];
-            startHourEl.value = '00:00';
+            startHourEl.value = '0000';
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Disable live mode if switching to week
@@ -2015,6 +2089,7 @@ function setDatePreset(preset) {
                 updateFilterSummary();
             }, 100);
             break;
+        }
         case 'custom':
             // Show custom date fields and action buttons
             customDateFields.style.display = 'block';
@@ -2025,7 +2100,7 @@ function setDatePreset(preset) {
             }
             break;
     }
-    
+
     // Update active preset button
     document.querySelectorAll('.btn-preset').forEach(btn => {
         btn.classList.remove('active');
@@ -2249,9 +2324,9 @@ function initializeUI() {
     
     // Set default dates
     document.getElementById('startDate').value = yesterday.toISOString().split('T')[0];
-    document.getElementById('startHour').value = '00:00';
+    document.getElementById('startHour').value = '0000';
     document.getElementById('endDate').value = today.toISOString().split('T')[0];
-    document.getElementById('endHour').value = '23:59';
+    document.getElementById('endHour').value = '2359';
     
     const startHourInput = document.getElementById('startHour');
     const endHourInput = document.getElementById('endHour');
@@ -2273,6 +2348,7 @@ function initializeUI() {
         'Flood': 'fa-water',
         'Coastal Flooding': 'fa-water',
         'Snow': 'fa-snowflake',
+        'Snow Squall': 'fa-snowflake',
         'Sleet': 'fa-snowflake',
         'Freezing Rain': 'fa-cloud-rain',
         'Ice': 'fa-icicles',
@@ -2409,9 +2485,9 @@ function loadStateFromURL() {
         const end = params.get('end').split('T');
         if (start[0] && end[0]) {
             document.getElementById('startDate').value = start[0];
-            document.getElementById('startHour').value = start[1] || '00:00';
+            document.getElementById('startHour').value = start[1] || '0000';
             document.getElementById('endDate').value = end[0];
-            document.getElementById('endHour').value = end[1] || '23:59';
+            document.getElementById('endHour').value = end[1] || '2359';
             setDatePreset('custom');
             shouldFetch = true;
         }

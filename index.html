@@ -96,6 +96,8 @@
                     </div>
                     <div class="control-group-content">
                     <div class="date-presets">
+                        <button type="button" class="btn-preset" data-preset="6h" title="Load reports from the last 6 hours">Last 6h</button>
+                        <button type="button" class="btn-preset" data-preset="12h" title="Load reports from the last 12 hours">Last 12h</button>
                         <button type="button" class="btn-preset" data-preset="24h" title="Load reports from the last 24 hours">Last 24h</button>
                         <button type="button" class="btn-preset" data-preset="48h" title="Load reports from the last 48 hours">Last 48h</button>
                         <button type="button" class="btn-preset" data-preset="week" title="Load reports from the last 7 days">Last Week</button>
@@ -128,12 +130,12 @@
                     <div id="customDateFields" style="display: none;">
                         <label for="startDate">Start Date:</label>
                         <input type="date" id="startDate" class="form-control">
-                        <label for="startHour">Start Hour:</label>
-                        <input type="text" id="startHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HH:MM" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="24-hour time (HH:MM)">
+                        <label for="startHour">Start Time (UTC):</label>
+                        <input type="text" id="startHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HHMM" pattern="^([01]\d|2[0-3])[0-5]\d$" title="24-hour UTC time (HHMM)">
                         <label for="endDate">End Date:</label>
                         <input type="date" id="endDate" class="form-control">
-                        <label for="endHour">End Hour:</label>
-                        <input type="text" id="endHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HH:MM" pattern="^([01]\d|2[0-3]):[0-5]\d$" title="24-hour time (HH:MM)">
+                        <label for="endHour">End Time (UTC):</label>
+                        <input type="text" id="endHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HHMM" pattern="^([01]\d|2[0-3])[0-5]\d$" title="24-hour UTC time (HHMM)">
                     </div>
                     <div class="date-shift-buttons">
                         <button type="button" id="shiftDateBackward" class="btn btn-secondary" title="Move date range back one day">
@@ -332,7 +334,7 @@
                 <!-- Public Information Statements -->
                 <div class="control-group collapsible" data-section="pns">
                     <div class="control-group-header">
-                        <h4><i class="fas fa-info-circle"></i> Public Information Statements</h4>
+                        <h4><i class="fas fa-file-alt"></i> Public Information Statements (PNS)</h4>
                         <button type="button" class="collapse-toggle" aria-label="Toggle section">
                             <i class="fas fa-chevron-down"></i>
                         </button>
@@ -342,10 +344,17 @@
                             <input type="checkbox" id="showPNS" />
                             <span>Show NWS Public Information Statements</span>
                         </label>
-                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                            Displays recent Public Information Statements from the National Weather Service.<br>
-                            <small>Note: PNS are text products without geographic coordinates. Markers are placed at the issuing WFO office location.</small>
-                        </p>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <p style="margin-bottom: 0.5rem;">
+                                <strong>What are PNS?</strong> Public Information Statements are detailed text products issued by NWS Weather Forecast Offices containing weather observations, storm summaries, and significant weather data.
+                            </p>
+                            <p style="margin-bottom: 0.5rem;">
+                                <strong>Data includes:</strong> Snow totals, rainfall amounts, wind gusts, temperatures, ice accumulation, flood reports, and other significant weather measurements from observers and automated stations.
+                            </p>
+                            <p style="margin-bottom: 0;">
+                                <small><i class="fas fa-map-marker-alt"></i> PNS reports with embedded coordinates are plotted at their exact location. Others are placed at the issuing WFO office. Click markers to view full details.</small>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -522,15 +531,21 @@
                         <p><strong>Tip:</strong> Click "All" or "None" buttons to quickly toggle all weather types.</p>
                     </div>
                     <div class="tutorial-step" data-step="5">
+                        <div class="tutorial-icon">📋</div>
+                        <h3>Public Information Statements (PNS)</h3>
+                        <p>Enable PNS to see detailed weather observations from NWS offices. PNS reports include snow totals, rainfall amounts, wind gusts, temperatures, ice accumulation, and other significant measurements.</p>
+                        <p><strong>Tip:</strong> PNS reports with coordinates appear at exact locations. Click any marker to view the full statement text with all observer details.</p>
+                    </div>
+                    <div class="tutorial-step" data-step="6">
                         <div class="tutorial-icon">⚡</div>
                         <h3>Live Mode & Sharing</h3>
-                        <p>Enable "Live Mode" for auto-refreshing data every 60 seconds. Use "Share" to copy a link with your current filters, or "Export" to download data.</p>
+                        <p>Enable "Live Mode" for auto-refreshing data every 60 seconds with animated radar. Use "Share" to copy a link with your current filters, or "Export" to download data.</p>
                         <p><strong>Tip:</strong> Keyboard shortcuts: G (Get Data), C (Clear), S (Share), E (Export), ? (Help)</p>
                     </div>
                 </div>
                 <div class="tutorial-footer">
                     <div class="tutorial-progress">
-                        <span id="tutorialStepCount">1</span> / <span id="tutorialTotalSteps">5</span>
+                        <span id="tutorialStepCount">1</span> / <span id="tutorialTotalSteps">6</span>
                     </div>
                     <div class="tutorial-actions">
                         <button type="button" class="btn btn-secondary" id="tutorialPrev" style="display: none;">

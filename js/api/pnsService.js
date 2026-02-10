@@ -23,7 +23,9 @@ const PNS_TYPE_MAP = {
     'SNOW': { filterType: 'Snow', rtype: 'S' },
     'SNOW_24': { filterType: 'Snow', rtype: 'S' },
     'SN': { filterType: 'Snow', rtype: 'S' },
-    
+    'SNOW_SQUALL': { filterType: 'Snow Squall', rtype: 'S' },
+    'SNOWSQUALL': { filterType: 'Snow Squall', rtype: 'S' },
+
     // Rain types
     'RAIN': { filterType: 'Rain', rtype: 'R' },
     'RAIN_24': { filterType: 'Rain', rtype: 'R' },

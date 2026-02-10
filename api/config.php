@@ -9,6 +9,6 @@ define('CACHE_FILE_EXT', '.geojson');
 
 // Ensure cache directory exists
 if (!is_dir(CACHE_DIR)) {
-    mkdir(CACHE_DIR, 0755, true);
+    @mkdir(CACHE_DIR, 0755, true);
 }
 ?>

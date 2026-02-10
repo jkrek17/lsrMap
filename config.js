@@ -3,6 +3,10 @@
 // ============================================================================
 
 const CONFIG = {
+    // Set to false to bypass cache.php and always use JSONP directly from Iowa State
+    // Useful when server PHP cannot make outbound HTTP requests (firewall/policy)
+    USE_SERVER_CACHE: false,
+    
     CACHE_DAYS: 30, // Must match api/config.php CACHE_DAYS; used for cache API window
     ICON_SIZE: 28,
     BATCH_SIZE: 200,
@@ -19,7 +23,7 @@ const CONFIG = {
         lon: -98.5795,
         zoom: 4
     },
-    WEATHER_TYPES: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Sleet', 'Freezing Rain', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Tropical', 'Temperature', 'Other'],
+    WEATHER_TYPES: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Snow Squall', 'Sleet', 'Freezing Rain', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Tropical', 'Temperature', 'Other'],
     // State and Region bounding boxes [south, north, east, west]
     STATES: {
         'AL': { name: 'Alabama', bounds: [30.14, 35.01, -84.89, -88.47] },
@@ -369,9 +373,9 @@ const CONFIG = {
 
 // Weather category mappings
 const WEATHER_CATEGORIES = {
-    WINTER: ['Snow', 'Sleet', 'Freezing Rain', 'Ice'],
+    WINTER: ['Snow', 'Snow Squall', 'Sleet', 'Freezing Rain', 'Ice'],
     SEVERE: ['Tornado', 'Thunderstorm', 'Hail'],
-    PRECIP: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Sleet', 'Freezing Rain', 'Ice'],
+    PRECIP: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Snow Squall', 'Sleet', 'Freezing Rain', 'Ice'],
     TROPICAL: ['Rain', 'Flood', 'Coastal Flooding', 'Tropical']
 };
 
@@ -429,21 +433,21 @@ const ICON_CONFIG = {
         type: "circle",
         emoji: "❄️",
         thresholds: [
-            { max: 0.1, fill: "#bdd7e7", stroke: "black" },
-            { max: 1, fill: "#6baed6", stroke: "black" },
-            { max: 2, fill: "#3182bd", stroke: "black" },
-            { max: 3, fill: "#005199", stroke: "black" },
-            { max: 4, fill: "#002694", stroke: "black" },
-            { max: 6, fill: "#ffff96", stroke: "black" },
-            { max: 8, fill: "#ffc400", stroke: "black" },
-            { max: 12, fill: "#ff8700", stroke: "black" },
-            { max: 18, fill: "#db1400", stroke: "black" },
-            { max: 24, fill: "#9e0000", stroke: "black" },
-            { max: 30, fill: "#690000", stroke: "black" },
-            { max: 36, fill: "#360000", stroke: "black" },
-            { max: 48, fill: "#ccccff", stroke: "black" },
-            { max: 60, fill: "#9f8cd8", stroke: "black" },
-            { max: 72, fill: "#7c52a5", stroke: "black" },
+            { max: 0.1, fill: "#bdd7e7", stroke: "#bdd7e7" },
+            { max: 1, fill: "#6baed6", stroke: "#6baed6" },
+            { max: 2, fill: "#3182bd", stroke: "#3182bd" },
+            { max: 3, fill: "#005199", stroke: "#005199" },
+            { max: 4, fill: "#002694", stroke: "#002694" },
+            { max: 6, fill: "#ffff96", stroke: "#ffff96" },
+            { max: 8, fill: "#ffc400", stroke: "#ffc400" },
+            { max: 12, fill: "#ff8700", stroke: "#ff8700" },
+            { max: 18, fill: "#db1400", stroke: "#db1400" },
+            { max: 24, fill: "#9e0000", stroke: "#9e0000" },
+            { max: 30, fill: "#690000", stroke: "#690000" },
+            { max: 36, fill: "#360000", stroke: "#360000" },
+            { max: 48, fill: "#ccccff", stroke: "#ccccff" },
+            { max: 60, fill: "#9f8cd8", stroke: "#9f8cd8" },
+            { max: 72, fill: "#7c52a5", stroke: "#7c52a5" },
             { max: Infinity, fill: "#7c52a5", stroke: "white" }
         ]
     },
@@ -452,6 +456,12 @@ const ICON_CONFIG = {
         emoji: "❄️",
         fill: "#ffffff",
         stroke: "red"
+    },
+    "SQ": { // Snow Squall
+        type: "circle",
+        emoji: "❄️",
+        fill: "#ffffff",
+        stroke: "#dc2626"
     },
     "D": { // Thunderstorm wind
         type: "rect",
@@ -527,27 +537,31 @@ const ICON_CONFIG = {
             { max: Infinity, fill: "#990099", stroke: "#333" }
         ]
     },
-    "5": { // Ice
+    "5": { // Ice / Freezing Rain
         type: "circle",
         emoji: "🧊",
         thresholds: [
-            { max: 0.10, fill: "#999999", stroke: "#333" },
-            { max: 0.25, fill: "#FF99FF", stroke: "#333" },
-            { max: 0.50, fill: "#FF3399", stroke: "#333" },
-            { max: Infinity, fill: "#990099", stroke: "#333" }
+            { max: 0.01, fill: "#999999", stroke: "#999999" },  // 0.00" or unknown
+            { max: 0.10, fill: "#FFFF00", stroke: "#FFFF00" },  // 0.01-0.09"
+            { max: 0.25, fill: "#FFA500", stroke: "#FFA500" },  // 0.10-0.24"
+            { max: 0.50, fill: "#FF0000", stroke: "#FF0000" },  // 0.25-0.49"
+            { max: 0.75, fill: "#992600", stroke: "#992600" },  // 0.50-0.74"
+            { max: 1.00, fill: "#9966FF", stroke: "#9966FF" },  // 0.75-0.99"
+            { max: 2.00, fill: "#7D19FF", stroke: "#7D19FF" },  // 1.00-1.99"
+            { max: Infinity, fill: "#37007F", stroke: "#37007F" } // 2.00"+
         ]
     },
     "s": { // Sleet
         type: "circle",
         emoji: "🌨️",
         thresholds: [
-            { max: 1, fill: "#f7f7f7", stroke: "#333" },
-            { max: 2, fill: "#d9d9d9", stroke: "#333" },
-            { max: 3, fill: "#bdbdbd", stroke: "#333" },
-            { max: 4, fill: "#969696", stroke: "#333" },
-            { max: 5, fill: "#737373", stroke: "#333" },
-            { max: 6, fill: "#525252", stroke: "#333" },
-            { max: Infinity, fill: "#252525", stroke: "#333" }
+            { max: 0.01, fill: "#999999", stroke: "#999999" },  // 0.00" or unknown
+            { max: 0.50, fill: "#FF99FF", stroke: "#FF99FF" },  // 0.01-0.49"
+            { max: 1.00, fill: "#FF3399", stroke: "#FF3399" },  // 0.50-0.99"
+            { max: 2.00, fill: "#990099", stroke: "#990099" },  // 1.00-1.99"
+            { max: 3.00, fill: "#7D19FF", stroke: "#7D19FF" },  // 2.00-2.99"
+            { max: 4.00, fill: "#37007F", stroke: "#37007F" },  // 3.00-3.99"
+            { max: Infinity, fill: "#000000", stroke: "#333" }   // 4.00"+
         ]
     },
     "F": { // Flood
@@ -590,9 +604,10 @@ const LEGEND_ITEMS = [
     { name: 'Flood', color: '#b2f7b3', emoji: '💧', shape: 'circle' },
     { name: 'Coastal Flooding', color: '#b2f7b3', emoji: '🌊', shape: 'circle' },
     { name: 'Snow', color: '#6baed6', emoji: '❄️', shape: 'circle' },
-    { name: 'Sleet', color: '#bdbdbd', emoji: '🌨️', shape: 'circle' },
-    { name: 'Freezing Rain', color: '#999999', emoji: '🌧️', shape: 'square' },
-    { name: 'Ice', color: '#999999', emoji: '🧊', shape: 'circle' },
+    { name: 'Snow Squall', color: '#ffffff', emoji: '❄️', shape: 'circle' },
+    { name: 'Sleet', color: '#FF99FF', emoji: '🌨️', shape: 'circle' },
+    { name: 'Freezing Rain', color: '#FFA500', emoji: '🌧️', shape: 'square' },
+    { name: 'Ice', color: '#FFFF00', emoji: '🧊', shape: 'circle' },
     { name: 'Hail', color: '#FF99FF', emoji: '⚪️', shape: 'square' },
     { name: 'Wind', color: '#FFEDCC', emoji: '💨', shape: 'circle' },
     { name: 'Thunderstorm', color: 'yellow', emoji: '⛈️', shape: 'square' },
