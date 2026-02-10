@@ -57,6 +57,9 @@ class ErrorHandler {
         } else if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
             type = ERROR_TYPES.TIMEOUT;
             userMessage = 'Request timed out. Please try again.';
+        } else if (error.message.includes('JSONP')) {
+            type = ERROR_TYPES.NETWORK;
+            userMessage = 'Failed to load data from external service.';
         } else if (error.message.includes('JSON') || error.message.includes('parse')) {
             type = ERROR_TYPES.PARSE;
             userMessage = 'Failed to parse server response.';
