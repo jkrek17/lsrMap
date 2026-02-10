@@ -11,7 +11,7 @@ import { offlineDetector } from './js/utils/offlineDetector.js';
 import { appState } from './js/state/appState.js';
 import { createIcon, getIconForReport } from './js/map/iconService.js';
 import { addMarkersInBatches } from './js/map/markerService.js';
-import { showStatusToast } from './js/ui/toastService.js';
+import { showStatusToast, hideStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
 import PNSService from './js/api/pnsService.js';
 import StatisticsService from './js/ui/statisticsService.js';
@@ -372,10 +372,20 @@ async function fetchLSRData() {
         
         if (data && data.features) {
             displayReports(data, south, north, east, west);
-            showStatusToast(`Loaded ${data.features.length} reports`, 'success');
-            // Fetch PNS data if enabled
-            fetchPNSData();
+            
+            // Fetch PNS data if enabled, and wait for it to complete
+            const lsrCount = data.features.length;
+            const pnsCount = await fetchPNSDataAndGetCount();
+            
+            // Show combined success message after all loading is complete
+            hideStatusToast();
+            if (pnsCount > 0) {
+                showStatusToast(`Loaded ${lsrCount} LSR reports + ${pnsCount} PNS reports`, 'success');
+            } else {
+                showStatusToast(`Loaded ${lsrCount} reports`, 'success');
+            }
         } else {
+            hideStatusToast();
             showStatusToast('No reports found for the selected criteria', 'info');
             updateReportCount(0);
             showEmptyState('No reports found for the selected criteria. Try adjusting your date range or filters.');
@@ -385,6 +395,7 @@ async function fetchLSRData() {
         if (btnText) btnText.style.display = '';
         if (btnLoading) btnLoading.style.display = 'none';
         
+        hideStatusToast();
         const handledError = errorHandler.handleError(error, 'Fetch LSR Data');
         const retryAction = () => fetchLSRData();
         showStatusToast(handledError.message, 'error', retryAction);
@@ -1129,7 +1140,9 @@ async function fetchWarnings() {
  * Displays PNS at the issuing WFO office location with a formatted popup
  */
 // Fetch PNS data using the service
-async function fetchPNSData() {
+// @param {boolean} silent - If true, don't show toast notifications (for coordinated loading)
+// @returns {number} - Number of PNS reports loaded
+async function fetchPNSData(silent = false) {
     if (!pnsService) {
         pnsService = new PNSService();
     }
@@ -1144,11 +1157,13 @@ async function fetchPNSData() {
         }
         updateReportCountWithPNS();
         updateStatisticsWithPNS();
-        return;
+        return 0;
     }
     
-    // Show loading indicator
-    showStatusToast('Processing PNS reports...', 'loading');
+    // Show loading indicator only if not silent
+    if (!silent) {
+        showStatusToast('Processing PNS reports...', 'loading');
+    }
     
     try {
         // Collect PNS marker data (without adding to layer yet)
@@ -1174,18 +1189,35 @@ async function fetchPNSData() {
         // After fetching, apply current filters and performance optimizations to PNS markers
         filterPNSMarkers();
         
-        // Show success message with count
+        // Show success message with count only if not silent
         const pnsCount = pnsMarkerData.length;
-        if (pnsCount > 0) {
-            showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
-        } else {
-            showStatusToast('No PNS reports found', 'info');
+        if (!silent) {
+            if (pnsCount > 0) {
+                showStatusToast(`Loaded ${pnsCount} PNS report${pnsCount !== 1 ? 's' : ''}`, 'success');
+            } else {
+                showStatusToast('No PNS reports found', 'info');
+            }
         }
+        
+        return pnsCount;
     } catch (error) {
-        // Error handling - show error message
-        const handledError = errorHandler.handleError(error, 'PNS Fetch');
-        showStatusToast(handledError.message, 'error');
+        // Error handling - show error message only if not silent
+        if (!silent) {
+            const handledError = errorHandler.handleError(error, 'PNS Fetch');
+            showStatusToast(handledError.message, 'error');
+        } else {
+            errorHandler.log('PNS fetch failed during coordinated loading', error);
+        }
+        return 0;
     }
+}
+
+/**
+ * Fetch PNS data in silent mode (for coordinated loading with LSR data)
+ * @returns {number} - Number of PNS reports loaded
+ */
+async function fetchPNSDataAndGetCount() {
+    return fetchPNSData(true);
 }
 
 /**
@@ -1701,9 +1733,16 @@ function loadRadarTimestamps() {
     radarTimestamps = [];
     radarLayers = [];
     
+    // Round current time DOWN to the nearest 5-minute interval (radar updates at :00, :05, :10, etc.)
+    const currentMinutes = now.getUTCMinutes();
+    const roundedMinutes = Math.floor(currentMinutes / 5) * 5;
+    const roundedNow = new Date(now);
+    roundedNow.setUTCMinutes(roundedMinutes, 0, 0); // Set to rounded minutes, 0 seconds, 0 ms
+    
     // Generate timestamps going back 1 hour, every 5 minutes (12 frames total)
-    for (let i = 0; i <= 11; i++) {
-        const timestamp = new Date(now.getTime() - (i * 5 * 60 * 1000));
+    // Start from 5 minutes ago to ensure data is available (there's often a delay)
+    for (let i = 1; i <= 12; i++) {
+        const timestamp = new Date(roundedNow.getTime() - (i * 5 * 60 * 1000));
         radarTimestamps.push(timestamp);
     }
     
@@ -1711,14 +1750,15 @@ function loadRadarTimestamps() {
     radarTimestamps.reverse();
     
     // Create a tile layer for each timestamp using IEM's tile cache
+    // IMPORTANT: Use UTC time - IEM radar tiles use UTC timestamps
     radarTimestamps.forEach((timestamp, index) => {
-        const year = timestamp.getFullYear().toString();
-        const month = String(timestamp.getMonth() + 1).padStart(2, '0');
-        const day = String(timestamp.getDate()).padStart(2, '0');
-        const hour = String(timestamp.getHours()).padStart(2, '0');
-        const minute = String(timestamp.getMinutes()).padStart(2, '0');
+        const year = timestamp.getUTCFullYear().toString();
+        const month = String(timestamp.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(timestamp.getUTCDate()).padStart(2, '0');
+        const hour = String(timestamp.getUTCHours()).padStart(2, '0');
+        const minute = String(timestamp.getUTCMinutes()).padStart(2, '0');
         
-        // Format: YYYYMMDDHHmm (e.g., "202601141200")
+        // Format: YYYYMMDDHHmm (e.g., "202601141200") - UTC time
         const timeStr = year + month + day + hour + minute;
         
         // IEM radar tile URL format
