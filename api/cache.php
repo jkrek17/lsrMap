@@ -22,25 +22,30 @@ try {
     require_once 'config.php';
 
     // Get parameters with sanitization
+    // Strip all non-digits from hour params (handles both HHMM and HH:MM input)
     $startDate = isset($_GET['start']) ? preg_replace('/[^0-9\-]/', '', $_GET['start']) : null;
-    $startHour = isset($_GET['startHour']) ? preg_replace('/[^0-9:]/', '', $_GET['startHour']) : '00:00';
+    $startHour = isset($_GET['startHour']) ? preg_replace('/[^0-9]/', '', $_GET['startHour']) : '0000';
     $endDate = isset($_GET['end']) ? preg_replace('/[^0-9\-]/', '', $_GET['end']) : null;
-    $endHour = isset($_GET['endHour']) ? preg_replace('/[^0-9:]/', '', $_GET['endHour']) : '23:59';
+    $endHour = isset($_GET['endHour']) ? preg_replace('/[^0-9]/', '', $_GET['endHour']) : '2359';
+
+    // Ensure hour params are exactly 4 digits
+    $startHour = str_pad(substr($startHour, 0, 4), 4, '0');
+    $endHour = str_pad(substr($endHour, 0, 4), 4, '0');
 
     // Default to last 24 hours if not specified
     if (!$startDate || !$endDate) {
         $endDate = date('Y-m-d');
-        $endHour = '23:59';
+        $endHour = '2359';
         $startDateObj = new DateTime($endDate);
         $startDateObj->modify('-1 day');
         $startDate = $startDateObj->format('Y-m-d');
-        $startHour = '00:00';
+        $startHour = '0000';
     }
 
-    // Parse date/time with validation
+    // Parse date/time with validation (insert colon for DateTime parsing)
     $now = new DateTime();
-    $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $endDate . ' ' . $endHour);
-    $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $startDate . ' ' . $startHour);
+    $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $endDate . ' ' . substr($endHour, 0, 2) . ':' . substr($endHour, 2, 2));
+    $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $startDate . ' ' . substr($startHour, 0, 2) . ':' . substr($startHour, 2, 2));
 
     // Validate date parsing
     if (!$endDateTime || !$startDateTime) {
@@ -138,10 +143,10 @@ function loadFromCache($startDate, $endDate) {
  */
 function serveFromSourceAPI($startDate, $startHour, $endDate, $endHour) {
     // Format dates for API (YYYYMMDDHHMM - 12 characters)
-    // Input: $startDate = "2026-01-17", $startHour = "00:00"
+    // Input: $startDate = "2026-01-17", $startHour = "0000"
     // Output: "202601170000"
-    $startFormatted = str_replace(['-', ':'], '', $startDate . $startHour);
-    $endFormatted = str_replace(['-', ':'], '', $endDate . $endHour);
+    $startFormatted = str_replace('-', '', $startDate) . $startHour;
+    $endFormatted = str_replace('-', '', $endDate) . $endHour;
     
     $url = SOURCE_API_URL . '?sts=' . $startFormatted . '&ets=' . $endFormatted . '&wfos=';
     

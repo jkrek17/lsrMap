@@ -86,9 +86,12 @@ class LSRService {
         const startString = formatDateForAPI(startDate, startHour);
         const endString = formatDateForAPI(endDate, endHour);
 
+        // Insert colon into HHMM format for ISO Date parsing (e.g. "1044" -> "10:44")
+        const fmtHour = (h) => h.includes(':') ? h : h.slice(0, 2) + ':' + h.slice(2);
+
         // Determine which API to use
-        const endDateTime = new Date(endDate + 'T' + endHour);
-        const startDateTime = new Date(startDate + 'T' + startHour);
+        const endDateTime = new Date(endDate + 'T' + fmtHour(endHour));
+        const startDateTime = new Date(startDate + 'T' + fmtHour(startHour));
         const now = new Date();
         
         // If query includes today or future dates, use source API directly for real-time data
