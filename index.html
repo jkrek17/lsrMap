@@ -9,13 +9,13 @@
     <!-- Content Security Policy: Local assets plus external services (matches .htaccess) -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu;">
     <title>NWS Local Storm Reports - Interactive Map</title>
-    
+
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
-    
+    <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="lib/fontawesome/css/all.min.css" />
-    
+    <link rel="stylesheet" href="lib/fontawesome/css/all.min.css">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -23,7 +23,7 @@
     <div class="app-container">
         <!-- Header -->
         <header class="header">
-            <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Toggle menu" title="Toggle menu">
+            <button type="button" id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Toggle menu" title="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
             <h1><i class="fas fa-cloud-showers-heavy"></i> NWS Local Storm Reports</h1>
@@ -48,7 +48,7 @@
 
         <!-- Controls Panel -->
         <aside class="controls-panel">
-            <button id="mobileMenuClose" class="mobile-menu-close" aria-label="Close menu" title="Close menu">
+            <button type="button" id="mobileMenuClose" class="mobile-menu-close" aria-label="Close menu" title="Close menu">
                 <i class="fas fa-times"></i>
             </button>
             <!-- Active Filter Summary -->
@@ -85,7 +85,7 @@
 
             <div class="controls-section">
                 <h3><i class="fas fa-filter"></i> Filters</h3>
-                
+
                 <!-- Date Range -->
                 <div class="control-group collapsible" data-section="date">
                     <div class="control-group-header">
@@ -145,8 +145,8 @@
                             +1 Day <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
-                    <div id="actionButtons" style="display: none; margin-top: 1rem;">
-                        <button id="fetchData" class="btn btn-primary" title="Fetch storm reports for selected date range and filters (Shortcut: G)">
+                    <div id="actionButtons" style="display: none;">
+                        <button type="button" id="fetchData" class="btn btn-primary" title="Fetch storm reports for selected date range and filters (Shortcut: G)">
                             <i class="fas fa-search"></i> <span class="btn-text">Get Data</span>
                             <span class="btn-loading" style="display: none;">
                                 <i class="fas fa-spinner fa-spin"></i> Loading...
@@ -260,10 +260,10 @@
                             <option value="PR">Puerto Rico</option>
                         </optgroup>
                     </select>
-                    <button type="button" id="clearBounds" class="btn btn-small" style="margin-top: 0.5rem;" title="Clear location filter and reset to full United States">
+                    <button type="button" id="clearBounds" class="btn btn-small" title="Clear location filter and reset to full United States">
                         <i class="fas fa-times"></i> Clear Location
                     </button>
-                    <label for="wfoSelect" style="margin-top: 0.75rem;">Select WFO:</label>
+                    <label for="wfoSelect">Select WFO:</label>
                     <select id="wfoSelect" class="form-control">
                         <option value="">Select WFO...</option>
                     </select>
@@ -341,17 +341,17 @@
                     </div>
                     <div class="control-group-content">
                         <label class="checkbox-item">
-                            <input type="checkbox" id="showPNS" />
+                            <input type="checkbox" id="showPNS">
                             <span>Show NWS Public Information Statements</span>
                         </label>
-                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                            <p style="margin-bottom: 0.5rem;">
+                        <div class="pns-description">
+                            <p>
                                 <strong>What are PNS?</strong> Public Information Statements are detailed text products issued by NWS Weather Forecast Offices containing weather observations, storm summaries, and significant weather data.
                             </p>
-                            <p style="margin-bottom: 0.5rem;">
+                            <p>
                                 <strong>Data includes:</strong> Snow totals, rainfall amounts, wind gusts, temperatures, ice accumulation, flood reports, and other significant weather measurements from observers and automated stations.
                             </p>
-                            <p style="margin-bottom: 0;">
+                            <p>
                                 <small><i class="fas fa-map-marker-alt"></i> PNS reports with embedded coordinates are plotted at their exact location. Others are placed at the issuing WFO office. Click markers to view full details.</small>
                             </p>
                         </div>
@@ -370,7 +370,7 @@
                         <div id="statisticsContent" class="statistics-content">
                             <!-- Will be populated by JavaScript -->
                         </div>
-                        <button type="button" id="showTopReports" class="btn btn-secondary btn-full" style="margin-top: 1rem; display: none;">
+                        <button type="button" id="showTopReports" class="btn btn-secondary btn-full" style="display: none;">
                             <i class="fas fa-trophy"></i> View Top 10 Reports
                         </button>
                     </div>
@@ -381,7 +381,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3><i class="fas fa-trophy"></i> Top 10 Highest Magnitude Reports</h3>
-                            <button type="button" class="modal-close" id="closeTopReports">
+                            <button type="button" class="modal-close" id="closeTopReports" aria-label="Close">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -402,7 +402,7 @@
                                     <span class="pns-modal-office" id="pnsModalOffice"></span>
                                 </div>
                             </div>
-                            <button type="button" class="modal-close" id="closePnsModal">
+                            <button type="button" class="modal-close" id="closePnsModal" aria-label="Close">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -446,8 +446,8 @@
         <div id="helpModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts & Help</h3>
-                    <button type="button" class="modal-close" id="closeHelpModal">
+                    <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts &amp; Help</h3>
+                    <button type="button" class="modal-close" id="closeHelpModal" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -501,7 +501,7 @@
             <div class="modal-content tutorial-content">
                 <div class="tutorial-header">
                     <h2><i class="fas fa-graduation-cap"></i> Welcome to NWS Local Storm Reports</h2>
-                    <button type="button" class="modal-close" id="closeTutorialModal" title="Skip tutorial">
+                    <button type="button" class="modal-close" id="closeTutorialModal" title="Skip tutorial" aria-label="Skip tutorial">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -538,7 +538,7 @@
                     </div>
                     <div class="tutorial-step" data-step="6">
                         <div class="tutorial-icon">⚡</div>
-                        <h3>Live Mode & Sharing</h3>
+                        <h3>Live Mode &amp; Sharing</h3>
                         <p>Enable "Live Mode" for auto-refreshing data every 60 seconds with animated radar. Use "Share" to copy a link with your current filters, or "Export" to download data.</p>
                         <p><strong>Tip:</strong> Keyboard shortcuts: G (Get Data), C (Clear), S (Share), E (Export), ? (Help)</p>
                     </div>
@@ -570,47 +570,46 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h3><i class="fas fa-download"></i> Export Data</h3>
-                    <button type="button" class="modal-close" id="closeExportModal">
+                    <button type="button" class="modal-close" id="closeExportModal" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+                    <p class="export-description">
                         Export <strong id="exportCount">0</strong> reports in your preferred format:
                     </p>
                     <div class="export-options">
                         <button type="button" class="export-option-btn" data-format="csv">
-                            <div class="export-option-icon">
+                            <span class="export-option-icon">
                                 <i class="fas fa-file-csv"></i>
-                            </div>
-                            <div class="export-option-content">
-                                <div class="export-option-title">CSV (Spreadsheet)</div>
-                                <div class="export-option-desc">Compatible with Excel, Google Sheets</div>
-                            </div>
+                            </span>
+                            <span class="export-option-content">
+                                <span class="export-option-title">CSV (Spreadsheet)</span>
+                                <span class="export-option-desc">Compatible with Excel, Google Sheets</span>
+                            </span>
                         </button>
                         <button type="button" class="export-option-btn" data-format="json">
-                            <div class="export-option-icon">
+                            <span class="export-option-icon">
                                 <i class="fas fa-file-code"></i>
-                            </div>
-                            <div class="export-option-content">
-                                <div class="export-option-title">JSON (Data)</div>
-                                <div class="export-option-desc">Structured data format for developers</div>
-                            </div>
+                            </span>
+                            <span class="export-option-content">
+                                <span class="export-option-title">JSON (Data)</span>
+                                <span class="export-option-desc">Structured data format for developers</span>
+                            </span>
                         </button>
                         <button type="button" class="export-option-btn" data-format="geojson">
-                            <div class="export-option-icon">
+                            <span class="export-option-icon">
                                 <i class="fas fa-map"></i>
-                            </div>
-                            <div class="export-option-content">
-                                <div class="export-option-title">GeoJSON (Map Data)</div>
-                                <div class="export-option-desc">Geographic data for mapping applications</div>
-                            </div>
+                            </span>
+                            <span class="export-option-content">
+                                <span class="export-option-title">GeoJSON (Map Data)</span>
+                                <span class="export-option-desc">Geographic data for mapping applications</span>
+                            </span>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        </aside>
 
         <!-- Map Container -->
         <main class="map-container">
@@ -662,13 +661,13 @@
 
     <!-- Leaflet JS -->
     <script src="lib/leaflet/leaflet.js"></script>
-    
+
     <!-- Configuration -->
     <script src="config.js"></script>
-    
+
     <!-- Application JS (now modular) -->
     <script type="module" src="app.js"></script>
-    
+
     <!-- Fallback for browsers without ES6 module support -->
     <script nomodule>
         alert('This application requires a modern browser with ES6 module support. Please update your browser.');
