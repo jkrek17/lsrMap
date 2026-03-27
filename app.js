@@ -18,6 +18,14 @@ import StatisticsService from './js/ui/statisticsService.js';
 import ReportCountService from './js/ui/reportCountService.js';
 import FilterService from './js/filter/filterService.js';
 import { normalizeLSRReports as normalizeLSRReportsCore } from './js/lsr/normalizeLSR.js';
+import {
+    loadBoundaryGeoJson,
+    boundariesReady,
+    createStateBoundaryLayer,
+    createWfoBoundaryLayer,
+    createNwsAdminRegionLayer,
+    isNwsAdminRegionWithGeoJson
+} from './js/map/boundaryOverlays.js';
 
 // ============================================================================
 // MAP INITIALIZATION
@@ -330,6 +338,174 @@ function shiftCustomDateRange(days) {
     fetchLSRData();
 }
 
+function boundsFromLatLngBounds(lb) {
+    return {
+        south: lb.getSouth(),
+        north: lb.getNorth(),
+        east: lb.getEast(),
+        west: lb.getWest()
+    };
+}
+
+function addRectOverlay(south, north, east, west, fit) {
+    const bounds = [[south, west], [north, east]];
+    L.rectangle(bounds, { color: '#dc2626', fill: false, weight: 2, dashArray: '5, 5' }).addTo(userArea);
+    if (fit) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+    return { south, north, east, west };
+}
+
+/**
+ * LSR lat/lon filter bounds for current location controls (uses cached GeoJSON when loaded).
+ */
+function getLsrFilterBoundsSync(selectedRegion, wfoCode) {
+    if (boundariesReady()) {
+        if (wfoCode) {
+            const wfoLayer = createWfoBoundaryLayer(wfoCode);
+            if (wfoLayer) {
+                return boundsFromLatLngBounds(wfoLayer.getBounds());
+            }
+        }
+        if (selectedRegion && CONFIG.STATES[selectedRegion]) {
+            const stLayer = createStateBoundaryLayer(selectedRegion);
+            if (stLayer) {
+                return boundsFromLatLngBounds(stLayer.getBounds());
+            }
+        }
+        if (selectedRegion && CONFIG.REGIONS[selectedRegion] && isNwsAdminRegionWithGeoJson(selectedRegion)) {
+            const regLayer = createNwsAdminRegionLayer(selectedRegion);
+            if (regLayer) {
+                return boundsFromLatLngBounds(regLayer.getBounds());
+            }
+        }
+    }
+
+    if (wfoCode) {
+        const wfoKey = wfoCode.startsWith('K') ? wfoCode : `K${wfoCode}`;
+        const coords = pnsService?.wfoCoords?.[wfoCode] || pnsService?.wfoCoords?.[wfoKey];
+        if (coords) {
+            const lat = coords[0];
+            const lon = coords[1];
+            const pad = 0.6;
+            return { south: lat - pad, north: lat + pad, east: lon + pad, west: lon - pad };
+        }
+        const regionKey = CONFIG.WFO_REGION_MAP?.[wfoCode];
+        if (regionKey && CONFIG.REGIONS[regionKey]) {
+            const b = CONFIG.REGIONS[regionKey].bounds;
+            return { south: b[0], north: b[1], east: b[2], west: b[3] };
+        }
+        return {
+            south: CONFIG.DEFAULT_BOUNDS.south,
+            north: CONFIG.DEFAULT_BOUNDS.north,
+            east: CONFIG.DEFAULT_BOUNDS.east,
+            west: CONFIG.DEFAULT_BOUNDS.west
+        };
+    }
+    if (selectedRegion && CONFIG.STATES[selectedRegion]) {
+        const b = CONFIG.STATES[selectedRegion].bounds;
+        return { south: b[0], north: b[1], east: b[2], west: b[3] };
+    }
+    if (selectedRegion && CONFIG.REGIONS[selectedRegion]) {
+        const b = CONFIG.REGIONS[selectedRegion].bounds;
+        return { south: b[0], north: b[1], east: b[2], west: b[3] };
+    }
+    return {
+        south: CONFIG.DEFAULT_BOUNDS.south,
+        north: CONFIG.DEFAULT_BOUNDS.north,
+        east: CONFIG.DEFAULT_BOUNDS.east,
+        west: CONFIG.DEFAULT_BOUNDS.west
+    };
+}
+
+/**
+ * Draw GeoJSON boundary for state / NWS admin region / WFO (CWA) and return LSR filter bounds.
+ * Falls back to CONFIG rectangles when GeoJSON is unavailable.
+ */
+async function applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, options = {}) {
+    const fitMap = options.fitMap !== false;
+    userArea.clearLayers();
+
+    try {
+        await loadBoundaryGeoJson();
+    } catch (e) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.warn('Boundary GeoJSON load failed', e);
+        }
+    }
+
+    const geoReady = boundariesReady();
+
+    if (wfoCode) {
+        const layer = geoReady ? createWfoBoundaryLayer(wfoCode) : null;
+        if (layer) {
+            layer.addTo(userArea);
+            if (fitMap) {
+                map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+            }
+            return boundsFromLatLngBounds(layer.getBounds());
+        }
+        const wfoKey = wfoCode.startsWith('K') ? wfoCode : `K${wfoCode}`;
+        const coords = pnsService?.wfoCoords?.[wfoCode] || pnsService?.wfoCoords?.[wfoKey];
+        if (coords) {
+            const lat = coords[0];
+            const lon = coords[1];
+            const pad = 0.6;
+            return addRectOverlay(lat - pad, lat + pad, lon + pad, lon - pad, fitMap);
+        }
+        const regionKey = CONFIG.WFO_REGION_MAP?.[wfoCode];
+        if (regionKey && CONFIG.REGIONS[regionKey]) {
+            const b = CONFIG.REGIONS[regionKey].bounds;
+            if (fitMap) {
+                showStatusToast('CWA GeoJSON unavailable; using NWS region bounds', 'info');
+            }
+            return addRectOverlay(b[0], b[1], b[2], b[3], fitMap);
+        }
+        if (fitMap) {
+            map.setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
+        }
+        return {
+            south: CONFIG.DEFAULT_BOUNDS.south,
+            north: CONFIG.DEFAULT_BOUNDS.north,
+            east: CONFIG.DEFAULT_BOUNDS.east,
+            west: CONFIG.DEFAULT_BOUNDS.west
+        };
+    }
+
+    if (selectedRegion && CONFIG.STATES[selectedRegion]) {
+        const layer = geoReady ? createStateBoundaryLayer(selectedRegion) : null;
+        if (layer) {
+            layer.addTo(userArea);
+            if (fitMap) {
+                map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+            }
+            return boundsFromLatLngBounds(layer.getBounds());
+        }
+        const b = CONFIG.STATES[selectedRegion].bounds;
+        return addRectOverlay(b[0], b[1], b[2], b[3], fitMap);
+    }
+
+    if (selectedRegion && CONFIG.REGIONS[selectedRegion]) {
+        const layer = geoReady && isNwsAdminRegionWithGeoJson(selectedRegion)
+            ? createNwsAdminRegionLayer(selectedRegion)
+            : null;
+        if (layer) {
+            layer.addTo(userArea);
+            if (fitMap) {
+                map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+            }
+            return boundsFromLatLngBounds(layer.getBounds());
+        }
+        const b = CONFIG.REGIONS[selectedRegion].bounds;
+        return addRectOverlay(b[0], b[1], b[2], b[3], fitMap);
+    }
+
+    if (fitMap) {
+        map.setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
+    }
+    return getLsrFilterBoundsSync('', '');
+}
+
 // Fetch NWS Local Storm Reports data
 async function fetchLSRData() {
     // Ensure CONFIG is available
@@ -380,50 +556,13 @@ async function fetchLSRData() {
     if (btnLoading) btnLoading.style.display = 'inline-flex';
     
     markersLayer.clearLayers();
-    userArea.clearLayers();
-    
-    // Get selected region/state
+
     const regionSelect = document.getElementById('regionSelect');
-    const selectedRegion = regionSelect.value;
-    
-    let south, north, east, west;
-    let hasBounds = false;
-    
-    if (selectedRegion) {
-        // Check if it's a state
-        if (CONFIG.STATES[selectedRegion]) {
-            const stateBounds = CONFIG.STATES[selectedRegion].bounds;
-            south = stateBounds[0];
-            north = stateBounds[1];
-            east = stateBounds[2];
-            west = stateBounds[3];
-            hasBounds = true;
-        } 
-        // Check if it's a region
-        else if (CONFIG.REGIONS[selectedRegion]) {
-            const regionBounds = CONFIG.REGIONS[selectedRegion].bounds;
-            south = regionBounds[0];
-            north = regionBounds[1];
-            east = regionBounds[2];
-            west = regionBounds[3];
-            hasBounds = true;
-        }
-    }
-    
-    // Use default bounds if no selection
-    if (!hasBounds) {
-        south = CONFIG.DEFAULT_BOUNDS.south;
-        north = CONFIG.DEFAULT_BOUNDS.north;
-        east = CONFIG.DEFAULT_BOUNDS.east;
-        west = CONFIG.DEFAULT_BOUNDS.west;
-    } else {
-        // Draw rectangle and zoom to bounds
-        userArea.clearLayers();
-        const bounds = [[south, west], [north, east]];
-        L.rectangle(bounds, {color: "red", fill: false, weight: 2, dashArray: '5, 5'}).addTo(userArea);
-        map.fitBounds(bounds, { padding: [50, 50] });
-    }
-    
+    const selectedRegion = regionSelect?.value || '';
+    const wfoFromSelect = document.getElementById('wfoSelect')?.value || '';
+    const wfoCode = wfoFromSelect || selectedWFO || '';
+    const { south, north, east, west } = await applyLocationOverlayAndGetBounds(selectedRegion, wfoCode);
+
     // Fetch LSR data
     try {
         if (!lsrService) {
@@ -2200,32 +2339,12 @@ function refreshMapWithCurrentFilters() {
     setTimeout(() => {
         const activeFilters = getActiveWeatherFilters();
         if (lastGeoJsonData) {
-            // Get current bounds from selected region/state
             const regionSelect = document.getElementById('regionSelect');
             const selectedRegion = regionSelect ? regionSelect.value : '';
-            
-            let southLat, northLat, eastLon, westLon;
-            
-            if (selectedRegion && CONFIG.STATES[selectedRegion]) {
-                const stateBounds = CONFIG.STATES[selectedRegion].bounds;
-                southLat = stateBounds[0];
-                northLat = stateBounds[1];
-                eastLon = stateBounds[2];
-                westLon = stateBounds[3];
-            } else if (selectedRegion && CONFIG.REGIONS[selectedRegion]) {
-                const regionBounds = CONFIG.REGIONS[selectedRegion].bounds;
-                southLat = regionBounds[0];
-                northLat = regionBounds[1];
-                eastLon = regionBounds[2];
-                westLon = regionBounds[3];
-            } else {
-                southLat = CONFIG.DEFAULT_BOUNDS.south;
-                northLat = CONFIG.DEFAULT_BOUNDS.north;
-                eastLon = CONFIG.DEFAULT_BOUNDS.east;
-                westLon = CONFIG.DEFAULT_BOUNDS.west;
-            }
-            
-            // Re-display with current filters
+            const wfoSel = document.getElementById('wfoSelect')?.value || '';
+            const wfoCode = wfoSel || selectedWFO || '';
+            const { south: southLat, north: northLat, east: eastLon, west: westLon } =
+                getLsrFilterBoundsSync(selectedRegion, wfoCode);
             displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon, activeFilters);
         }
         
@@ -2771,6 +2890,8 @@ document.addEventListener('DOMContentLoaded', () => {
     allWarningsLayer = L.layerGroup();
     allWatchesLayer = L.layerGroup();
     userArea = L.layerGroup().addTo(map);
+
+    loadBoundaryGeoJson().catch(() => {});
     
     // Initialize warnings service
     warningsService = new WarningsService();
@@ -2994,33 +3115,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Always refresh on zoom changes to apply zoom-based limits
             // Only apply viewport filtering when zoomed in enough
             if (lastGeoJsonData && allFilteredReports.length > 0) {
-                // Get current bounds from selected region/state
                 const regionSelect = document.getElementById('regionSelect');
                 const selectedRegion = regionSelect.value;
-                
-                let southLat, northLat, eastLon, westLon;
-                
-                if (selectedRegion && CONFIG.STATES[selectedRegion]) {
-                    const stateBounds = CONFIG.STATES[selectedRegion].bounds;
-                    southLat = stateBounds[0];
-                    northLat = stateBounds[1];
-                    eastLon = stateBounds[2];
-                    westLon = stateBounds[3];
-                } else if (selectedRegion && CONFIG.REGIONS[selectedRegion]) {
-                    const regionBounds = CONFIG.REGIONS[selectedRegion].bounds;
-                    southLat = regionBounds[0];
-                    northLat = regionBounds[1];
-                    eastLon = regionBounds[2];
-                    westLon = regionBounds[3];
-                } else {
-                    southLat = CONFIG.DEFAULT_BOUNDS.south;
-                    northLat = CONFIG.DEFAULT_BOUNDS.north;
-                    eastLon = CONFIG.DEFAULT_BOUNDS.east;
-                    westLon = CONFIG.DEFAULT_BOUNDS.west;
-                }
-                
-                // Re-display with current zoom level (applies zoom-based limits)
-                // Viewport filtering is handled inside displayReports based on zoom level
+                const wfoSel = document.getElementById('wfoSelect')?.value || '';
+                const wfoCode = wfoSel || selectedWFO || '';
+                const { south: southLat, north: northLat, east: eastLon, west: westLon } =
+                    getLsrFilterBoundsSync(selectedRegion, wfoCode);
                 displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon);
             }
             
@@ -3042,47 +3142,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (regionSelect) {
         regionSelect.addEventListener('change', (e) => {
         const selectedRegion = e.target.value;
-        userArea.clearLayers();
         const wfoSelect = document.getElementById('wfoSelect');
         if (wfoSelect) {
             wfoSelect.value = '';
         }
         selectedWFO = null;
-        
-        if (selectedRegion) {
-            let bounds;
-            if (CONFIG.STATES[selectedRegion]) {
-                const stateBounds = CONFIG.STATES[selectedRegion].bounds;
-                bounds = [[stateBounds[0], stateBounds[3]], [stateBounds[1], stateBounds[2]]];
-                // Draw rectangle
-                L.rectangle(bounds, {color: "red", fill: false, weight: 2, dashArray: '5, 5'}).addTo(userArea);
-                map.fitBounds(bounds, { padding: [50, 50] });
-                // Automatically fetch data for selected region
-                setTimeout(() => {
-                    fetchLSRData();
-                    updateFilterSummary();
-                }, 300); // Small delay to allow zoom animation
-            } else if (CONFIG.REGIONS[selectedRegion]) {
-                const regionBounds = CONFIG.REGIONS[selectedRegion].bounds;
-                bounds = [[regionBounds[0], regionBounds[3]], [regionBounds[1], regionBounds[2]]];
-                // Draw rectangle
-                L.rectangle(bounds, {color: "red", fill: false, weight: 2, dashArray: '5, 5'}).addTo(userArea);
-                map.fitBounds(bounds, { padding: [50, 50] });
-                // Automatically fetch data for selected region
-                setTimeout(() => {
-                    fetchLSRData();
-                    updateFilterSummary();
-                }, 300); // Small delay to allow zoom animation
-            }
-        } else {
-            // Reset to default view
-            map.setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
-            // Fetch data for full US
-            setTimeout(() => {
-                fetchLSRData();
-                updateFilterSummary();
-            }, 300);
-        }
+
+        setTimeout(() => {
+            fetchLSRData();
+            updateFilterSummary();
+        }, 50);
         });
     }
 
@@ -3091,40 +3160,21 @@ document.addEventListener('DOMContentLoaded', () => {
         wfoSelect.addEventListener('change', (e) => {
             const code = e.target.value;
             selectedWFO = code || null;
-            userArea.clearLayers();
             const regionSelectEl = document.getElementById('regionSelect');
             if (regionSelectEl) {
                 regionSelectEl.value = '';
             }
             if (!code) {
-                updateFilterSummary();
+                setTimeout(() => {
+                    fetchLSRData();
+                    updateFilterSummary();
+                }, 50);
                 return;
             }
-            const wfoKey = code.startsWith('K') ? code : `K${code}`;
-            const coords = pnsService?.wfoCoords?.[code] || pnsService?.wfoCoords?.[wfoKey];
-            if (!coords) {
-                const regionKey = CONFIG.WFO_REGION_MAP?.[code];
-                const region = regionKey ? CONFIG.REGIONS[regionKey] : null;
-                if (region) {
-                    const [south, north, east, west] = region.bounds;
-                    const centerLat = (south + north) / 2;
-                    const centerLon = (east + west) / 2;
-                    map.setView([centerLat, centerLon], 6);
-                    showStatusToast('WFO coordinates not available; showing region bounds', 'info');
-                    setTimeout(() => {
-                        fetchLSRData();
-                        updateFilterSummary();
-                    }, 300);
-                    return;
-                }
-                showStatusToast('WFO coordinates not available', 'error');
-                return;
-            }
-            map.setView([coords[0], coords[1]], 7);
             setTimeout(() => {
                 fetchLSRData();
                 updateFilterSummary();
-            }, 300);
+            }, 50);
         });
     }
     

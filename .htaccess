@@ -1,6 +1,6 @@
 <IfModule mod_headers.c>
     # CSP: Local assets plus external services (Esri basemap tiles, Weather API, Iowa State LSR data)
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://server.arcgisonline.com https://*.arcgisonline.com https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu;"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://server.arcgisonline.com https://*.arcgisonline.com https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;"
 </IfModule>
 
 # Ensure correct MIME types are served

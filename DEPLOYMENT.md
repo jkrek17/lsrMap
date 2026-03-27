@@ -152,6 +152,7 @@ If deploying to a subdirectory (e.g., `/lsr/` or `/weather/`):
   - `unpkg.com` (Leaflet)
   - `cdnjs.cloudflare.com` (Font Awesome)
   - `server.arcgisonline.com` / `*.arcgisonline.com` (Esri World Street Map basemap tiles)
+  - `mapservices.weather.noaa.gov` (NWS boundary GeoJSON for state / CWA overlays)
 
 ### Map not loading
 - **Cause:** Leaflet.js CDN blocked or network issue
