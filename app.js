@@ -3597,8 +3597,8 @@ function updateMapTileLayer() {
     // Use same map tiles for both light and dark mode (no switching)
     // Only create if it doesn't exist
     if (!baseTileLayer) {
-        baseTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        baseTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, HERE, Garmin, USGS, OpenStreetMap contributors, and the GIS user community',
             maxZoom: 19
         });
     }

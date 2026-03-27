@@ -151,7 +151,7 @@ If deploying to a subdirectory (e.g., `/lsr/` or `/weather/`):
 - **Solution:** We have added a permissive `<meta>` CSP tag to `index.html`. If errors persist, check if your web server sends a strict `Content-Security-Policy` header that overrides the meta tag. You may need to ask your server admin to allow:
   - `unpkg.com` (Leaflet)
   - `cdnjs.cloudflare.com` (Font Awesome)
-  - `*.tile.openstreetmap.org` (Map tiles)
+  - `server.arcgisonline.com` / `*.arcgisonline.com` (Esri World Street Map basemap tiles)
 
 ### Map not loading
 - **Cause:** Leaflet.js CDN blocked or network issue
