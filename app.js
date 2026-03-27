@@ -702,9 +702,9 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
     const currentZoom = map.getZoom();
     const zoomLimit = getZoomBasedLimit(currentZoom);
     
-    // Get viewport bounds if viewport filtering is enabled
+    // At higher zoom, only consider markers inside the current map viewport (reduces DOM + work on pan)
     let viewportBounds = null;
-    if (CONFIG.VIEWPORT_ONLY && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT) {
+    if (CONFIG.VIEWPORT_ONLY !== false && map && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT) {
         viewportBounds = map.getBounds();
     }
     
@@ -853,16 +853,19 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         }
     }
 
+    const lightweightUi = options.lightweightUi === true;
     updateReportCount(reportsToDisplay.length, allFilteredReports.length, hiddenCount);
     if (isLocalhost && (normalizeDuration || filterDuration)) {
         console.log(`[Perf] LSR normalize ${normalizeDuration.toFixed(1)}ms, filter ${filterDuration.toFixed(1)}ms, filtered ${allFilteredReports.length}/${normalizedLsrReports.length}`);
     }
     updateStatistics(allFilteredReports);
-    updateFeatureBadges(); // Update feature discoverability badges
-    updateFilterSummary();
-    updateExportCount(); // Update export count in modal
-    if (liveModeActive) {
-        updateLastUpdateTime();
+    if (!lightweightUi) {
+        updateFeatureBadges();
+        updateFilterSummary();
+        updateExportCount();
+        if (liveModeActive) {
+            updateLastUpdateTime();
+        }
     }
     
     // Add or sync markers (incremental on pan/zoom when data and weather filters unchanged)
@@ -884,10 +887,9 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         lastLsrMapFilterKey = filterKey;
     }
     
-    if (reportsToDisplay.length > 0) {
+    if (!incrementalMarkers && reportsToDisplay.length > 0) {
         setTimeout(() => {
             if (markersLayer && markersLayer.getBounds && markersLayer.getBounds().isValid()) {
-                // Only auto-fit if not using viewport filtering or at low zoom
                 if (!viewportBounds || currentZoom < CONFIG.MIN_ZOOM_FOR_VIEWPORT) {
                     map.fitBounds(markersLayer.getBounds(), { padding: [50, 50] });
                 }
@@ -1368,8 +1370,8 @@ function updateReportCountWithPNS() {
     // Get filtered PNS reports (before limits) for total count
     const currentZoom = map ? map.getZoom() : 4;
     const zoomLimit = getZoomBasedLimit(currentZoom);
-    const viewportBounds = CONFIG.VIEWPORT_ONLY && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT 
-        ? map.getBounds() 
+    const viewportBounds = CONFIG.VIEWPORT_ONLY !== false && map && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT
+        ? map.getBounds()
         : null;
     
     // Get active filters
@@ -3159,7 +3161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { south: southLat, north: northLat, east: eastLon, west: westLon } =
                     getLsrFilterBoundsSync(selectedRegion, wfoCode);
                 displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon, undefined, {
-                    incrementalMarkers: true
+                    incrementalMarkers: true,
+                    lightweightUi: true
                 });
             }
             
@@ -3171,8 +3174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Always listen to zoom changes to update marker limits
     map.on('zoomend', refreshMarkersOnZoomMove);
     
-    // Only listen to move events when viewport filtering is enabled
-    if (CONFIG.VIEWPORT_ONLY) {
+    if (CONFIG.VIEWPORT_ONLY !== false) {
         map.on('moveend', refreshMarkersOnZoomMove);
     }
     

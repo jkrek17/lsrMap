@@ -28,9 +28,7 @@ class FilterService {
         activeFiltersOverride
     ) {
         if (!pnsLayer || !showPNS) {
-            // Update counts even when PNS is disabled
             if (updateReportCountWithPNS) updateReportCountWithPNS();
-            if (updateStatisticsWithPNS) updateStatisticsWithPNS();
             return;
         }
         
@@ -40,8 +38,8 @@ class FilterService {
         // Get current zoom and bounds for performance filtering
         const currentZoom = map ? map.getZoom() : 4;
         const zoomLimit = getZoomBasedLimit ? getZoomBasedLimit(currentZoom) : undefined;
-        const viewportBounds = CONFIG.VIEWPORT_ONLY && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT 
-            ? map.getBounds() 
+        const viewportBounds = CONFIG.VIEWPORT_ONLY !== false && map && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT
+            ? map.getBounds()
             : null;
         
         // Get active filters
@@ -152,8 +150,8 @@ class FilterService {
         // Get current zoom and bounds for performance filtering
         const currentZoom = map ? map.getZoom() : 4;
         const zoomLimit = getZoomBasedLimit ? getZoomBasedLimit(currentZoom) : undefined;
-        const viewportBounds = CONFIG.VIEWPORT_ONLY && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT 
-            ? map.getBounds() 
+        const viewportBounds = CONFIG.VIEWPORT_ONLY !== false && map && currentZoom >= CONFIG.MIN_ZOOM_FOR_VIEWPORT
+            ? map.getBounds()
             : null;
         
         // Get active filters
