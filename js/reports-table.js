@@ -5,6 +5,12 @@
 import LSRService from './api/lsrService.js';
 import { offlineDetector } from './utils/offlineDetector.js';
 import { normalizeLSRReports } from './lsr/normalizeLSR.js';
+import {
+    loadBoundaryGeoJson,
+    boundariesReady,
+    getClipFeaturesForSelection,
+    pointInClipFeatures
+} from './map/boundaryOverlays.js';
 
 function normalizeTimeInputValue(value) {
     if (typeof value !== 'string') {
@@ -209,7 +215,7 @@ function updateSortHeaders() {
     });
 }
 
-function applyClientFilters() {
+async function applyClientFilters() {
     if (!allRawNormalized.length) {
         allRows = [];
         document.getElementById('reportsTableBody').innerHTML = '';
@@ -218,17 +224,38 @@ function applyClientFilters() {
         document.getElementById('linkToMap').href = mapPageHref();
         return;
     }
+
+    try {
+        await loadBoundaryGeoJson();
+    } catch (e) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.warn('Boundary GeoJSON load failed (table)', e);
+        }
+    }
+
+    const state = document.getElementById('stateFilter').value;
     const bounds = stateBoundsForSelection();
+    let clipFeatures = null;
+    if (state && boundariesReady()) {
+        clipFeatures = getClipFeaturesForSelection(state, '');
+        if (!clipFeatures || clipFeatures.length === 0) {
+            clipFeatures = null;
+        }
+    }
+
     const selectedTypes = getSelectedReportTypes();
     const allTypesCount = CONFIG.WEATHER_TYPES.length;
     let typeSet = null;
-    if (selectedTypes.length === 0) {
-        typeSet = new Set();
-    } else if (selectedTypes.length < allTypesCount) {
+    // Empty multi-select = show all types (browser quirk / user cleared selection)
+    if (selectedTypes.length > 0 && selectedTypes.length < allTypesCount) {
         typeSet = new Set(selectedTypes);
     }
+
     allRows = allRawNormalized.filter((r) => {
         if (!reportInBounds(r, bounds)) {
+            return false;
+        }
+        if (clipFeatures && !pointInClipFeatures(r.lat, r.lon, clipFeatures)) {
             return false;
         }
         if (typeSet === null) {
@@ -236,18 +263,24 @@ function applyClientFilters() {
         }
         return typeSet.has(r.filterType);
     });
-    renderTable();
+    renderTable(clipFeatures);
     updateTableUrl();
     document.getElementById('linkToMap').href = mapPageHref();
 }
 
-function renderTable() {
+function renderTable(usedPolygonClip = null) {
     const sorted = sortReports(allRows, sortState.column, sortState.direction);
     document.getElementById('reportsTableBody').innerHTML = buildTableRowsHtml(sorted);
     updateSortHeaders();
     const meta = document.getElementById('reportsTableMeta');
     const rawCount = allRawNormalized.length;
-    meta.textContent = `Showing ${sorted.length} of ${rawCount} loaded report${rawCount !== 1 ? 's' : ''} (state bounds and report type filters).`;
+    const state = document.getElementById('stateFilter').value;
+    const geoNote = state && usedPolygonClip
+        ? 'state polygon (NWS boundaries)'
+        : state
+            ? 'state bounding box'
+            : 'US bounds';
+    meta.textContent = `Showing ${sorted.length} of ${rawCount} loaded report${rawCount !== 1 ? 's' : ''} (${geoNote}; report type filters).`;
 }
 
 function attachSortHandlers() {
@@ -260,7 +293,7 @@ function attachSortHandlers() {
                 sortState.column = col;
                 sortState.direction = col === 'time' ? 'desc' : 'asc';
             }
-            renderTable();
+            renderTable(null);
         });
     });
 }
@@ -337,7 +370,7 @@ async function loadReports() {
         allRawNormalized = normalizeLSRReports(data, REPORT_TYPE_MAP).normalized;
 
         document.getElementById('reportsLoading').style.display = 'none';
-        applyClientFilters();
+        await applyClientFilters();
     } catch (e) {
         document.getElementById('reportsLoading').style.display = 'none';
         document.getElementById('reportsError').textContent = e.message || 'Failed to load reports.';
@@ -407,6 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
     populateStateSelect();
     populateTypeFilter();
     parseUrlParams();
+
+    loadBoundaryGeoJson().catch(() => {});
 
     ['startHour', 'endHour'].forEach((id) => {
         const el = document.getElementById(id);
