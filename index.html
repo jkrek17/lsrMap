@@ -56,7 +56,7 @@
                 <h3><i class="fas fa-eye"></i> Current View</h3>
                 <div class="current-view-summaries">
                     <button type="button" class="cv-detail cv-clickable" data-section="date" title="Click to edit date range">
-                        <i class="fas fa-calendar"></i> <span id="summaryDate">Last 24h</span>
+                        <i class="fas fa-calendar"></i> <span id="summaryDate">−1 Day (12Z)</span>
                     </button>
                     <button type="button" class="cv-detail cv-clickable" data-section="location" title="Click to edit location">
                         <i class="fas fa-map-marker-alt"></i> <span id="summaryLocation">All US</span>
@@ -99,7 +99,8 @@
                         <button type="button" class="btn-preset" data-preset="6h" title="Load reports from the last 6 hours">Last 6h</button>
                         <button type="button" class="btn-preset" data-preset="12h" title="Load reports from the last 12 hours">Last 12h</button>
                         <button type="button" class="btn-preset" data-preset="24h" title="Load reports from the last 24 hours">Last 24h</button>
-                        <button type="button" class="btn-preset" data-preset="day12z" title="UTC meteorological day: previous day 12:00 UTC through today 12:00 UTC">−1 Day (12Z)</button>
+                        <button type="button" class="btn-preset" data-preset="day12z" title="Meteorological day: previous calendar day 12:00 UTC through today 12:00 UTC (NWS-style; aligns with Eastern storm day)">−1 Day (12Z)</button>
+                        <button type="button" class="btn-preset" data-preset="day12zNext" title="Next meteorological day: today 12:00 UTC through tomorrow 12:00 UTC">+1 Day (12Z)</button>
                         <button type="button" class="btn-preset" data-preset="48h" title="Load reports from the last 48 hours">Last 48h</button>
                         <button type="button" class="btn-preset" data-preset="week" title="Load reports from the last 7 days">Last Week</button>
                         <button type="button" class="btn-preset" data-preset="custom" title="Set custom date and time range">Custom</button>
@@ -485,7 +486,7 @@
                     <div class="help-section">
                         <h4><i class="fas fa-lightbulb"></i> Tips</h4>
                         <ul class="tips-list">
-                            <li>Use date presets (24h, 48h, Week) for quick data loading</li>
+                            <li>Use date presets (12Z day, 24h, 48h, Week) for quick data loading</li>
                             <li>Quick filters (Severe, Winter, Precip, Tropical) help focus on specific weather types</li>
                             <li>Zoom in to see more markers when limited by performance</li>
                             <li>Click markers to view detailed report information</li>
@@ -516,7 +517,7 @@
                     <div class="tutorial-step" data-step="2">
                         <div class="tutorial-icon">📅</div>
                         <h3>Quick Date Presets</h3>
-                        <p>Use the date presets (Last 24h, 48h, Week) for instant data loading, or select "Custom" for specific date ranges.</p>
+                        <p>Use the date presets (−1 Day 12Z, Last 24h, 48h, Week) for instant data loading, or select "Custom" for specific date ranges. The ±1 Day (12Z) options use 12:00 UTC boundaries, which match the usual NWS Eastern-time calendar day for storm reports.</p>
                         <p><strong>Tip:</strong> Date presets automatically fetch data - no need to click "Get Data"!</p>
                     </div>
                     <div class="tutorial-step" data-step="3">

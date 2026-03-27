@@ -2085,6 +2085,25 @@ function setDatePreset(preset) {
             }, 100);
             break;
         }
+        case 'day12zNext': {
+            // Next meteorological day: today 12Z → tomorrow 12Z (same convention as −1 Day)
+            startDateEl.value = today.toISOString().split('T')[0];
+            startHourEl.value = '1200';
+            const tomorrow = new Date(today);
+            tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+            endDateEl.value = getUtcDateString(tomorrow);
+            endHourEl.value = '1200';
+            customDateFields.style.display = 'none';
+            actionButtons.style.display = 'none';
+            if (liveModeActive) {
+                toggleLiveMode();
+            }
+            setTimeout(() => {
+                fetchLSRData();
+                updateFilterSummary();
+            }, 100);
+            break;
+        }
         case '6h': {
             const start6h = new Date(today.getTime() - 6 * 60 * 60 * 1000);
             startDateEl.value = getUtcDateString(start6h);
@@ -2481,8 +2500,8 @@ function initializeUI() {
     if (hasURLParams) {
         loadStateFromURL();
     } else {
-        // Set default date preset (will auto-load data)
-        setDatePreset('24h');
+        // Default: meteorological day 12Z–12Z UTC (NWS-style; aligns with Eastern “calendar” storm day)
+        setDatePreset('day12z');
     }
     
     const legendContainer = document.getElementById('legend');
@@ -2574,8 +2593,8 @@ function loadStateFromURL() {
             shouldFetch = true;
         }
     } else {
-        // No date params, use default
-        setDatePreset('24h');
+        // No date params, use default meteorological day
+        setDatePreset('day12z');
     }
     
     // Load region
@@ -2899,8 +2918,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearAllFiltersBtn = document.getElementById('clearAllFilters');
     if (clearAllFiltersBtn) {
         clearAllFiltersBtn.addEventListener('click', () => {
-            // Reset date to 24h
-            setDatePreset('24h');
+            // Reset date to default 12Z meteorological day
+            setDatePreset('day12z');
             // Reset location
             const regionSelect = document.getElementById('regionSelect');
             if (regionSelect) {
