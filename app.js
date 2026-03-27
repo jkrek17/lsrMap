@@ -480,6 +480,18 @@ function normalizeLSRReports(geoJsonData) {
             upperTypetext.includes('FZRA');
         const isSleet = upperTypetext.includes('SLEET');
         const isCoastalFloodReport = ['F', 'E', 'v'].includes(rtype) && isCoastalFlood(typetext, remark);
+        const isFog = upperTypetext.includes('FOG');
+        const isWildfire = upperTypetext.includes('WILDFIRE') ||
+            upperTypetext.includes('BRUSH FIRE') ||
+            upperTypetext.includes('GRASS FIRE') ||
+            upperTypetext.includes('WILDFIRES');
+        const isWaterspoutText = upperTypetext.includes('WATERSPOUT');
+        const isLandspoutText = upperTypetext.includes('LANDSPOUT');
+        const isFunnelCloud = upperTypetext.includes('FUNNEL CLOUD') || upperTypetext.includes('FUNNEL_CLOUD');
+        const isHighSustainedWind = rtype === 'A' ||
+            upperTypetext.includes('HIGH SUST WIND') ||
+            upperTypetext.includes('HIGH SUSTAINED') ||
+            (upperTypetext.includes('SUSTAINED') && upperTypetext.includes('WIND'));
 
         // Always use temperature icon (X) for temperature-related reports, regardless of original rtype
         let iconRtype = rtype;
@@ -491,6 +503,26 @@ function normalizeLSRReports(geoJsonData) {
         }
         if (isTemperature) {
             iconRtype = 'X'; // Always use temperature icon configuration for temperature-related reports
+        }
+        if (isFog) {
+            iconRtype = 'J';
+        }
+        if (isWildfire) {
+            iconRtype = 'U';
+        }
+        if (isHighSustainedWind) {
+            iconRtype = 'O';
+        }
+        if (rtype === 'T' && isFunnelCloud) {
+            iconRtype = 'FC';
+        } else if (rtype === 'C') {
+            iconRtype = isFunnelCloud ? 'FC' : 'T';
+        } else if (rtype === 'W') {
+            if (isWaterspoutText) {
+                iconRtype = 'WS';
+            } else if (isLandspoutText) {
+                iconRtype = 'T';
+            }
         }
 
         // Determine filter type - use Temperature for filtering if it's a temperature-related report
@@ -505,6 +537,18 @@ function normalizeLSRReports(geoJsonData) {
             filterType = 'Sleet';
         } else if (isCoastalFloodReport) {
             filterType = 'Coastal Flooding';
+        } else if (isFog) {
+            filterType = 'Fog';
+        } else if (isWildfire) {
+            filterType = 'Wildfire';
+        } else if (isHighSustainedWind) {
+            filterType = 'Wind';
+        } else if (iconRtype === 'FC') {
+            filterType = 'Funnel Cloud';
+        } else if (iconRtype === 'WS') {
+            filterType = 'Waterspout';
+        } else if (rtype === 'W' && isLandspoutText) {
+            filterType = 'Tornado';
         } else {
             filterType = getReportTypeName(rtype, REPORT_TYPE_MAP);
         }
@@ -524,6 +568,16 @@ function normalizeLSRReports(geoJsonData) {
             category = 'Sleet';
         } else if (isCoastalFloodReport) {
             category = 'Coastal Flooding';
+        } else if (isFog) {
+            category = 'Fog';
+        } else if (isWildfire) {
+            category = 'Wildfire';
+        } else if (isHighSustainedWind) {
+            category = typetext || 'Wind';
+        } else if (iconRtype === 'FC') {
+            category = 'Funnel Cloud';
+        } else if (iconRtype === 'WS') {
+            category = 'Waterspout';
         }
 
         // Snow squalls don't have a meaningful magnitude
@@ -534,7 +588,7 @@ function normalizeLSRReports(geoJsonData) {
         // Normalize "Tropical Cyclone" to "Tropical" for consistency
         if (lowerTypetext.includes('tropical')) {
             category = 'Tropical';
-        } else if (typetext && !lowerTypetext.includes('unknown') && !isFreezingRain && !isSleet && !isCoastalFloodReport && !isSnowSquall) {
+        } else if (typetext && !lowerTypetext.includes('unknown') && !isFreezingRain && !isSleet && !isCoastalFloodReport && !isSnowSquall && !isFog && !isWildfire && !isHighSustainedWind && iconRtype !== 'FC' && iconRtype !== 'WS') {
             // Use typetext if it's meaningful and not "unknown"
             // This keeps original names like "EXTREME COLD", "WIND CHILL", etc.
             category = typetext;
@@ -564,7 +618,9 @@ function normalizeLSRReports(geoJsonData) {
             isSnowSquall,
             isFreezingRain,
             isSleet,
-            isCoastalFloodReport
+            isCoastalFloodReport,
+            isFog,
+            isWildfire
         });
     }
 
@@ -2011,6 +2067,24 @@ function setDatePreset(preset) {
     endHourEl.value = '2359';
 
     switch(preset) {
+        case 'day12z': {
+            const y = new Date(today);
+            y.setUTCDate(y.getUTCDate() - 1);
+            startDateEl.value = getUtcDateString(y);
+            startHourEl.value = '1200';
+            endDateEl.value = today.toISOString().split('T')[0];
+            endHourEl.value = '1200';
+            customDateFields.style.display = 'none';
+            actionButtons.style.display = 'none';
+            if (liveModeActive) {
+                toggleLiveMode();
+            }
+            setTimeout(() => {
+                fetchLSRData();
+                updateFilterSummary();
+            }, 100);
+            break;
+        }
         case '6h': {
             const start6h = new Date(today.getTime() - 6 * 60 * 60 * 1000);
             startDateEl.value = getUtcDateString(start6h);
@@ -2322,11 +2396,11 @@ function initializeUI() {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    // Set default dates
+    // Default custom range: prior UTC day 12Z → today 12Z (matches "−1 Day" preset)
     document.getElementById('startDate').value = yesterday.toISOString().split('T')[0];
-    document.getElementById('startHour').value = '0000';
+    document.getElementById('startHour').value = '1200';
     document.getElementById('endDate').value = today.toISOString().split('T')[0];
-    document.getElementById('endHour').value = '2359';
+    document.getElementById('endHour').value = '1200';
     
     const startHourInput = document.getElementById('startHour');
     const endHourInput = document.getElementById('endHour');
@@ -2349,15 +2423,19 @@ function initializeUI() {
         'Coastal Flooding': 'fa-water',
         'Snow': 'fa-snowflake',
         'Snow Squall': 'fa-snowflake',
-        'Sleet': 'fa-snowflake',
+        'Sleet': 'fa-circle',
         'Freezing Rain': 'fa-cloud-rain',
         'Ice': 'fa-icicles',
         'Hail': 'fa-circle',
         'Wind': 'fa-wind',
         'Thunderstorm': 'fa-bolt',
         'Tornado': 'fa-tornado',
+        'Funnel Cloud': 'fa-tornado',
+        'Waterspout': 'fa-water',
         'Tropical': 'fa-hurricane',
         'Temperature': 'fa-thermometer-half',
+        'Fog': 'fa-smog',
+        'Wildfire': 'fa-fire',
         'Other': 'fa-cloud'
     };
     
@@ -2413,15 +2491,19 @@ function initializeUI() {
         'Flood': 'Flooding reports (non-coastal). Green indicates flood conditions.',
         'Coastal Flooding': 'Coastal flooding reports. Green indicates coastal flood conditions.',
         'Snow': 'Snowfall reports measured in inches. Color changes with accumulation.',
-        'Sleet': 'Sleet reports measured in inches. Colors show 1-6 inches of accumulation.',
+        'Sleet': 'Sleet depth in inches. Same marker style as hail (circle) with sleet color scale.',
         'Freezing Rain': 'Freezing rain reports measured in inches. Blue outline distinguishes freezing rain.',
         'Ice': 'Ice accumulation reports. Gray to purple indicates severity.',
         'Hail': 'Hail size reports in inches. Pink to purple indicates larger hail.',
         'Wind': 'Wind speed reports in mph. Yellow to brown indicates stronger winds.',
         'Thunderstorm': 'Thunderstorm wind reports. Yellow to red indicates severity.',
-        'Tornado': 'Tornado reports. Red markers indicate confirmed tornadoes.',
+        'Tornado': 'Confirmed tornado reports. Red square with red border.',
+        'Funnel Cloud': 'Funnel cloud reports. Red square with white border.',
+        'Waterspout': 'Waterspout reports. Blue water-themed marker.',
         'Tropical': 'Tropical storm/hurricane reports. White to black indicates intensity.',
         'Temperature': 'Temperature reports in °F. Blue to red indicates cold to hot.',
+        'Fog': 'Fog reports. Visibility in miles when reported.',
+        'Wildfire': 'Wildfire and similar fire-weather reports.',
         'Other': 'Other weather phenomena not categorized above.'
     };
     

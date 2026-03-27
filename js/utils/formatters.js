@@ -40,11 +40,13 @@ export function isCoastalFlood(typetext = '', remark = '') {
  */
 export function getUnitForReportType(rtype) {
     const inchTypes = ["R", "S", "s", "H", "5"];
-    const mphTypes = ["O", "N", "D", "G", "M", "0", "Q"];
+    const mphTypes = ["O", "N", "A", "D", "G", "M", "0", "Q"];
     const tempTypes = ["X"];
+    const visibilityTypes = ["J"];
     if (inchTypes.includes(rtype)) return '"';
     if (mphTypes.includes(rtype)) return ' mph';
     if (tempTypes.includes(rtype)) return '°F';
+    if (visibilityTypes.includes(rtype)) return ' mi';
     return '';
 }
 

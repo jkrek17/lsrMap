@@ -74,6 +74,11 @@ const PNS_TYPE_MAP = {
     
     // Hail types
     'HAIL': { filterType: 'Hail', rtype: 'H' },
+
+    'FOG': { filterType: 'Fog', rtype: 'J' },
+    'DENSE_FOG': { filterType: 'Fog', rtype: 'J' },
+    'WILDFIRE': { filterType: 'Wildfire', rtype: 'U' },
+    'WILD_FIRE': { filterType: 'Wildfire', rtype: 'U' },
     
     // Thunderstorm types
     'THUNDERSTORM': { filterType: 'Thunderstorm', rtype: 'D' },
