@@ -2357,7 +2357,7 @@ function initializeUI() {
         'Thunderstorm': 'Thunderstorm wind reports. Yellow to red indicates severity.',
         'Tornado': 'Confirmed tornado reports. Red square with red border.',
         'Funnel Cloud': 'Funnel cloud reports. Red square with white border.',
-        'Waterspout': 'Waterspout reports. Same tornado marker with a blue border.',
+        'Waterspout': 'Waterspout reports. Same tornado icon on a blue square with blue border.',
         'Tropical': 'Tropical storm/hurricane reports. White to black indicates intensity.',
         'Temperature': 'Temperature reports in °F. Blue to red indicates cold to hot.',
         'Fog': 'Fog reports. Visibility in miles when reported.',
