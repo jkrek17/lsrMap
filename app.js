@@ -299,11 +299,18 @@ function shiftCustomDateRange(days) {
         return;
     }
 
-    const normalizedStartHour = normalizeTimeInputValue(startHourEl.value);
-    const normalizedEndHour = normalizeTimeInputValue(endHourEl.value);
-    if (!normalizedStartHour || !normalizedEndHour) {
-        showStatusToast('Please enter time in 24-hour UTC format (HHMM).', 'error');
-        return;
+    const preset = document.querySelector('.btn-preset.active')?.dataset?.preset;
+    const isCustomPreset = preset === 'custom';
+
+    let normalizedStartHour;
+    let normalizedEndHour;
+    if (isCustomPreset) {
+        normalizedStartHour = normalizeTimeInputValue(startHourEl.value);
+        normalizedEndHour = normalizeTimeInputValue(endHourEl.value);
+        if (!normalizedStartHour || !normalizedEndHour) {
+            showStatusToast('Please enter time in 24-hour UTC format (HHMM).', 'error');
+            return;
+        }
     }
 
     startDate.setUTCDate(startDate.getUTCDate() + days);
@@ -311,8 +318,13 @@ function shiftCustomDateRange(days) {
 
     startDateEl.value = formatDateInputValue(startDate);
     endDateEl.value = formatDateInputValue(endDate);
-    startHourEl.value = normalizedStartHour;
-    endHourEl.value = normalizedEndHour;
+    if (isCustomPreset) {
+        startHourEl.value = normalizedStartHour;
+        endHourEl.value = normalizedEndHour;
+    } else {
+        startHourEl.value = '1200';
+        endHourEl.value = '1200';
+    }
 
     updateFilterSummary();
     fetchLSRData();
