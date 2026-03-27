@@ -499,18 +499,6 @@ body {
     min-height: 0;
 }
 
-.date-day12z-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.date-day12z-buttons .btn-preset {
-    flex: 1;
-    min-width: 0;
-}
-
 #actionButtons {
     display: flex;
     flex-wrap: wrap;
