@@ -2,7 +2,7 @@
 // MODULE IMPORTS
 // ============================================================================
 
-import { formatDateForAPI, extractWindSpeed, getUnitForReportType, getReportTypeName, isCoastalFlood } from './js/utils/formatters.js';
+import { formatDateForAPI, extractWindSpeed, getUnitForReportType, getReportTypeName } from './js/utils/formatters.js';
 import { errorHandler, ERROR_TYPES } from './js/errors/errorHandler.js';
 import { cacheService } from './js/cache/cacheService.js';
 import { requestManager } from './js/api/requestManager.js';
@@ -17,6 +17,7 @@ import PNSService from './js/api/pnsService.js';
 import StatisticsService from './js/ui/statisticsService.js';
 import ReportCountService from './js/ui/reportCountService.js';
 import FilterService from './js/filter/filterService.js';
+import { normalizeLSRReports as normalizeLSRReportsCore } from './js/lsr/normalizeLSR.js';
 
 // ============================================================================
 // MAP INITIALIZATION
@@ -172,6 +173,34 @@ function updateFilterSummary() {
     
     // Show summary
     summary.style.display = 'flex';
+
+    const tableLink = document.getElementById('linkReportsTable');
+    if (tableLink) {
+        tableLink.href = tableOfReportsHref();
+    }
+}
+
+function tableOfReportsHref() {
+    const params = new URLSearchParams();
+    const startDate = document.getElementById('startDate')?.value;
+    const startHour = document.getElementById('startHour')?.value;
+    const endDate = document.getElementById('endDate')?.value;
+    const endHour = document.getElementById('endHour')?.value;
+    if (startDate && endDate) {
+        params.set('start', `${startDate}T${startHour || '0000'}`);
+        params.set('end', `${endDate}T${endHour || '2359'}`);
+    }
+    const region = document.getElementById('regionSelect')?.value;
+    if (region && CONFIG.STATES[region]) {
+        params.set('region', region);
+    }
+    const activeTypes = Array.from(document.querySelectorAll('input[id^="hidden-filter-"]:checked'))
+        .map(cb => cb.value);
+    if (activeTypes.length > 0 && activeTypes.length < CONFIG.WEATHER_TYPES.length) {
+        params.set('types', activeTypes.join(','));
+    }
+    const q = params.toString();
+    return q ? `reports-table.html?${q}` : 'reports-table.html';
 }
 
 // ============================================================================
@@ -422,215 +451,13 @@ appState.set('lastGeoJsonData', lastGeoJsonData);
 appState.set('topReportsByType', topReportsByType);
 
 function normalizeLSRReports(geoJsonData) {
-    const features = geoJsonData?.features || [];
-    const normalized = [];
-    const stats = {
-        total: features.length,
-        invalidCoords: 0,
-        invalidSamples: []
-    };
-    const invalidSampleLimit = 50;
-
-    for (const feature of features) {
-        const props = feature.properties || {};
-        const lat = parseFloat(props.lat);
-        const lon = parseFloat(props.lon);
-
-        if (isNaN(lat) || isNaN(lon)) {
-            stats.invalidCoords++;
-            if (stats.invalidSamples.length < invalidSampleLimit) {
-                stats.invalidSamples.push({
-                    type: props.typetext || getReportTypeName(props.type || props.rtype || '', REPORT_TYPE_MAP),
-                    rtype: props.type || props.rtype || '',
-                    magnitude: props.magnitude || 0,
-                    location: [props.city, props.st || props.state].filter(Boolean).join(', '),
-                    time: props.valid || '',
-                    lat: props.lat,
-                    lon: props.lon
-                });
-            }
-            continue;
-        }
-
-        let rtype = props.type || props.rtype || '';
-        const typetext = props.typetext || '';
-        const remark = props.remark || '';
-
-        // Check if this is a snow squall - separate category from snow
-        const upperTypetext = typetext ? typetext.toUpperCase() : '';
-        const lowerTypetext = typetext ? typetext.toLowerCase() : '';
-        const isSnowSquall = upperTypetext.includes('SNOW SQUALL');
-
-        // Check if this is a temperature-related report - use temperature icon but keep original category name
-        // Look for temperature, extreme cold, wind chill, heat index, extreme heat, etc.
-        const isTemperature = upperTypetext && (
-            upperTypetext.includes('TEMPERATURE') ||
-            upperTypetext.includes('EXTREME TEMP') ||
-            upperTypetext.includes('EXTREME COLD') ||
-            upperTypetext.includes('WIND CHILL') ||
-            upperTypetext.includes('HEAT INDEX') ||
-            upperTypetext.includes('EXTREME HEAT') ||
-            (upperTypetext.includes('COLD') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY'))) ||
-            (upperTypetext.includes('HEAT') && (upperTypetext.includes('WARNING') || upperTypetext.includes('ADVISORY')))
-        );
-        const isFreezingRain = upperTypetext.includes('FREEZING RAIN') ||
-            upperTypetext.includes('FREEZING_RAIN') ||
-            upperTypetext.includes('FREEZING DRIZZLE') ||
-            upperTypetext.includes('FREEZING_DRIZZLE') ||
-            upperTypetext.includes('FZRA');
-        const isSleet = upperTypetext.includes('SLEET');
-        const isCoastalFloodReport = ['F', 'E', 'v'].includes(rtype) && isCoastalFlood(typetext, remark);
-        const isFog = upperTypetext.includes('FOG');
-        const isWildfire = upperTypetext.includes('WILDFIRE') ||
-            upperTypetext.includes('BRUSH FIRE') ||
-            upperTypetext.includes('GRASS FIRE') ||
-            upperTypetext.includes('WILDFIRES');
-        const isWaterspoutText = upperTypetext.includes('WATERSPOUT');
-        const isLandspoutText = upperTypetext.includes('LANDSPOUT');
-        const isFunnelCloud = upperTypetext.includes('FUNNEL CLOUD') || upperTypetext.includes('FUNNEL_CLOUD');
-        const isHighSustainedWind = rtype === 'A' ||
-            upperTypetext.includes('HIGH SUST WIND') ||
-            upperTypetext.includes('HIGH SUSTAINED') ||
-            (upperTypetext.includes('SUSTAINED') && upperTypetext.includes('WIND'));
-
-        // Always use temperature icon (X) for temperature-related reports, regardless of original rtype
-        let iconRtype = rtype;
-        if (isSnowSquall) {
-            iconRtype = 'SQ';
-        }
-        if (isSleet) {
-            iconRtype = 's';
-        }
-        if (isTemperature) {
-            iconRtype = 'X'; // Always use temperature icon configuration for temperature-related reports
-        }
-        if (isFog) {
-            iconRtype = 'J';
-        }
-        if (isWildfire) {
-            iconRtype = 'U';
-        }
-        if (isHighSustainedWind) {
-            iconRtype = 'O';
-        }
-        if (rtype === 'T' && isFunnelCloud) {
-            iconRtype = 'FC';
-        } else if (rtype === 'C') {
-            iconRtype = isFunnelCloud ? 'FC' : 'T';
-        } else if (rtype === 'W') {
-            if (isWaterspoutText) {
-                iconRtype = 'WS';
-            } else if (isLandspoutText) {
-                iconRtype = 'T';
-            }
-        }
-
-        // Determine filter type - use Temperature for filtering if it's a temperature-related report
-        let filterType;
-        if (isTemperature) {
-            filterType = 'Temperature'; // Filter as Temperature
-        } else if (isSnowSquall) {
-            filterType = 'Snow Squall';
-        } else if (isFreezingRain) {
-            filterType = 'Freezing Rain';
-        } else if (isSleet) {
-            filterType = 'Sleet';
-        } else if (isCoastalFloodReport) {
-            filterType = 'Coastal Flooding';
-        } else if (isFog) {
-            filterType = 'Fog';
-        } else if (isWildfire) {
-            filterType = 'Wildfire';
-        } else if (isHighSustainedWind) {
-            filterType = 'Wind';
-        } else if (iconRtype === 'FC') {
-            filterType = 'Funnel Cloud';
-        } else if (iconRtype === 'WS') {
-            filterType = 'Waterspout';
-        } else if (rtype === 'W' && isLandspoutText) {
-            filterType = 'Tornado';
-        } else {
-            filterType = getReportTypeName(rtype, REPORT_TYPE_MAP);
-        }
-
-        let magnitude = parseFloat(props.magnitude) || 0;
-        const valid = (props.valid || '').replace('T', ' ');
-        const city = props.city || '';
-        const state = props.st || props.state || '';
-
-        // Use REPORT_TYPE_MAP for consistent naming, but prefer typetext if it's more descriptive
-        let category = getReportTypeName(rtype, REPORT_TYPE_MAP);
-        if (isSnowSquall) {
-            category = 'Snow Squall';
-        } else if (isFreezingRain) {
-            category = 'Freezing Rain';
-        } else if (isSleet) {
-            category = 'Sleet';
-        } else if (isCoastalFloodReport) {
-            category = 'Coastal Flooding';
-        } else if (isFog) {
-            category = 'Fog';
-        } else if (isWildfire) {
-            category = 'Wildfire';
-        } else if (isHighSustainedWind) {
-            category = typetext || 'Wind';
-        } else if (iconRtype === 'FC') {
-            category = 'Funnel Cloud';
-        } else if (iconRtype === 'WS') {
-            category = 'Waterspout';
-        }
-
-        // Snow squalls don't have a meaningful magnitude
-        if (isSnowSquall) {
-            magnitude = 0;
-        }
-
-        // Normalize "Tropical Cyclone" to "Tropical" for consistency
-        if (lowerTypetext.includes('tropical')) {
-            category = 'Tropical';
-        } else if (typetext && !lowerTypetext.includes('unknown') && !isFreezingRain && !isSleet && !isCoastalFloodReport && !isSnowSquall && !isFog && !isWildfire && !isHighSustainedWind && iconRtype !== 'FC' && iconRtype !== 'WS') {
-            // Use typetext if it's meaningful and not "unknown"
-            // This keeps original names like "EXTREME COLD", "WIND CHILL", etc.
-            category = typetext;
-        }
-
-        // Use iconRtype for icon creation (allows temperature reports to use temp icon)
-        // but keep original rtype for unit and category purposes
-        const unit = getUnitForReportType(iconRtype);
-        const iconMagnitude = isSnowSquall ? 0 : magnitude;
-        const locationStr = city + (state ? ', ' + state : '');
-
-        normalized.push({
-            lat,
-            lon,
-            rtype,
-            iconRtype,
-            typetext,
-            remark,
-            magnitude,
-            iconMagnitude,
-            unit,
-            location: locationStr,
-            time: valid,
-            type: category,
-            category,
-            filterType,
-            isSnowSquall,
-            isFreezingRain,
-            isSleet,
-            isCoastalFloodReport,
-            isFog,
-            isWildfire
-        });
-    }
-
+    const { normalized, stats } = normalizeLSRReportsCore(geoJsonData, REPORT_TYPE_MAP);
     lastNormalizationStats = {
         total: stats.total,
         invalidCoords: stats.invalidCoords,
-        normalized: normalized.length,
+        normalized: stats.normalized,
         invalidSamples: stats.invalidSamples
     };
-
     return normalized;
 }
 
