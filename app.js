@@ -635,6 +635,7 @@ let allPNSReports = []; // All PNS reports (filtered and processed for performan
 let locationClipFeatures = null;
 /** Set after a full marker rebuild; pan/zoom uses incremental sync when data + filters match */
 let lastLsrMapFilterKey = null;
+let refreshMapRafId = null;
 
 // Sync with appState
 appState.set('allFilteredReports', allFilteredReports);
@@ -684,7 +685,11 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
     }
     
     let normalizeDuration = 0;
-    if (isNewData || lastNormalizedGeoJson !== geoJsonData || normalizedLsrReports.length === 0) {
+    const canReuseNormalization =
+        !isNewData &&
+        geoJsonData === lastNormalizedGeoJson &&
+        normalizedLsrReports.length > 0;
+    if (!canReuseNormalization) {
         const normalizeStart = isLocalhost ? performance.now() : 0;
         normalizedLsrReports = normalizeLSRReports(geoJsonData);
         lastNormalizedGeoJson = geoJsonData;
@@ -2374,8 +2379,11 @@ function clearBounds() {
 // Refresh map with current filters (called when weather type filters change)
 // Defined before initializeUI so it's accessible when chip listeners are set up
 function refreshMapWithCurrentFilters() {
-    // Use a small timeout to ensure checkbox state is updated
-    setTimeout(() => {
+    if (refreshMapRafId != null) {
+        cancelAnimationFrame(refreshMapRafId);
+    }
+    refreshMapRafId = requestAnimationFrame(() => {
+        refreshMapRafId = null;
         const activeFilters = getActiveWeatherFilters();
         if (lastGeoJsonData) {
             const regionSelect = document.getElementById('regionSelect');
@@ -2386,10 +2394,9 @@ function refreshMapWithCurrentFilters() {
                 getLsrFilterBoundsSync(selectedRegion, wfoCode);
             displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon, activeFilters);
         }
-        
-        // Also filter PNS markers (this updates counts and statistics)
+
         filterPNSMarkers(activeFilters);
-    }, 10);
+    });
 }
 
 // ============================================================================

@@ -362,6 +362,10 @@ const CONFIG = {
     MIN_ZOOM_FOR_VIEWPORT: 6,
     /** Do not persist LSR GeoJSON in localStorage above this feature count (avoids quota churn and slow JSON.stringify). */
     LSR_LOCALSTORAGE_MAX_FEATURES: 2500,
+    /** If the requested UTC range is longer than this many days, fetch it in multiple API calls (smaller JSON per request). */
+    LSR_FETCH_MAX_DAYS_SINGLE: 21,
+    /** Chunk size in days for long-range LSR fetches. */
+    LSR_FETCH_CHUNK_DAYS: 14,
     ZOOM_BASED_LIMITS: {
         // Max markers per zoom level (undefined = no limit)
         3: 500,   // Increased from 100 - show more at continent view

@@ -7,6 +7,43 @@ import { cacheService } from '../cache/cacheService.js';
 import { errorHandler, ERROR_TYPES } from '../errors/errorHandler.js';
 import { formatDateForAPI } from '../utils/formatters.js';
 
+function utcDateStr(d) {
+    return d.toISOString().slice(0, 10);
+}
+
+function utcHHMM(d) {
+    const h = d.getUTCHours();
+    const m = d.getUTCMinutes();
+    return `${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}`;
+}
+
+/** Stable key for deduping LSR features when merging chunked responses */
+function lsrFeatureDedupKey(feature) {
+    const p = feature?.properties || {};
+    const lat = parseFloat(p.lat);
+    const lon = parseFloat(p.lon);
+    const valid = (p.valid || '').replace('T', ' ');
+    const latK = Number.isFinite(lat) ? lat.toFixed(5) : String(p.lat ?? '');
+    const lonK = Number.isFinite(lon) ? lon.toFixed(5) : String(p.lon ?? '');
+    return `${valid}|${latK}|${lonK}|${p.type || p.rtype || ''}|${p.magnitude ?? ''}`;
+}
+
+function mergeLsrFeatureCollections(collections) {
+    const seen = new Set();
+    const features = [];
+    for (const fc of collections) {
+        const list = fc?.features;
+        if (!list || !list.length) continue;
+        for (const f of list) {
+            const k = lsrFeatureDedupKey(f);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            features.push(f);
+        }
+    }
+    return { type: 'FeatureCollection', features };
+}
+
 // Console logging styles for data fetching feedback
 const LOG_STYLES = {
     cache: 'background: #10b981; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
@@ -85,7 +122,8 @@ class LSRService {
             startHour,
             endDate,
             endHour,
-            useCache = true
+            useCache = true,
+            skipChunking = false
         } = params;
 
         const startTime = performance.now();
@@ -100,7 +138,7 @@ class LSRService {
         const endDateTime = new Date(endDate + 'T' + fmtHour(endHour));
         const startDateTime = new Date(startDate + 'T' + fmtHour(startHour));
         const now = new Date();
-        
+
         // If query includes today or future dates, use source API directly for real-time data
         // Today's data won't be in the cache (it's still accumulating)
         // This matches the cache.php routing logic
@@ -151,6 +189,24 @@ class LSRService {
                 reason: 'Found in browser localStorage (5-min TTL)'
             });
             return cached;
+        }
+
+        const spanMs = endDateTime - startDateTime;
+        const maxSingleDays = (typeof CONFIG !== 'undefined' && CONFIG.LSR_FETCH_MAX_DAYS_SINGLE != null)
+            ? CONFIG.LSR_FETCH_MAX_DAYS_SINGLE
+            : 21;
+        const chunkDays = (typeof CONFIG !== 'undefined' && CONFIG.LSR_FETCH_CHUNK_DAYS != null)
+            ? CONFIG.LSR_FETCH_CHUNK_DAYS
+            : 14;
+        const maxSingleMs = maxSingleDays * 86400000;
+        if (!skipChunking && spanMs > maxSingleMs && chunkDays > 0) {
+            return this.fetchLSRDataChunked(
+                { startDate, startHour, endDate, endHour, useCache },
+                chunkDays,
+                startTime,
+                dateRange,
+                cacheKey
+            );
         }
 
         // Fetch from API
@@ -212,6 +268,54 @@ class LSRService {
         this.cacheLsrResponseIfSmall(cacheKey, data);
 
         return data;
+    }
+
+    /**
+     * Long ranges: sequential chunk requests + merge (dedupe). Uses skipChunking fetches only.
+     */
+    async fetchLSRDataChunked(rangeParams, chunkDays, startTime, dateRange, fullRangeCacheKey) {
+        const fmtHour = (h) => h.includes(':') ? h : h.slice(0, 2) + ':' + h.slice(2);
+        const { startDate, startHour, endDate, endHour, useCache } = rangeParams;
+        const endDateTime = new Date(endDate + 'T' + fmtHour(endHour));
+        let cursor = new Date(startDate + 'T' + fmtHour(startHour));
+        const chunkMs = chunkDays * 86400000;
+        const parts = [];
+        let chunkIndex = 0;
+
+        while (cursor < endDateTime) {
+            const chunkEnd = new Date(Math.min(cursor.getTime() + chunkMs, endDateTime.getTime()));
+            const sd = utcDateStr(cursor);
+            const sh = utcHHMM(cursor);
+            const ed = utcDateStr(chunkEnd);
+            const eh = utcHHMM(chunkEnd);
+            const data = await this.fetchLSRData({
+                startDate: sd,
+                startHour: sh,
+                endDate: ed,
+                endHour: eh,
+                useCache,
+                skipChunking: true
+            });
+            parts.push(data);
+            chunkIndex++;
+            if (chunkEnd.getTime() <= cursor.getTime()) {
+                break;
+            }
+            cursor = chunkEnd;
+        }
+
+        const merged = mergeLsrFeatureCollections(parts);
+        const duration = Math.round(performance.now() - startTime);
+        this.logFetch('sourceAPI', {
+            features: merged.features.length,
+            duration,
+            dateRange,
+            reason: `Chunked fetch (${chunkIndex} requests, ${chunkDays}d windows)`
+        });
+
+        this.cacheLsrResponseIfSmall(fullRangeCacheKey, merged);
+
+        return merged;
     }
 
     /**
