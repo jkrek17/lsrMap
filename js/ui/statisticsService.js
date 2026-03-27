@@ -199,7 +199,7 @@ class StatisticsService {
         const iconMap = {
             'Tornado': '<i class="fas fa-tornado" style="color: #dc2626;"></i>',
             'Funnel Cloud': '<i class="fas fa-tornado" style="color: #f97316;"></i>',
-            'Waterspout': '<i class="fas fa-water" style="color: #0ea5e9;"></i>',
+            'Waterspout': '<i class="fas fa-tornado" style="color: #2563eb;"></i>',
             'Temperature': '<i class="fas fa-thermometer-half" style="color: #60a5fa;"></i>',
             'Thunderstorm': '<i class="fas fa-bolt" style="color: #f59e0b;"></i>',
             'Hail': '<i class="fas fa-circle" style="color: #3b82f6;"></i>',

@@ -188,7 +188,7 @@ function tableOfReportsHref() {
     const endHour = document.getElementById('endHour')?.value;
     if (startDate && endDate) {
         params.set('start', `${startDate}T${startHour || '0000'}`);
-        params.set('end', `${endDate}T${endHour || '2359'}`);
+        params.set('end', `${endDate}T${endHour || '1200'}`);
     }
     const region = document.getElementById('regionSelect')?.value;
     if (region && CONFIG.STATES[region]) {
@@ -1890,8 +1890,8 @@ function setDatePreset(preset) {
     const customDateFields = document.getElementById('customDateFields');
     const actionButtons = document.getElementById('actionButtons');
 
-    endDateEl.value = today.toISOString().split('T')[0];
-    endHourEl.value = '2359';
+    endDateEl.value = getUtcDateString(today);
+    endHourEl.value = '1200';
 
     switch(preset) {
         case 'day12z': {
@@ -1901,7 +1901,7 @@ function setDatePreset(preset) {
             startHourEl.value = '1200';
             endDateEl.value = today.toISOString().split('T')[0];
             endHourEl.value = '1200';
-            customDateFields.style.display = 'none';
+            customDateFields.style.display = 'block';
             actionButtons.style.display = 'none';
             if (liveModeActive) {
                 toggleLiveMode();
@@ -1920,7 +1920,7 @@ function setDatePreset(preset) {
             tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
             endDateEl.value = getUtcDateString(tomorrow);
             endHourEl.value = '1200';
-            customDateFields.style.display = 'none';
+            customDateFields.style.display = 'block';
             actionButtons.style.display = 'none';
             if (liveModeActive) {
                 toggleLiveMode();
@@ -1935,6 +1935,8 @@ function setDatePreset(preset) {
             const start6h = new Date(today.getTime() - 6 * 60 * 60 * 1000);
             startDateEl.value = getUtcDateString(start6h);
             startHourEl.value = getUtcTimeString(start6h);
+            endDateEl.value = getUtcDateString(today);
+            endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             if (!liveModeActive) {
@@ -1949,6 +1951,8 @@ function setDatePreset(preset) {
             const start12h = new Date(today.getTime() - 12 * 60 * 60 * 1000);
             startDateEl.value = getUtcDateString(start12h);
             startHourEl.value = getUtcTimeString(start12h);
+            endDateEl.value = getUtcDateString(today);
+            endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             if (liveModeActive) {
@@ -1964,6 +1968,8 @@ function setDatePreset(preset) {
             const start24h = new Date(today.getTime() - 24 * 60 * 60 * 1000);
             startDateEl.value = getUtcDateString(start24h);
             startHourEl.value = getUtcTimeString(start24h);
+            endDateEl.value = getUtcDateString(today);
+            endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Auto-load data (unless live mode is active, it will handle its own refresh)
@@ -1979,6 +1985,8 @@ function setDatePreset(preset) {
             const start48h = new Date(today.getTime() - 48 * 60 * 60 * 1000);
             startDateEl.value = getUtcDateString(start48h);
             startHourEl.value = getUtcTimeString(start48h);
+            endDateEl.value = getUtcDateString(today);
+            endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Disable live mode if switching to 48h
@@ -1997,6 +2005,8 @@ function setDatePreset(preset) {
             lastWeek.setDate(lastWeek.getDate() - 7);
             startDateEl.value = lastWeek.toISOString().split('T')[0];
             startHourEl.value = '0000';
+            endDateEl.value = getUtcDateString(today);
+            endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
             // Disable live mode if switching to week
@@ -2021,11 +2031,13 @@ function setDatePreset(preset) {
             break;
     }
 
-    // Update active preset button
+    // Update active preset button (duplicate controls may share the same data-preset)
     document.querySelectorAll('.btn-preset').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.querySelector(`.btn-preset[data-preset="${preset}"]`)?.classList.add('active');
+    document.querySelectorAll(`.btn-preset[data-preset="${preset}"]`).forEach(btn => {
+        btn.classList.add('active');
+    });
 }
 
 // ============================================================================
@@ -2277,7 +2289,7 @@ function initializeUI() {
         'Thunderstorm': 'fa-bolt',
         'Tornado': 'fa-tornado',
         'Funnel Cloud': 'fa-tornado',
-        'Waterspout': 'fa-water',
+        'Waterspout': 'fa-tornado',
         'Tropical': 'fa-hurricane',
         'Temperature': 'fa-thermometer-half',
         'Fog': 'fa-smog',
@@ -2345,7 +2357,7 @@ function initializeUI() {
         'Thunderstorm': 'Thunderstorm wind reports. Yellow to red indicates severity.',
         'Tornado': 'Confirmed tornado reports. Red square with red border.',
         'Funnel Cloud': 'Funnel cloud reports. Red square with white border.',
-        'Waterspout': 'Waterspout reports. Blue water-themed marker.',
+        'Waterspout': 'Waterspout reports. Same tornado marker with a blue border.',
         'Tropical': 'Tropical storm/hurricane reports. White to black indicates intensity.',
         'Temperature': 'Temperature reports in °F. Blue to red indicates cold to hot.',
         'Fog': 'Fog reports. Visibility in miles when reported.',
@@ -2415,7 +2427,7 @@ function loadStateFromURL() {
             document.getElementById('startDate').value = start[0];
             document.getElementById('startHour').value = start[1] || '0000';
             document.getElementById('endDate').value = end[0];
-            document.getElementById('endHour').value = end[1] || '2359';
+            document.getElementById('endHour').value = end[1] || '1200';
             setDatePreset('custom');
             shouldFetch = true;
         }
@@ -2620,7 +2632,7 @@ function setupKeyboardShortcuts() {
                 break;
             case 'c':
                 e.preventDefault();
-                document.getElementById('clearMap')?.click();
+                document.getElementById('clearMapBtn')?.click();
                 break;
             case 's':
                 e.preventDefault();
@@ -2722,24 +2734,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-    
-    // Dropdown menu for actions
-    const moreActionsBtn = document.getElementById('moreActionsBtn');
-    const moreActionsMenu = document.getElementById('moreActionsMenu');
-    if (moreActionsBtn && moreActionsMenu) {
-        moreActionsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const wrapper = moreActionsBtn.closest('.btn-dropdown-wrapper');
-            wrapper.classList.toggle('active');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!moreActionsBtn.contains(e.target) && !moreActionsMenu.contains(e.target)) {
-                moreActionsBtn.closest('.btn-dropdown-wrapper')?.classList.remove('active');
-            }
-        });
-    }
     
     // Clear all filters
     const clearAllFiltersBtn = document.getElementById('clearAllFilters');
@@ -3091,8 +3085,11 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFilterSummary();
         });
     }
-    // clearMap and autoRefresh are now in dropdown menu
-    
+    const autoRefreshBtn = document.getElementById('autoRefresh');
+    if (autoRefreshBtn) {
+        autoRefreshBtn.addEventListener('click', toggleAutoRefresh);
+    }
+
     // Mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const mobileMenuClose = document.getElementById('mobileMenuClose');
@@ -3360,11 +3357,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 100);
     
-    // Dropdown clearMap button (also exists in More Actions menu)
-    const dropdownClearMap = document.getElementById('clearMap');
-    if (dropdownClearMap) {
-        dropdownClearMap.addEventListener('click', clearMap);
-    }
     
     // Help modal handlers
     const helpModal = document.getElementById('helpModal');

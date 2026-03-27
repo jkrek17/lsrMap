@@ -103,8 +103,6 @@
                         <button type="button" class="btn-preset" data-preset="6h" title="Load reports from the last 6 hours">Last 6h</button>
                         <button type="button" class="btn-preset" data-preset="12h" title="Load reports from the last 12 hours">Last 12h</button>
                         <button type="button" class="btn-preset" data-preset="24h" title="Load reports from the last 24 hours">Last 24h</button>
-                        <button type="button" class="btn-preset" data-preset="day12z" title="Meteorological day: previous calendar day 12:00 UTC through today 12:00 UTC (NWS-style; aligns with Eastern storm day)">−1 Day (12Z)</button>
-                        <button type="button" class="btn-preset" data-preset="day12zNext" title="Next meteorological day: today 12:00 UTC through tomorrow 12:00 UTC">+1 Day (12Z)</button>
                         <button type="button" class="btn-preset" data-preset="48h" title="Load reports from the last 48 hours">Last 48h</button>
                         <button type="button" class="btn-preset" data-preset="week" title="Load reports from the last 7 days">Last Week</button>
                         <button type="button" class="btn-preset" data-preset="custom" title="Set custom date and time range">Custom</button>
@@ -142,6 +140,10 @@
                         <input type="date" id="endDate" class="form-control">
                         <label for="endHour">End Time (UTC):</label>
                         <input type="text" id="endHour" class="form-control" inputmode="numeric" autocomplete="off" placeholder="HHMM" pattern="^([01]\d|2[0-3])[0-5]\d$" title="24-hour UTC time (HHMM)">
+                        <div class="date-day12z-buttons">
+                            <button type="button" class="btn btn-secondary btn-preset" data-preset="day12z" title="24-hour window: previous calendar day 12:00 UTC through today 12:00 UTC (NWS-style meteorological day)">−1 Day (12Z)</button>
+                            <button type="button" class="btn btn-secondary btn-preset" data-preset="day12zNext" title="24-hour window: today 12:00 UTC through tomorrow 12:00 UTC">+1 Day (12Z)</button>
+                        </div>
                     </div>
                     <div class="date-shift-buttons">
                         <button type="button" id="shiftDateBackward" class="btn btn-secondary" title="Move date range back one day">
@@ -158,19 +160,9 @@
                                 <i class="fas fa-spinner fa-spin"></i> Loading...
                             </span>
                         </button>
-                        <div class="btn-dropdown-wrapper">
-                            <button type="button" class="btn btn-secondary btn-dropdown-toggle" id="moreActionsBtn" title="More actions menu">
-                                <i class="fas fa-ellipsis-v"></i> More Actions
-                            </button>
-                            <div class="btn-dropdown-menu" id="moreActionsMenu">
-                                <button type="button" id="clearMap" class="dropdown-item" title="Clear all markers from map (Shortcut: C)">
-                                    <i class="fas fa-trash"></i> Clear Map
-                                </button>
-                                <button type="button" id="autoRefresh" class="dropdown-item" title="Automatically refresh data every 5 minutes">
-                                    <i class="fas fa-sync-alt"></i> Auto Refresh
-                                </button>
-                            </div>
-                        </div>
+                        <button type="button" id="autoRefresh" class="btn btn-secondary" title="Automatically refresh data every 5 minutes">
+                            <i class="fas fa-sync-alt"></i> Auto Refresh
+                        </button>
                     </div>
                     </div>
                 </div>
@@ -490,7 +482,7 @@
                     <div class="help-section">
                         <h4><i class="fas fa-lightbulb"></i> Tips</h4>
                         <ul class="tips-list">
-                            <li>Use date presets (12Z day, 24h, 48h, Week) for quick data loading</li>
+                            <li>Use date presets (Last 6h–Week) or the ±1 Day (12Z) buttons under End Time; 12Z uses 12:00 UTC boundaries</li>
                             <li>Quick filters (Severe, Winter, Precip, Tropical) help focus on specific weather types</li>
                             <li>Zoom in to see more markers when limited by performance</li>
                             <li>Click markers to view detailed report information</li>

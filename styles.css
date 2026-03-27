@@ -275,11 +275,19 @@
     color: var(--warning-color);
 }
 
+html {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
     line-height: 1.6;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
 }
 
 .app-container {
@@ -468,6 +476,10 @@ body {
         "header header"
         "controls map";
     height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
 }
 
 .header {
@@ -479,10 +491,31 @@ body {
     background: var(--card-bg);
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
+    min-height: 0;
+}
+
+.date-day12z-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.date-day12z-buttons .btn-preset {
+    flex: 1;
+    min-width: 0;
+}
+
+#actionButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
 }
 
 /* Current View Section */
@@ -666,6 +699,8 @@ body {
     grid-area: map;
     position: relative;
     background: var(--bg-color);
+    min-height: 0;
+    overflow: hidden;
 }
 
 #map {

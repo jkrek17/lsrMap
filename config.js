@@ -547,11 +547,11 @@ const ICON_CONFIG = {
         fill: "#dc2626",
         stroke: "#fff"
     },
-    "WS": { // Waterspout
+    "WS": { // Waterspout (tornado icon, blue border applied in iconService)
         type: "rect",
-        emoji: "🌊",
-        fill: "#0ea5e9",
-        stroke: "#0369a1"
+        emoji: "🌪️",
+        fill: "#dc2626",
+        stroke: "#dc2626"
     },
     "H": { // Hail
         type: "rect", // Rectangle/square to match severe thunderstorm style
@@ -655,7 +655,7 @@ const LEGEND_ITEMS = [
     { name: 'Thunderstorm', color: 'yellow', emoji: '⛈️', shape: 'square' },
     { name: 'Tornado', color: '#dc2626', emoji: '🌪️', shape: 'square' },
     { name: 'Funnel Cloud', color: '#dc2626', emoji: '🌪️', shape: 'square' },
-    { name: 'Waterspout', color: '#0ea5e9', emoji: '🌊', shape: 'square' },
+    { name: 'Waterspout', color: '#dc2626', emoji: '🌪️', shape: 'square' },
     { name: 'Tropical', color: '#FFFFFF', emoji: '🌀', shape: 'circle' },
     { name: 'Temperature', color: '#60a5fa', emoji: '🌡️', shape: 'circle' },
     { name: 'Fog', color: '#9ca3af', emoji: '🌫️', shape: 'circle' },

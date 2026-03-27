@@ -54,9 +54,9 @@ function parseUrlParams() {
             document.getElementById('startDate').value = sd;
             document.getElementById('endDate').value = ed;
             const sh = normalizeTimeInputValue(shRaw || '') || (shRaw || '0000').replace(/\D/g, '').padStart(4, '0').slice(0, 4);
-            const eh = normalizeTimeInputValue(ehRaw || '') || (ehRaw || '2359').replace(/\D/g, '').padStart(4, '0').slice(0, 4);
+            const eh = normalizeTimeInputValue(ehRaw || '') || (ehRaw || '1200').replace(/\D/g, '').padStart(4, '0').slice(0, 4);
             document.getElementById('startHour').value = sh.length === 4 ? sh : '0000';
-            document.getElementById('endHour').value = eh.length === 4 ? eh : '2359';
+            document.getElementById('endHour').value = eh.length === 4 ? eh : '1200';
         }
     } else {
         applyDefaultDay12z();
