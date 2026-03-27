@@ -523,35 +523,35 @@ const ICON_CONFIG = {
             { max: Infinity, fill: "#000000", stroke: "red" }
         ]
     },
-    "T": { // Tornado (confirmed)
+    "T": { // Tornado (confirmed): 🌪️ on red fill, red border ring
         type: "rect",
         emoji: "🌪️",
         fill: "#dc2626",
-        stroke: "#dc2626"
+        stroke: "#7f1d1d"
     },
-    "C": { // Funnel cloud (legacy — prefer FC after normalization)
+    "C": { // Legacy; prefer FC after normalization
         type: "rect",
         emoji: "🌪️",
         fill: "#dc2626",
         stroke: "#fff"
     },
-    "W": { // Waterspout (legacy — prefer WS after normalization)
+    "W": { // Legacy landspout/tornado styling
         type: "rect",
         emoji: "🌪️",
         fill: "#dc2626",
-        stroke: "#dc2626"
+        stroke: "#7f1d1d"
     },
-    "FC": { // Funnel cloud
+    "FC": { // Funnel cloud: 🌪️ on red fill, white border
         type: "rect",
         emoji: "🌪️",
         fill: "#dc2626",
         stroke: "#fff"
     },
-    "WS": { // Waterspout (tornado icon, blue border applied in iconService)
+    "WS": { // Waterspout: same 🌪️ marker, blue fill + blue border
         type: "rect",
         emoji: "🌪️",
-        fill: "#dc2626",
-        stroke: "#dc2626"
+        fill: "#2563eb",
+        stroke: "#1e40af"
     },
     "H": { // Hail
         type: "rect", // Rectangle/square to match severe thunderstorm style
@@ -655,7 +655,7 @@ const LEGEND_ITEMS = [
     { name: 'Thunderstorm', color: 'yellow', emoji: '⛈️', shape: 'square' },
     { name: 'Tornado', color: '#dc2626', emoji: '🌪️', shape: 'square' },
     { name: 'Funnel Cloud', color: '#dc2626', emoji: '🌪️', shape: 'square' },
-    { name: 'Waterspout', color: '#dc2626', emoji: '🌪️', shape: 'square' },
+    { name: 'Waterspout', color: '#2563eb', emoji: '🌪️', shape: 'square' },
     { name: 'Tropical', color: '#FFFFFF', emoji: '🌀', shape: 'circle' },
     { name: 'Temperature', color: '#60a5fa', emoji: '🌡️', shape: 'circle' },
     { name: 'Fog', color: '#9ca3af', emoji: '🌫️', shape: 'circle' },

@@ -52,11 +52,7 @@ export function getIconForReport(rtype, magnitude, remark, iconConfig, iconSize,
         upperTypetext.includes('FREEZING DRIZZLE') ||
         upperTypetext.includes('FREEZING_DRIZZLE') ||
         upperTypetext.includes('FZRA');
-    const isWaterspout = rtype === 'WS';
     let borderColor = isFreezingRain ? '#2563eb' : null; // Blue border for freezing rain
-    if (isWaterspout) {
-        borderColor = '#2563eb';
-    }
     const configToUse = isFreezingRain && config
         ? { ...config, type: 'rect', emoji: '🌧️' }
         : config;
