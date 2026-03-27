@@ -5,12 +5,6 @@
 import LSRService from './api/lsrService.js';
 import { offlineDetector } from './utils/offlineDetector.js';
 import { normalizeLSRReports } from './lsr/normalizeLSR.js';
-import {
-    loadBoundaryGeoJson,
-    boundariesReady,
-    getClipFeaturesForSelection,
-    pointInClipFeatures
-} from './map/boundaryOverlays.js';
 
 function normalizeTimeInputValue(value) {
     if (typeof value !== 'string') {
@@ -91,25 +85,13 @@ function getSelectedReportTypes() {
     return Array.from(typeSel.selectedOptions).map((o) => o.value);
 }
 
-function stateBoundsForSelection() {
-    const state = document.getElementById('stateFilter').value;
-    if (state && CONFIG.STATES[state]) {
-        const b = CONFIG.STATES[state].bounds;
-        return { south: b[0], north: b[1], east: b[2], west: b[3] };
+function reportMatchesStateFilter(report, stateCode) {
+    if (!stateCode) {
+        return true;
     }
-    return {
-        south: CONFIG.DEFAULT_BOUNDS.south,
-        north: CONFIG.DEFAULT_BOUNDS.north,
-        east: CONFIG.DEFAULT_BOUNDS.east,
-        west: CONFIG.DEFAULT_BOUNDS.west
-    };
-}
-
-function reportInBounds(report, bounds) {
-    return report.lat >= bounds.south &&
-        report.lat <= bounds.north &&
-        report.lon >= bounds.west &&
-        report.lon <= bounds.east;
+    const want = String(stateCode).trim().toUpperCase();
+    const got = String(report.state || '').trim().toUpperCase();
+    return got === want;
 }
 
 function updateTableUrl() {
@@ -215,7 +197,7 @@ function updateSortHeaders() {
     });
 }
 
-async function applyClientFilters() {
+function applyClientFilters() {
     if (!allRawNormalized.length) {
         allRows = [];
         document.getElementById('reportsTableBody').innerHTML = '';
@@ -225,24 +207,7 @@ async function applyClientFilters() {
         return;
     }
 
-    try {
-        await loadBoundaryGeoJson();
-    } catch (e) {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.warn('Boundary GeoJSON load failed (table)', e);
-        }
-    }
-
     const state = document.getElementById('stateFilter').value;
-    const bounds = stateBoundsForSelection();
-    let clipFeatures = null;
-    if (state && boundariesReady()) {
-        clipFeatures = getClipFeaturesForSelection(state, '');
-        if (!clipFeatures || clipFeatures.length === 0) {
-            clipFeatures = null;
-        }
-    }
-
     const selectedTypes = getSelectedReportTypes();
     const allTypesCount = CONFIG.WEATHER_TYPES.length;
     let typeSet = null;
@@ -252,10 +217,7 @@ async function applyClientFilters() {
     }
 
     allRows = allRawNormalized.filter((r) => {
-        if (!reportInBounds(r, bounds)) {
-            return false;
-        }
-        if (clipFeatures && !pointInClipFeatures(r.lat, r.lon, clipFeatures)) {
+        if (!reportMatchesStateFilter(r, state)) {
             return false;
         }
         if (typeSet === null) {
@@ -263,24 +225,22 @@ async function applyClientFilters() {
         }
         return typeSet.has(r.filterType);
     });
-    renderTable(clipFeatures);
+    renderTable();
     updateTableUrl();
     document.getElementById('linkToMap').href = mapPageHref();
 }
 
-function renderTable(usedPolygonClip = null) {
+function renderTable() {
     const sorted = sortReports(allRows, sortState.column, sortState.direction);
     document.getElementById('reportsTableBody').innerHTML = buildTableRowsHtml(sorted);
     updateSortHeaders();
     const meta = document.getElementById('reportsTableMeta');
     const rawCount = allRawNormalized.length;
     const state = document.getElementById('stateFilter').value;
-    const geoNote = state && usedPolygonClip
-        ? 'state polygon (NWS boundaries)'
-        : state
-            ? 'state bounding box'
-            : 'US bounds';
-    meta.textContent = `Showing ${sorted.length} of ${rawCount} loaded report${rawCount !== 1 ? 's' : ''} (${geoNote}; report type filters).`;
+    const stateNote = state
+        ? `state column = ${state}`
+        : 'all states';
+    meta.textContent = `Showing ${sorted.length} of ${rawCount} loaded report${rawCount !== 1 ? 's' : ''} (${stateNote}; report type filters).`;
 }
 
 function attachSortHandlers() {
@@ -293,7 +253,7 @@ function attachSortHandlers() {
                 sortState.column = col;
                 sortState.direction = col === 'time' ? 'desc' : 'asc';
             }
-            renderTable(null);
+            renderTable();
         });
     });
 }
@@ -370,7 +330,7 @@ async function loadReports() {
         allRawNormalized = normalizeLSRReports(data, REPORT_TYPE_MAP).normalized;
 
         document.getElementById('reportsLoading').style.display = 'none';
-        await applyClientFilters();
+        applyClientFilters();
     } catch (e) {
         document.getElementById('reportsLoading').style.display = 'none';
         document.getElementById('reportsError').textContent = e.message || 'Failed to load reports.';
@@ -440,8 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
     populateStateSelect();
     populateTypeFilter();
     parseUrlParams();
-
-    loadBoundaryGeoJson().catch(() => {});
 
     ['startHour', 'endHour'].forEach((id) => {
         const el = document.getElementById(id);
