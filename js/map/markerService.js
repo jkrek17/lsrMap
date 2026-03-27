@@ -28,6 +28,7 @@ export function addMarkersInBatches(reports, markersLayer, batchSize, onProgress
             if (!marker) {
                 marker = L.marker([report.lat, report.lon], { icon: report.icon });
                 report.marker = marker;
+                marker._lsrReport = report;
                 marker.bindPopup(() => createPopupContent(report), {
                     maxWidth: 350,
                     className: 'custom-popup'
@@ -72,4 +73,47 @@ export function addMarkersInBatches(reports, markersLayer, batchSize, onProgress
     }
     
     processBatch();
+}
+
+/**
+ * Null out marker refs after layer.clearLayers() so reused report objects get fresh markers.
+ */
+export function clearReportMarkerRefs(reports) {
+    if (!reports || !reports.length) {
+        return;
+    }
+    for (const r of reports) {
+        if (r.marker) {
+            r.marker._lsrReport = undefined;
+            r.marker = null;
+        }
+    }
+}
+
+/**
+ * Pan/zoom refresh: remove markers not in desired list; add batches only for new ones.
+ * Assumes report objects are stable across calls (same references when GeoJSON unchanged).
+ */
+export function syncLsrMarkersIncremental(desiredReports, markersLayer, batchSize, onPopupOpen) {
+    const desiredSet = new Set(desiredReports);
+    const toRemove = [];
+    markersLayer.eachLayer((layer) => {
+        const rep = layer._lsrReport;
+        if (!rep || !desiredSet.has(rep)) {
+            toRemove.push(layer);
+        }
+    });
+    for (const layer of toRemove) {
+        const rep = layer._lsrReport;
+        markersLayer.removeLayer(layer);
+        if (rep && rep.marker === layer) {
+            rep.marker = null;
+        }
+        layer._lsrReport = undefined;
+    }
+
+    const toAdd = desiredReports.filter((r) => !r.marker || !markersLayer.hasLayer(r.marker));
+    if (toAdd.length > 0) {
+        addMarkersInBatches(toAdd, markersLayer, batchSize, null, onPopupOpen);
+    }
 }

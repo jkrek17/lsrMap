@@ -10,7 +10,7 @@ import LSRService from './js/api/lsrService.js';
 import { offlineDetector } from './js/utils/offlineDetector.js';
 import { appState } from './js/state/appState.js';
 import { createIcon, getIconForReport } from './js/map/iconService.js';
-import { addMarkersInBatches } from './js/map/markerService.js';
+import { addMarkersInBatches, syncLsrMarkersIncremental, clearReportMarkerRefs } from './js/map/markerService.js';
 import { showStatusToast, hideStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
 import PNSService from './js/api/pnsService.js';
@@ -633,6 +633,8 @@ let topReportsByType = {}; // Store top 10 reports by type
 let allPNSReports = []; // All PNS reports (filtered and processed for performance)
 /** GeoJSON polygon features for exact location filter (state / CWA / NWS admin); null = bbox only */
 let locationClipFeatures = null;
+/** Set after a full marker rebuild; pan/zoom uses incremental sync when data + filters match */
+let lastLsrMapFilterKey = null;
 
 // Sync with appState
 appState.set('allFilteredReports', allFilteredReports);
@@ -650,7 +652,7 @@ function normalizeLSRReports(geoJsonData) {
     return normalized;
 }
 
-function displayReports(geoJsonData, south, north, east, west, activeFiltersOverride) {
+function displayReports(geoJsonData, south, north, east, west, activeFiltersOverride, options = {}) {
     // Ensure CONFIG is available
     if (typeof CONFIG === 'undefined' || typeof REPORT_TYPE_MAP === 'undefined') {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -658,9 +660,20 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         }
         return;
     }
-    
-    markersLayer.clearLayers();
-    
+
+    const activeFilters = activeFiltersOverride || getActiveWeatherFilters();
+    const filterKey = activeFilters.slice().sort().join('\u0001');
+    const incrementalMarkers =
+        options.incrementalMarkers === true &&
+        geoJsonData === lastGeoJsonData &&
+        lastLsrMapFilterKey !== null &&
+        filterKey === lastLsrMapFilterKey;
+
+    if (!incrementalMarkers) {
+        clearReportMarkerRefs(normalizedLsrReports);
+        markersLayer.clearLayers();
+    }
+
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isNewData = geoJsonData !== lastGeoJsonData;
     
@@ -679,8 +692,6 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
             normalizeDuration = performance.now() - normalizeStart;
         }
     }
-    
-    const activeFilters = activeFiltersOverride || getActiveWeatherFilters();
     
     allFilteredReports = [];
     topReportsByType = {}; // Reset top reports when loading new data
@@ -854,8 +865,24 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         updateLastUpdateTime();
     }
     
-    // Add markers
-    addMarkersInBatches(reportsToDisplay, markersLayer, CONFIG.BATCH_SIZE, null, updateMagnitudeLegendForReport);
+    // Add or sync markers (incremental on pan/zoom when data and weather filters unchanged)
+    if (incrementalMarkers) {
+        syncLsrMarkersIncremental(
+            reportsToDisplay,
+            markersLayer,
+            CONFIG.BATCH_SIZE,
+            updateMagnitudeLegendForReport
+        );
+    } else {
+        addMarkersInBatches(
+            reportsToDisplay,
+            markersLayer,
+            CONFIG.BATCH_SIZE,
+            null,
+            updateMagnitudeLegendForReport
+        );
+        lastLsrMapFilterKey = filterKey;
+    }
     
     if (reportsToDisplay.length > 0) {
         setTimeout(() => {
@@ -1562,7 +1589,9 @@ function clearMap() {
     if (liveModeActive) {
         toggleLiveMode();
     }
-    
+
+    clearReportMarkerRefs(normalizedLsrReports);
+    lastLsrMapFilterKey = null;
     markersLayer.clearLayers();
     userArea.clearLayers();
     allFilteredReports = [];
@@ -3129,7 +3158,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const wfoCode = wfoSel || selectedWFO || '';
                 const { south: southLat, north: northLat, east: eastLon, west: westLon } =
                     getLsrFilterBoundsSync(selectedRegion, wfoCode);
-                displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon);
+                displayReports(lastGeoJsonData, southLat, northLat, eastLon, westLon, undefined, {
+                    incrementalMarkers: true
+                });
             }
             
             // Also refresh PNS markers to apply zoom-based limits and viewport filtering
