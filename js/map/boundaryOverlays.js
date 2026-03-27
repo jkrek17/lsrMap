@@ -146,3 +146,96 @@ export function createNwsAdminRegionLayer(regionKey) {
 export function isNwsAdminRegionWithGeoJson(regionKey) {
     return Boolean(NWS_REGION_TO_CWA_REGION[regionKey]);
 }
+
+/**
+ * GeoJSON features for point-in-polygon filtering (same polygons as map overlay).
+ * Returns null to use axis-aligned bbox only (full US, custom region, or GeoJSON not loaded).
+ */
+export function getClipFeaturesForSelection(selectedRegion, wfoCode) {
+    if (!boundariesReady()) {
+        return null;
+    }
+    if (wfoCode) {
+        const f = featureForWfo(wfoCode);
+        return f ? [f] : null;
+    }
+    if (selectedRegion && featuresForState(selectedRegion).length) {
+        return featuresForState(selectedRegion);
+    }
+    if (selectedRegion && isNwsAdminRegionWithGeoJson(selectedRegion)) {
+        const list = featuresForNwsAdminRegion(selectedRegion);
+        return list.length ? list : null;
+    }
+    return null;
+}
+
+function ringContainsLngLat(lng, lat, ring) {
+    if (!ring || ring.length < 3) {
+        return false;
+    }
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0];
+        const yi = ring[i][1];
+        const xj = ring[j][0];
+        const yj = ring[j][1];
+        const intersect =
+            yi > lat !== yj > lat &&
+            lng < ((xj - xi) * (lat - yi)) / (yj - yi || 1e-12) + xi;
+        if (intersect) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
+function polygonContainsLngLat(lng, lat, coordinates) {
+    if (!coordinates || !coordinates.length) {
+        return false;
+    }
+    if (!ringContainsLngLat(lng, lat, coordinates[0])) {
+        return false;
+    }
+    for (let h = 1; h < coordinates.length; h++) {
+        if (ringContainsLngLat(lng, lat, coordinates[h])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function geometryContainsLngLat(lng, lat, geometry) {
+    if (!geometry) {
+        return false;
+    }
+    const { type, coordinates } = geometry;
+    if (type === 'Polygon') {
+        return polygonContainsLngLat(lng, lat, coordinates);
+    }
+    if (type === 'MultiPolygon') {
+        for (const poly of coordinates) {
+            if (polygonContainsLngLat(lng, lat, poly)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return false;
+}
+
+/**
+ * True if (lat, lon) lies inside any of the GeoJSON polygon / multipolygon features.
+ */
+export function pointInClipFeatures(lat, lon, features) {
+    if (!features || features.length === 0) {
+        return false;
+    }
+    const lng = lon;
+    for (const f of features) {
+        const g = f.geometry;
+        if (g && geometryContainsLngLat(lng, lat, g)) {
+            return true;
+        }
+    }
+    return false;
+}

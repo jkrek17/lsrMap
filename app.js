@@ -24,7 +24,9 @@ import {
     createStateBoundaryLayer,
     createWfoBoundaryLayer,
     createNwsAdminRegionLayer,
-    isNwsAdminRegionWithGeoJson
+    isNwsAdminRegionWithGeoJson,
+    getClipFeaturesForSelection,
+    pointInClipFeatures
 } from './js/map/boundaryOverlays.js';
 
 // ============================================================================
@@ -435,6 +437,7 @@ async function applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, options
     }
 
     const geoReady = boundariesReady();
+    locationClipFeatures = getClipFeaturesForSelection(selectedRegion, wfoCode);
 
     if (wfoCode) {
         const layer = geoReady ? createWfoBoundaryLayer(wfoCode) : null;
@@ -628,6 +631,8 @@ let lastNormalizedGeoJson = null;
 let lastNormalizationStats = null;
 let topReportsByType = {}; // Store top 10 reports by type
 let allPNSReports = []; // All PNS reports (filtered and processed for performance)
+/** GeoJSON polygon features for exact location filter (state / CWA / NWS admin); null = bbox only */
+let locationClipFeatures = null;
 
 // Sync with appState
 appState.set('allFilteredReports', allFilteredReports);
@@ -725,19 +730,21 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
     for (const report of normalizedLsrReports) {
         // Filter by bounding box
         // Note: For US, west is more negative than east, so lon must be between west and east
-        if (report.lat < south || report.lat > north) {
+        if (report.lat < south || report.lat > north || report.lon < west || report.lon > east) {
             if (missingCounts) {
                 missingCounts.bounds++;
                 addMissingSample('bounds', report);
             }
             continue;
         }
-        if (report.lon < west || report.lon > east) {
-            if (missingCounts) {
-                missingCounts.bounds++;
-                addMissingSample('bounds', report);
+        if (locationClipFeatures && locationClipFeatures.length > 0) {
+            if (!pointInClipFeatures(report.lat, report.lon, locationClipFeatures)) {
+                if (missingCounts) {
+                    missingCounts.bounds++;
+                    addMissingSample('bounds', report);
+                }
+                continue;
             }
-            continue;
         }
         
         // Filter by viewport if enabled and zoomed in
@@ -2321,6 +2328,7 @@ function clearBounds() {
         wfoSelect.value = '';
     }
     selectedWFO = null;
+    locationClipFeatures = null;
     userArea.clearLayers();
     disableBoundsClickMode();
     
