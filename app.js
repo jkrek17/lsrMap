@@ -115,6 +115,25 @@ function getActiveWeatherFilters() {
         .map(cb => cb.value);
 }
 
+/** Last LSR API query range (UTC) shown in Current View; cleared when form edits or fetch fails */
+let activeLsrQueryRange = null;
+
+function clearActiveLsrQueryRange() {
+    activeLsrQueryRange = null;
+}
+
+function setActiveLsrQueryRange(startDate, startHour, endDate, endHour) {
+    activeLsrQueryRange = { startDate, startHour, endDate, endHour };
+}
+
+function formatSummaryDateRange(startDate, startHour, endDate, endHour) {
+    const sh = startHour || '';
+    const eh = endHour || '';
+    const startSuffix = sh ? ` ${sh}` : '';
+    const endSuffix = eh ? ` ${eh}` : '';
+    return `${startDate}${startSuffix} to ${endDate}${endSuffix}`;
+}
+
 function updateFilterSummary() {
     const summary = document.getElementById('filterSummary');
     const summaryDate = document.getElementById('summaryDate');
@@ -132,11 +151,17 @@ function updateFilterSummary() {
     const endDate = endDateEl?.value || '';
     const startHour = normalizeTimeInputValue(startHourEl?.value || '') || (startHourEl?.value || '').trim();
     const endHour = normalizeTimeInputValue(endHourEl?.value || '') || (endHourEl?.value || '').trim();
-    
-    if (startDate && endDate) {
-        const startSuffix = startHour ? ` ${startHour}` : '';
-        const endSuffix = endHour ? ` ${endHour}` : '';
-        summaryDate.textContent = `${startDate}${startSuffix} to ${endDate}${endSuffix}`;
+
+    if (activeLsrQueryRange) {
+        const q = activeLsrQueryRange;
+        summaryDate.textContent = formatSummaryDateRange(
+            q.startDate,
+            q.startHour,
+            q.endDate,
+            q.endHour
+        );
+    } else if (startDate && endDate) {
+        summaryDate.textContent = formatSummaryDateRange(startDate, startHour, endDate, endHour);
     } else {
         const activePreset = document.querySelector('.btn-preset.active');
         summaryDate.textContent = activePreset?.textContent?.trim() || 'Custom';
@@ -257,6 +282,7 @@ function formatDateInputValue(date) {
 }
 
 function shiftCustomDateRange(days) {
+    clearActiveLsrQueryRange();
     const startDateEl = document.getElementById('startDate');
     const endDateEl = document.getElementById('endDate');
     const startHourEl = document.getElementById('startHour');
@@ -309,7 +335,7 @@ async function fetchLSRData() {
         showStatusToast('You are currently offline. Please check your internet connection.', 'error');
         return;
     }
-    
+
     const startDate = document.getElementById('startDate').value;
     const startHourInput = document.getElementById('startHour');
     const startHourRaw = startHourInput ? startHourInput.value : '';
@@ -321,6 +347,8 @@ async function fetchLSRData() {
     const normalizedEndHour = normalizeTimeInputValue(endHourRaw);
 
     if (!normalizedStartHour || !normalizedEndHour) {
+        clearActiveLsrQueryRange();
+        updateFilterSummary();
         showStatusToast('Please enter time in 24-hour UTC format (HHMM).', 'error');
         return;
     }
@@ -329,6 +357,9 @@ async function fetchLSRData() {
     if (endHourInput) endHourInput.value = normalizedEndHour;
     const startHour = normalizedStartHour;
     const endHour = normalizedEndHour;
+
+    setActiveLsrQueryRange(startDate, startHour, endDate, endHour);
+    updateFilterSummary();
 
     // Show loading state
     showStatusToast('Loading data...', 'loading');
@@ -425,6 +456,8 @@ async function fetchLSRData() {
         if (btnLoading) btnLoading.style.display = 'none';
         
         hideStatusToast();
+        clearActiveLsrQueryRange();
+        updateFilterSummary();
         const handledError = errorHandler.handleError(error, 'Fetch LSR Data');
         const retryAction = () => fetchLSRData();
         showStatusToast(handledError.message, 'error', retryAction);
@@ -1454,6 +1487,7 @@ function getUtcTimeString(date) {
 }
 
 function applyLiveModeRange(hours) {
+    clearActiveLsrQueryRange();
     const startDateEl = document.getElementById('startDate');
     const startHourEl = document.getElementById('startHour');
     const endDateEl = document.getElementById('endDate');
@@ -1882,6 +1916,7 @@ function toggleAutoRefresh() {
 // ============================================================================
 
 function setDatePreset(preset) {
+    clearActiveLsrQueryRange();
     const today = new Date();
     const startDateEl = document.getElementById('startDate');
     const startHourEl = document.getElementById('startHour');
@@ -2271,6 +2306,24 @@ function initializeUI() {
             if (normalized) {
                 input.value = normalized;
             }
+            clearActiveLsrQueryRange();
+            updateFilterSummary();
+        });
+        input.addEventListener('input', () => {
+            clearActiveLsrQueryRange();
+            updateFilterSummary();
+        });
+    });
+
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    [startDateInput, endDateInput].forEach(input => {
+        if (!input) {
+            return;
+        }
+        input.addEventListener('change', () => {
+            clearActiveLsrQueryRange();
+            updateFilterSummary();
         });
     });
     
