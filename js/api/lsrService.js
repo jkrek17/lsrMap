@@ -27,6 +27,21 @@ class LSRService {
     }
 
     /**
+     * Avoid localStorage for very large LSR payloads (slow stringify, quota errors, little reuse value).
+     */
+    cacheLsrResponseIfSmall(cacheKey, data) {
+        const maxF = (typeof CONFIG !== 'undefined' && CONFIG.LSR_LOCALSTORAGE_MAX_FEATURES != null)
+            ? CONFIG.LSR_LOCALSTORAGE_MAX_FEATURES
+            : 2500;
+        if (!data || !Array.isArray(data.features) || data.features.length === 0) {
+            return;
+        }
+        if (data.features.length <= maxF) {
+            cacheService.set(cacheKey, data, 5 * 60 * 1000);
+        }
+    }
+
+    /**
      * Log data fetch information to console
      */
     logFetch(source, details = {}) {
@@ -194,10 +209,7 @@ class LSRService {
             });
         }
 
-        // Cache successful response in localStorage
-        if (data && data.features) {
-            cacheService.set(cacheKey, data, 5 * 60 * 1000); // 5 minute TTL
-        }
+        this.cacheLsrResponseIfSmall(cacheKey, data);
 
         return data;
     }
@@ -234,11 +246,8 @@ class LSRService {
                 });
             }
             
-            // Cache successful response in localStorage
-            if (data && data.features) {
-                cacheService.set(cacheKey, data, 5 * 60 * 1000);
-            }
-            
+            this.cacheLsrResponseIfSmall(cacheKey, data);
+
             return data;
         } catch (error) {
             const handledError = errorHandler.handleError(error, 'Source API fetch');

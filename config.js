@@ -357,8 +357,11 @@ const CONFIG = {
     // Performance settings
     MAX_MARKERS: 5000, // Maximum markers to display (prevents performance issues)
     MAX_MARKERS_WARNING: 3000, // Show warning when approaching limit
-    VIEWPORT_ONLY: true, // Only show markers in current viewport when zoomed in
-    MIN_ZOOM_FOR_VIEWPORT: 6, // Minimum zoom level to enable viewport filtering
+    /** When true (default), at zoom >= MIN_ZOOM_FOR_VIEWPORT only LSR/PNS markers inside the map viewport are drawn. Set false to always use region/bbox filtering only. */
+    VIEWPORT_ONLY: true,
+    MIN_ZOOM_FOR_VIEWPORT: 6,
+    /** Do not persist LSR GeoJSON in localStorage above this feature count (avoids quota churn and slow JSON.stringify). */
+    LSR_LOCALSTORAGE_MAX_FEATURES: 2500,
     ZOOM_BASED_LIMITS: {
         // Max markers per zoom level (undefined = no limit)
         3: 500,   // Increased from 100 - show more at continent view

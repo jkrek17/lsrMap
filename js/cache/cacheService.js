@@ -8,7 +8,7 @@ const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
 
 class CacheService {
     constructor() {
-        this.maxCacheSize = 10 * 1024 * 1024; // 10MB limit
+        this.maxCacheSize = 5 * 1024 * 1024; // 5MB — LSR JSON can be large; keep headroom for other site data
         this.checkStorageAvailable();
     }
 
