@@ -6,6 +6,7 @@ import { errorHandler, ERROR_TYPES } from '../errors/errorHandler.js';
 import { showStatusToast } from '../ui/toastService.js';
 import { createPopupContent } from '../map/popupService.js';
 import { getUnitForReportType } from '../utils/formatters.js';
+import { createPnsOfficeIcon } from '../map/iconService.js';
 
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const logPNS = (...args) => {
@@ -194,18 +195,16 @@ class PNSService {
     /**
      * Fetch and display PNS data
      * @param {boolean} showPNS - Whether to fetch and show PNS
-     * @param {L.LayerGroup} pnsLayer - Leaflet layer group for markers (optional, if null markers won't be added)
-     * @param {Function} onMarkerClick - Callback when marker is clicked (receives pnsData)
+     * @param {*} pnsLayer - Unused (markers are returned through onMarkerCreated); kept for call compatibility
+     * @param {Function} onMarkerClick - Unused; the map's PNS layer handles clicks
      * @param {Function} getIconFn - Function to get icon for report (rtype, magnitude, remark, typetext) -> icon
      * @param {Function} getReportTypeNameFn - Function to get report type name (rtype, map) -> name
      * @param {Object} reportTypeMap - Report type mapping object
-     * @param {Function} onMarkerCreated - Optional callback when marker is created (receives marker data object)
+     * @param {Function} onMarkerCreated - Callback for each marker data object ({ icon, popupHtml, lat, lon, ... })
+     * @param {Function} onPopupOpen - Unused; the map's PNS layer handles popups
      */
     async fetchPNSData(showPNS, pnsLayer, onMarkerClick, getIconFn, getReportTypeNameFn, reportTypeMap, onMarkerCreated, onPopupOpen) {
         if (!showPNS) {
-            if (pnsLayer) {
-                pnsLayer.clearLayers();
-            }
             return;
         }
         
@@ -231,12 +230,9 @@ class PNSService {
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                     console.log('[PNS] No PNS products found in API response');
                 }
-                if (pnsLayer) pnsLayer.clearLayers();
                 // No PNS found - not an error, just informational
                 return;
             }
-            
-            if (pnsLayer) pnsLayer.clearLayers();
             
             // Get recent PNS (last 24 hours only)
             const now = new Date();
@@ -343,20 +339,8 @@ class PNSService {
                                     icon = getIconFn(rtype, magnitude, description, entry.type);
                                 } else {
                                     // Fallback to generic PNS icon
-                                    icon = L.divIcon({
-                                        className: 'pns-marker',
-                                        html: '<div class="pns-marker-inner">📋</div>',
-                                        iconSize: [32, 32],
-                                        iconAnchor: [16, 16]
-                                    });
+                                    icon = createPnsOfficeIcon();
                                 }
-                                
-                                const marker = L.marker([entry.lat, entry.lon], { icon: icon });
-                                
-                                // Store filter type on marker for filtering
-                                marker.filterType = filterType;
-                                marker.pnsEntry = entry;
-                                marker.pnsData = pnsData;
                                 
                                 // Create report data for popup (similar to LSR reports)
                                 const reportData = {
@@ -369,53 +353,21 @@ class PNSService {
                                     rtype: rtype || ''
                                 };
                                 
-                                // Create popup using the same service as LSR markers
-                                const popupContent = createPopupContent(reportData);
-                                
-                                // Add a link to view full PNS text in the popup
-                                // Store pnsData reference on marker for button click handler
-                                marker._pnsDataRef = pnsData;
-                                
-                                const fullPopupContent = `${popupContent}
+                                // Popup uses the same service as LSR markers, plus a link to the full PNS text
+                                const popupHtml = `${createPopupContent(reportData)}
                                     <div class="popup-footer" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
-                                        <button class="pns-view-full-btn" 
+                                        <button type="button" class="pns-view-full-btn" 
                                                 style="background: #4a90e2; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; width: 100%;">
                                             <i class="fas fa-file-alt"></i> View Full PNS Text
                                         </button>
                                     </div>
                                 `;
                                 
-                                // Bind popup to marker
-                                marker.bindPopup(fullPopupContent, {
-                                    maxWidth: 350,
-                                    className: 'custom-popup'
-                                });
-                                
-                                // Handle popup button clicks (after popup is opened and DOM is available)
-                                marker.on('popupopen', function() {
-                                    if (onPopupOpen) {
-                                        onPopupOpen(reportData);
-                                    }
-                                    setTimeout(() => {
-                                        const popup = this.getPopup();
-                                        if (popup && popup.getElement) {
-                                            const popupElement = popup.getElement();
-                                            if (popupElement) {
-                                                const button = popupElement.querySelector('.pns-view-full-btn');
-                                                if (button && onMarkerClick && this._pnsDataRef) {
-                                                    button.onclick = (e) => {
-                                                        e.stopPropagation();
-                                                        onMarkerClick(this._pnsDataRef);
-                                                    };
-                                                }
-                                            }
-                                        }
-                                    }, 50);
-                                });
-                                
-                                // Store marker data for performance optimization
+                                // Marker data: drawn by the map's PNS report layer
                                 const markerData = {
-                                    marker: marker,
+                                    icon: icon,
+                                    popupHtml: popupHtml,
+                                    reportData: reportData,
                                     lat: entry.lat,
                                     lon: entry.lon,
                                     filterType: filterType,
@@ -429,14 +381,9 @@ class PNSService {
                                     rtype: rtype
                                 };
                                 
-                                // Call callback to collect marker data (for performance optimization)
+                                // Call callback to collect marker data
                                 if (onMarkerCreated) {
                                     onMarkerCreated(markerData);
-                                }
-                                
-                                // Add to layer only if pnsLayer is provided (for backward compatibility)
-                                if (pnsLayer) {
-                                    marker.addTo(pnsLayer);
                                 }
                                 
                                 displayedCount++;
@@ -454,21 +401,11 @@ class PNSService {
                         
                         if (wfoCode && this.wfoCoords[wfoCode]) {
                             const [lat, lon] = this.wfoCoords[wfoCode];
-                            const pnsIcon = L.divIcon({
-                                className: 'pns-marker',
-                                html: '<div class="pns-marker-inner">📋</div>',
-                                iconSize: [32, 32],
-                                iconAnchor: [16, 16]
-                            });
-                            const marker = L.marker([lat, lon], { icon: pnsIcon });
-                            
-                            // Store filter type for office markers (default to Other)
-                            marker.filterType = 'Other';
-                            marker.pnsData = pnsData;
-                            
-                            // Store marker data for office markers
+                            // Office marker: clicking it opens the full PNS text (no popup)
                             const markerData = {
-                                marker: marker,
+                                icon: createPnsOfficeIcon(),
+                                popupHtml: null,
+                                reportData: null,
                                 lat: lat,
                                 lon: lon,
                                 filterType: 'Other',
@@ -485,16 +422,6 @@ class PNSService {
                             // Call callback to collect marker data
                             if (onMarkerCreated) {
                                 onMarkerCreated(markerData);
-                            }
-                            
-                            // Open modal on click
-                            if (onMarkerClick) {
-                                marker.on('click', () => onMarkerClick(pnsData));
-                            }
-                            
-                            // Add to layer only if pnsLayer is provided
-                            if (pnsLayer) {
-                                marker.addTo(pnsLayer);
                             }
                             
                             displayedCount++;

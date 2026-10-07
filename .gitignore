@@ -52,3 +52,6 @@ composer.lock
 
 # Data files (optional - uncomment if you don't want to track cache data)
 # data/*.geojson
+
+# Street-detail basemap (several GB; lives on the web server, see tools/basemap/build-streets.sh)
+basemap/us-streets.pmtiles

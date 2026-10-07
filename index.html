@@ -7,11 +7,11 @@
     <meta name="keywords" content="NWS, weather, storm reports, tornado, hail, wind, interactive map">
     <meta name="author" content="NWS LSR Map">
     <!-- Content Security Policy: Local assets plus external services (matches .htaccess) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://server.arcgisonline.com https://*.arcgisonline.com https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;">
     <title>NWS Local Storm Reports - Interactive Map</title>
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+    <!-- MapLibre GL CSS -->
+    <link rel="stylesheet" href="lib/maplibre/maplibre-gl.css">
 
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="lib/fontawesome/css/all.min.css">
@@ -653,8 +653,8 @@
         </main>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="lib/leaflet/leaflet.js"></script>
+    <!-- PMTiles reader (self-hosted basemap; global "pmtiles"). MapLibre GL is imported by app.js -->
+    <script src="lib/pmtiles/pmtiles.js"></script>
 
     <!-- Configuration -->
     <script src="config.js"></script>

@@ -112,7 +112,7 @@ Use this checklist to ensure your deployment is production-ready.
 
 **Map not loading:**
 - Check browser console for errors
-- Verify Leaflet.js CDN is accessible
+- Open `test-data.html`: MapLibre loads and `basemap/us-core.pmtiles` answers range requests (HTTP 206)
 - Check CONFIG is loaded correctly
 
 **Data not loading:**

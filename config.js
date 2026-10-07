@@ -9,7 +9,6 @@ const CONFIG = {
     
     CACHE_DAYS: 30, // Must match api/config.php CACHE_DAYS; used for cache API window
     ICON_SIZE: 28,
-    BATCH_SIZE: 200,
     AUTO_REFRESH_INTERVAL: 300000, // 5 minutes
     LIVE_MODE_REFRESH_INTERVAL: 60000, // 1 minute for live mode
     DEFAULT_BOUNDS: {
@@ -18,10 +17,20 @@ const CONFIG = {
         east: -65,     // Puerto Rico easternmost point (includes East coast)
         west: -179.15  // Alaska westernmost point (Aleutian Islands)
     },
+    // MapLibre zoom levels (512px tiles): one less than the old Leaflet levels
     MAP_INITIAL: {
         lat: 39.8283,
         lon: -98.5795,
-        zoom: 4
+        zoom: 3
+    },
+    // Self-hosted basemap (see DEPLOYMENT.md, "Basemap")
+    BASEMAP: {
+        // OpenStreetMap vector tiles for the US, in the repo (max zoom 7, overzoomed beyond)
+        CORE_URL: 'basemap/us-core.pmtiles',
+        // Optional full street-detail PMTiles on this web server, e.g. 'basemap/us-streets.pmtiles'
+        // (too large for git; build with tools/basemap/build-streets.sh). Used when it answers,
+        // otherwise the map falls back to CORE_URL. Relative URLs resolve against the page.
+        STREETS_URL: ''
     },
     WEATHER_TYPES: ['Rain', 'Flood', 'Coastal Flooding', 'Snow', 'Snow Squall', 'Sleet', 'Freezing Rain', 'Ice', 'Hail', 'Wind', 'Thunderstorm', 'Tornado', 'Funnel Cloud', 'Waterspout', 'Tropical', 'Temperature', 'Fog', 'Wildfire', 'Other'],
     // State and Region bounding boxes [south, north, east, west]
@@ -354,20 +363,14 @@ const CONFIG = {
         'UNR': 'nws_central',
         'VEF': 'nws_western'
     },
-    // Performance settings
-    MAX_MARKERS: 5000, // Maximum markers to display (prevents performance issues)
-    MAX_MARKERS_WARNING: 3000, // Show warning when approaching limit
-    VIEWPORT_ONLY: true, // Only show markers in current viewport when zoomed in
-    MIN_ZOOM_FOR_VIEWPORT: 6, // Minimum zoom level to enable viewport filtering
+    // Performance settings. Reports are drawn with WebGL (one symbol layer), so
+    // tens of thousands display at once; the limits below are safety valves only.
+    MAX_MARKERS: 100000, // Maximum markers to display
+    MAX_MARKERS_WARNING: 50000, // Highlight the count when approaching the limit
+    VIEWPORT_ONLY: false, // true: only count/show reports in the viewport when zoomed in
+    MIN_ZOOM_FOR_VIEWPORT: 5, // Minimum (MapLibre) zoom level for viewport filtering
     ZOOM_BASED_LIMITS: {
-        // Max markers per zoom level (undefined = no limit)
-        3: 500,   // Increased from 100 - show more at continent view
-        4: 1000,  // Increased from 300 - show more at country view
-        5: 2000,  // Increased from 500 - show more at regional view
-        6: 3500,  // Increased from 1000 - show more at state view
-        7: 4500,  // Increased from 2000 - show more at local view
-        8: 5000,  // Increased from 3000 - matches MAX_MARKERS
-        // 9+: no limit (uses MAX_MARKERS)
+        // Optional max markers per (MapLibre) zoom level, e.g. 3: 20000. Empty = no limit.
     }
 };
 

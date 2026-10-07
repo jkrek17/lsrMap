@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-10-07
+
+### Changed
+- Map rendering moved from Leaflet to MapLibre GL JS (WebGL). All reports are drawn
+  as one symbol layer, so 10,000+ reports display at once; the 5,000-marker cap,
+  zoom-based limits and viewport filtering are off by default (still configurable).
+- Basemap is self-hosted: OpenStreetMap vector tiles in `basemap/us-core.pmtiles`
+  (states, counties, coastlines, interstates, cities), muted light and dark styles.
+  No external tile servers (fixes the OpenStreetMap "Access blocked" 403 tiles).
+- Optional street-level detail from a PMTiles file on the web server
+  (`CONFIG.BASEMAP.STREETS_URL`, built with `tools/basemap/build-streets.sh`), with
+  automatic fallback to the core basemap.
+- Severe report types and larger magnitudes draw on top of overlapping icons.
+- Automatic refreshes (live mode, auto refresh) and filter changes no longer
+  re-zoom the map.
+- Zoom levels follow MapLibre (one lower than Leaflet's): `MAP_INITIAL.zoom` is 3.
+
+### Fixed
+- Warnings / watches layers never loaded: the request allowlist blocked the IEM
+  warnings endpoint.
+
+### Removed
+- Leaflet, the Esri basemap tiles and their CSP entries.
+
 ## [2.0.0] - 2024-01-15
 
 ### Added

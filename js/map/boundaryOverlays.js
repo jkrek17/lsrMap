@@ -21,14 +21,6 @@ const NWS_REGION_TO_CWA_REGION = {
     nws_pacific: ['PR']
 };
 
-const OVERLAY_STYLE = {
-    color: '#dc2626',
-    weight: 2,
-    fill: true,
-    fillOpacity: 0.06,
-    dashArray: '5 6'
-};
-
 let cwaCollection = null;
 let stateCollection = null;
 let loadPromise = null;
@@ -108,39 +100,51 @@ function featuresForNwsAdminRegion(regionKey) {
 }
 
 /**
- * @returns {L.Layer|null}
+ * Bounding box of GeoJSON polygon features as {south, north, east, west}, or null
  */
-export function createBoundaryLayer(features) {
+export function boundsOfFeatures(features) {
     if (!features || features.length === 0) {
         return null;
     }
-    const fc =
-        features.length === 1
-            ? features[0]
-            : { type: 'FeatureCollection', features };
-    return L.geoJSON(fc, { style: OVERLAY_STYLE });
+    let south = Infinity, north = -Infinity, west = Infinity, east = -Infinity;
+    const visit = (coords) => {
+        if (typeof coords[0] === 'number') {
+            const [lng, lat] = coords;
+            if (lat < south) south = lat;
+            if (lat > north) north = lat;
+            if (lng < west) west = lng;
+            if (lng > east) east = lng;
+            return;
+        }
+        for (const c of coords) visit(c);
+    };
+    for (const f of features) {
+        if (f?.geometry?.coordinates) visit(f.geometry.coordinates);
+    }
+    return south === Infinity ? null : { south, north, east, west };
 }
 
 /**
  * @param {string} stateCode e.g. IL
+ * @returns {Array} polygon features (empty if unknown or not loaded)
  */
-export function createStateBoundaryLayer(stateCode) {
-    return createBoundaryLayer(featuresForState(stateCode));
+export function getStateBoundaryFeatures(stateCode) {
+    return featuresForState(stateCode);
 }
 
 /**
  * @param {string} wfoCode e.g. LOT or KLOT
  */
-export function createWfoBoundaryLayer(wfoCode) {
+export function getWfoBoundaryFeatures(wfoCode) {
     const f = featureForWfo(wfoCode);
-    return f ? createBoundaryLayer([f]) : null;
+    return f ? [f] : [];
 }
 
 /**
  * @param {string} regionKey CONFIG.REGIONS key for NWS admin regions
  */
-export function createNwsAdminRegionLayer(regionKey) {
-    return createBoundaryLayer(featuresForNwsAdminRegion(regionKey));
+export function getNwsAdminRegionFeatures(regionKey) {
+    return featuresForNwsAdminRegion(regionKey);
 }
 
 export function isNwsAdminRegionWithGeoJson(regionKey) {
