@@ -46,14 +46,18 @@ export class ReportLayer {
      * @param {Function} [options.onOpen]       (report, popupElement) => void after the popup opens
      * @param {Function} [options.onClick]      (report) => void for reports without a popup
      * @param {Function} [options.isClickBlocked] () => boolean, e.g. while drawing bounds
+     * @param {Function} [options.featureProperties] (report) => extra feature properties (e.g. time)
      */
-    constructor(maplibregl, { id, popupHtml, onOpen, onClick, isClickBlocked }) {
+    constructor(maplibregl, { id, popupHtml, onOpen, onClick, isClickBlocked, featureProperties }) {
         this.maplibregl = maplibregl;
         this.id = id;
         this.popupHtml = popupHtml;
         this.onOpen = onOpen;
         this.onClick = onClick;
         this.isClickBlocked = isClickBlocked || (() => false);
+        this.featureProperties = featureProperties || null;
+        this.filter = null;
+        this.paintOverrides = {};
         this.map = null;
         this.reports = [];
         this.popup = null;
@@ -78,7 +82,9 @@ export class ReportLayer {
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'symbol-sort-key': ['get', 'sort']
-            }
+            },
+            paint: { ...this.paintOverrides },
+            ...(this.filter ? { filter: this.filter } : {})
         }, beforeId);
 
         map.on('mouseenter', this.id, () => {
@@ -101,7 +107,12 @@ export class ReportLayer {
             features.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [r.lon, r.lat] },
-                properties: { i, icon: r.icon.id, sort: sortKey(r) }
+                properties: {
+                    ...(this.featureProperties ? this.featureProperties(r) : {}),
+                    i,
+                    icon: r.icon.id,
+                    sort: sortKey(r)
+                }
             });
         }
         return { type: 'FeatureCollection', features };
@@ -117,6 +128,22 @@ export class ReportLayer {
         const source = this.map.getSource(this.id);
         if (source) {
             source.setData(this.featureCollection());
+        }
+    }
+
+    /** Layer filter expression (null for none); kept across addTo */
+    setFilter(filter) {
+        this.filter = filter;
+        if (this.map?.getLayer(this.id)) {
+            this.map.setFilter(this.id, filter);
+        }
+    }
+
+    /** Paint property on the icon layer (e.g. icon-opacity); kept across addTo */
+    setPaintProperty(name, value) {
+        this.paintOverrides[name] = value;
+        if (this.map?.getLayer(this.id)) {
+            this.map.setPaintProperty(this.id, name, value);
         }
     }
 

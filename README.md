@@ -11,7 +11,8 @@ A modern, interactive web application for visualizing National Weather Service (
 - 🗺️ **Interactive Map** - WebGL map (MapLibre GL JS) that draws 10,000+ storm reports at once, with warnings, radar and boundary layers
 - 🧭 **Self-Hosted Basemap** - OpenStreetMap vector tiles (states, counties, coastlines, interstates, cities) served from this site as PMTiles; optional street-level detail file on the server; light and dark styles
 - 🔍 **Advanced Filtering** - Filter by report type, date range, and geographic region with real-time map updates
-- 📊 **Real-time Data** - Live mode with automatic refresh for current conditions
+- ⏯️ **Playback** - Replay any range up to 7 days on a timeline: reports appear as they happened (recent ones highlighted), with archived radar and the storm-based warnings in effect at each moment
+- 📊 **Live Mode** - Latest reports, radar and warnings, refreshing every minute (on the Playback & Live page)
 - 💾 **Client-side Caching** - Intelligent caching with localStorage for improved performance
 - 🔄 **Request Management** - Automatic retry logic with exponential backoff
 - 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
@@ -162,6 +163,18 @@ Client-side caching is configured in `js/cache/cacheService.js`:
 - **Export Data**: Click "Export Data" button or press `E` to export filtered data
 - **Help**: Click "Help" button or press `?` to view keyboard shortcuts
 
+### Playback & Live (`playback.html`)
+
+Open it with **Playback** (current date range, location and types) or **Live** in the Current View panel.
+
+- **Timeline**: bars show reports per time bin; drag or click to scrub, hover for counts
+- **Play / pause** `Space`, **step** `←` `→`, **start / end** `Home` `End`, **live** `L`
+- **Reports** up to the playhead stay on the map; those within the highlight window (15 min – 3 h) have an amber halo, older ones are dimmed
+- **Radar**: IEM NEXRAD composite for each 5-minute step, preloaded ahead of the playhead
+- **Warnings in effect**: storm-based warning polygons from the IEM archive, shown while they were valid
+- **Live**: the window (3–24 h) ends at now and refreshes every minute; the LIVE badge follows the latest time, Play loops the last hour
+- The URL keeps the range, filters and playhead, so a link reopens the same moment
+
 ### Filtering
 
 1. **By Report Type**: Check/uncheck report type chips in the filter panel (applies to both LSR and PNS reports)
@@ -213,6 +226,7 @@ The application is built with a modular architecture using ES6 modules:
 /
 ├── index.html              # Main HTML file
 ├── app.js                  # Main application entry point
+├── playback.html / .js / .css # Playback & Live page (timeline, archived radar and warnings)
 ├── config.js               # Configuration file
 ├── styles.css              # Application styles
 ├── basemap/                # Self-hosted basemap: us-core.pmtiles, county GeoJSON, fonts, sprites
@@ -232,6 +246,8 @@ The application is built with a modular architecture using ES6 modules:
 │   │   └── filterService.js # Marker filtering & performance optimization
 │   ├── map/                # Map-related services
 │   │   ├── basemap.js      # Self-hosted basemap style, light/dark themes, street-detail fallback
+│   │   ├── mapSetup.js     # Map creation and click routing shared by both pages
+│   │   ├── radarPlayer.js  # Archived radar frames synced to the playback clock
 │   │   ├── boundaryOverlays.js # NWS state / CWA / region polygons
 │   │   ├── iconService.js  # Weather-specific icons, drawn once per style for WebGL
 │   │   ├── overlayLayers.js # Area outline, warnings/watches, radar frames

@@ -70,9 +70,12 @@
                     </button>
                 </div>
                 <div class="cv-actions">
-                    <button type="button" id="toggleLiveMode" class="btn-toggle-action" title="Toggle Live Weather Mode">
+                    <a href="playback.html?mode=live" id="openLive" class="btn-toggle-action" style="text-decoration: none;" title="Live mode: reports, radar and warnings that refresh every minute (opens the Playback &amp; Live page)">
                         <i class="fas fa-satellite-dish"></i> Live
-                    </button>
+                    </a>
+                    <a href="playback.html" id="openPlayback" class="btn-toggle-action" style="text-decoration: none;" title="Replay this date range over time with radar and warnings">
+                        <i class="fas fa-play-circle"></i> Playback
+                    </a>
                     <button type="button" id="clearAllFilters" class="btn-toggle-action" title="Reset filters">
                         <i class="fas fa-redo-alt"></i> Reset
                     </button>
@@ -106,30 +109,6 @@
                         <button type="button" class="btn-preset" data-preset="48h" title="Load reports from the last 48 hours">Last 48h</button>
                         <button type="button" class="btn-preset" data-preset="week" title="Load reports from the last 7 days">Last Week</button>
                         <button type="button" class="btn-preset" data-preset="custom" title="Set custom date and time range">Custom</button>
-                    </div>
-                    <div class="live-mode-info" id="liveModeInfo" style="display: none;">
-                        <div class="live-mode-status">
-                            <i class="fas fa-sync-alt fa-spin"></i>
-                            <span>Auto-refreshing every <span id="refreshInterval">60</span>s</span>
-                        </div>
-                        <div class="live-mode-range">
-                            <span class="live-mode-range-label">Range:</span>
-                            <div class="live-mode-range-buttons">
-                                <button type="button" class="btn btn-secondary btn-live-range active" data-hours="24" aria-pressed="true">
-                                    Last 24h
-                                </button>
-                                <button type="button" class="btn btn-secondary btn-live-range" data-hours="6" aria-pressed="false">
-                                    Last 6h
-                                </button>
-                            </div>
-                        </div>
-                        <div class="live-mode-last-update">
-                            Last update: <span id="lastUpdateTime">--</span>
-                        </div>
-                        <div class="radar-animation-info">
-                            <i class="fas fa-video"></i>
-                            <span>Radar: <span id="radarFrameInfo">Loading...</span></span>
-                        </div>
                     </div>
                     <div id="customDateFields" style="display: none;">
                         <label for="startDate">Start Date:</label>
@@ -532,8 +511,8 @@
                     </div>
                     <div class="tutorial-step" data-step="6">
                         <div class="tutorial-icon">⚡</div>
-                        <h3>Live Mode &amp; Sharing</h3>
-                        <p>Enable "Live Mode" for auto-refreshing data every 60 seconds with animated radar. Use "Share" to copy a link with your current filters, or "Export" to download data.</p>
+                        <h3>Playback, Live &amp; Sharing</h3>
+                        <p>"Playback" replays the current date range over time with radar and the warnings in effect. "Live" follows the latest reports, radar and warnings, refreshing every minute. Use "Share" to copy a link with your current filters, or "Export" to download data.</p>
                         <p><strong>Tip:</strong> Keyboard shortcuts: G (Get Data), C (Clear), S (Share), E (Export), ? (Help)</p>
                     </div>
                 </div>
