@@ -1,14 +1,15 @@
 # NWS Local Storm Reports - Interactive Map
 
-A modern, interactive web application for visualizing National Weather Service (NWS) Local Storm Reports (LSR) on an interactive map. Built with vanilla JavaScript, Leaflet.js, and ES6 modules.
+A modern, interactive web application for visualizing National Weather Service (NWS) Local Storm Reports (LSR) on an interactive map. Built with vanilla JavaScript, MapLibre GL JS (WebGL), and ES6 modules, on a self-hosted vector basemap (no external tile servers).
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)
-![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-green.svg)
+![MapLibre](https://img.shields.io/badge/MapLibre_GL-6.13-green.svg)
 
 ## Features
 
-- 🗺️ **Interactive Map** - Explore storm reports on an interactive Leaflet map with multiple data layers
+- 🗺️ **Interactive Map** - WebGL map (MapLibre GL JS) that draws 10,000+ storm reports at once, with warnings, radar and boundary layers
+- 🧭 **Self-Hosted Basemap** - OpenStreetMap vector tiles (states, counties, coastlines, interstates, cities) served from this site as PMTiles; optional street-level detail file on the server; light and dark styles
 - 🔍 **Advanced Filtering** - Filter by report type, date range, and geographic region with real-time map updates
 - 📊 **Real-time Data** - Live mode with automatic refresh for current conditions
 - 💾 **Client-side Caching** - Intelligent caching with localStorage for improved performance
@@ -17,7 +18,7 @@ A modern, interactive web application for visualizing National Weather Service (
 - ⌨️ **Keyboard Shortcuts** - Power user features for quick navigation
 - 📤 **Data Export** - Export filtered data as CSV, JSON, or GeoJSON (includes both LSR and PNS reports)
 - 🌐 **Offline Detection** - Automatic detection and notification of network status
-- 🎯 **Performance Optimized** - Zoom-based marker limits, viewport filtering, and batch processing
+- 🎯 **Performance Optimized** - WebGL rendering, request caching and deduplication
 - 📋 **Public Information Statements (PNS)** - View and filter NWS PNS statements with metadata parsing
 - 🌡️ **Temperature Reports** - Specialized icons for temperature reports (extreme cold, heat index, wind chill)
 - ❄️ **Weather Differentiation** - Visual distinction between freezing rain (red border) and sleet
@@ -123,11 +124,14 @@ Configuration is managed in `config.js`. Key settings include:
 ```javascript
 CONFIG = {
     ICON_SIZE: 28,                    // Marker icon size in pixels
-    BATCH_SIZE: 200,                  // Markers processed per batch
     MAP_INITIAL: {
         lat: 39.8283,                 // Initial map center latitude
         lon: -98.5795,                // Initial map center longitude
-        zoom: 4                       // Initial zoom level
+        zoom: 3                       // Initial zoom level (MapLibre levels: Leaflet level - 1)
+    },
+    BASEMAP: {
+        CORE_URL: 'basemap/us-core.pmtiles', // In-repo US basemap (max zoom 7, overzoomed)
+        STREETS_URL: ''                      // Optional street-detail PMTiles on the server
     }
 }
 ```
@@ -135,17 +139,10 @@ CONFIG = {
 ### Performance Settings
 ```javascript
 CONFIG = {
-    MAX_MARKERS: 5000,                // Maximum markers to display
-    VIEWPORT_ONLY: true,              // Only show markers in viewport
-    MIN_ZOOM_FOR_VIEWPORT: 6,         // Minimum zoom for viewport filtering
-    ZOOM_BASED_LIMITS: {              // Marker limits by zoom level
-        3: 500,
-        4: 1000,
-        5: 2000,
-        6: 3500,
-        7: 4500,
-        8: 5000
-    }
+    MAX_MARKERS: 100000,              // Safety valve; WebGL draws all reports at once
+    VIEWPORT_ONLY: false,             // true: only count/show reports in the viewport when zoomed in
+    MIN_ZOOM_FOR_VIEWPORT: 5,         // Minimum zoom for viewport filtering
+    ZOOM_BASED_LIMITS: {}             // Optional marker limits by zoom level, e.g. { 3: 20000 }
 }
 ```
 
@@ -218,6 +215,9 @@ The application is built with a modular architecture using ES6 modules:
 ├── app.js                  # Main application entry point
 ├── config.js               # Configuration file
 ├── styles.css              # Application styles
+├── basemap/                # Self-hosted basemap: us-core.pmtiles, county GeoJSON, fonts, sprites
+├── lib/                    # Vendored MapLibre GL, PMTiles, Protomaps style layers, Font Awesome
+├── tools/basemap/          # Scripts that rebuild the basemap and the optional street-detail file
 ├── js/
 │   ├── api/                # API services
 │   │   ├── lsrService.js   # LSR API service
@@ -231,8 +231,11 @@ The application is built with a modular architecture using ES6 modules:
 │   ├── filter/             # Filtering services
 │   │   └── filterService.js # Marker filtering & performance optimization
 │   ├── map/                # Map-related services
-│   │   ├── iconService.js  # Icon creation with weather-specific styling
-│   │   ├── markerService.js # Marker management
+│   │   ├── basemap.js      # Self-hosted basemap style, light/dark themes, street-detail fallback
+│   │   ├── boundaryOverlays.js # NWS state / CWA / region polygons
+│   │   ├── iconService.js  # Weather-specific icons, drawn once per style for WebGL
+│   │   ├── overlayLayers.js # Area outline, warnings/watches, radar frames
+│   │   ├── reportLayer.js  # LSR / PNS reports as a WebGL symbol layer with popups
 │   │   └── popupService.js # Popup content generation
 │   ├── state/              # State management
 │   │   └── appState.js     # Application state
@@ -405,15 +408,16 @@ The application includes several performance optimizations:
 
 - **Client-side caching**: Reduces API calls
 - **Request deduplication**: Prevents duplicate requests
-- **Batch processing**: Processes markers in batches using `requestAnimationFrame`
-- **Viewport filtering**: Only renders markers in visible area
-- **Zoom-based limits**: Adjusts marker density based on zoom level
+- **WebGL rendering**: All reports are one MapLibre symbol layer; each distinct icon is drawn once and shared, so tens of thousands of reports stay smooth
+- **Vector basemap from one file**: PMTiles read with HTTP range requests; only the visible tiles are downloaded
+- **Optional limits**: Viewport filtering and zoom-based limits remain available in `config.js` but are off by default
 
 ## Troubleshooting
 
 ### Map Not Loading
 - Check browser console for errors
-- Verify Leaflet.js is loaded correctly
+- Open `test-data.html`: it checks that MapLibre loads and that the server answers range requests for the basemap
+- The browser must support WebGL (any current desktop or mobile browser)
 - Ensure `CONFIG` is defined in `config.js`
 
 ### Data Not Loading
@@ -452,7 +456,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [Iowa State Mesonet](https://mesonet.agron.iastate.edu/) for providing the LSR API
-- [Leaflet.js](https://leafletjs.com/) for the mapping library
+- [MapLibre GL JS](https://maplibre.org/) for the WebGL map
+- [Protomaps](https://protomaps.com/) for the basemap tiles, style layers and PMTiles format
+- [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) for the basemap data
+- US Census Bureau for county boundaries
 - [Font Awesome](https://fontawesome.com/) for icons
 - National Weather Service for the data
 

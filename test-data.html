@@ -82,6 +82,23 @@
             })
             .catch(e => fail(`Basemap file not reachable: ${e.message}`));
 
+        // Optional street-detail basemap configured in config.js
+        const streetsUrl = (typeof CONFIG !== 'undefined' && CONFIG.BASEMAP && CONFIG.BASEMAP.STREETS_URL) || '';
+        if (streetsUrl) {
+            fetch(streetsUrl, { headers: { Range: 'bytes=0-15' } })
+                .then(async r => {
+                    const magic = new TextDecoder().decode(new Uint8Array(await r.arrayBuffer()).slice(0, 7));
+                    if (r.status === 206 && magic === 'PMTiles') {
+                        pass(`Street-detail basemap ${streetsUrl} answers range requests (HTTP 206).`);
+                    } else {
+                        fail(`Street-detail basemap ${streetsUrl} returned HTTP ${r.status} (need 206); the map will use the core basemap.`);
+                    }
+                })
+                .catch(e => fail(`Street-detail basemap ${streetsUrl} not reachable (${e.message}); the map will use the core basemap.`));
+        } else {
+            log('No street-detail basemap configured (CONFIG.BASEMAP.STREETS_URL); using basemap/us-core.pmtiles.');
+        }
+
         if (typeof CONFIG !== 'undefined') {
             pass('CONFIG is loaded.');
         } else {
