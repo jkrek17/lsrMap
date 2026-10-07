@@ -21,6 +21,13 @@ import { ReportLayer } from './js/map/reportLayer.js';
 import { AreaOverlay, AlertLayer } from './js/map/overlayLayers.js';
 import { RadarPlayer } from './js/map/radarPlayer.js';
 import {
+    ReportTimeStates,
+    AlertTimeStates,
+    REPORT_ICON_OPACITY,
+    RECENT_HALO_PAINT,
+    ALERT_TIME_PAINT
+} from './js/map/timeStates.js';
+import {
     loadBoundaryGeoJson,
     getClipFeaturesForSelection,
     pointInClipFeatures,
@@ -47,7 +54,7 @@ const state = {
     startMs: 0,
     endMs: 0,
     stepMin: 5,
-    speed: 2, // steps per second
+    speed: 30, // minutes of weather per second of playback
     t: 0,
     playing: false,
     follow: true, // live: playhead tracks "now"
@@ -57,6 +64,7 @@ const state = {
     typesKey: 'all',
     customTypes: null,
     showRadar: true,
+    radarOpacity: 0.7,
     showWarnings: true
 };
 
@@ -75,7 +83,6 @@ let regionClip = null; // GeoJSON polygons for the selected location (null = bbo
 let regionBounds = null;
 let bins = { size: HOUR, counts: [], rects: [] };
 
-let playToken = 0;
 let loadToken = 0;
 let liveTimer = null;
 let urlTimer = null;
@@ -192,6 +199,7 @@ function applyFilters() {
         .sort((a, b) => a.tms - b.tms);
     times = reports.map(r => r.tms);
     if (reportLayer) reportLayer.setReports(reports);
+    reportStates?.reset(times);
 
     if (warningsLayer) {
         const b = regionBounds;
@@ -200,6 +208,7 @@ function applyFilters() {
             return wb && wb.west <= b.east && wb.east >= b.west && wb.south <= b.north && wb.north >= b.south;
         });
         warningsLayer.setAlerts(visible);
+        alertStates?.reset(visible);
     }
 
     if (areaOverlay) {
@@ -209,7 +218,7 @@ function applyFilters() {
     }
 
     buildTimeline();
-    applyTime();
+    renderTime();
 }
 
 function prepareReports(geoJson) {
@@ -278,7 +287,7 @@ async function fetchWarnings(startMs, endMs) {
 async function loadData({ fit = true, playhead, quiet = false } = {}) {
     const token = ++loadToken;
     if (!quiet) showStatusToast('Loading storm reports...', 'loading');
-    setPlaying(false);
+    if (state.playing) setPlaying(false);
     try {
         if (!lsrService) lsrService = new LSRService(CONFIG);
         const [geoJson, warnings] = await Promise.all([
@@ -304,7 +313,7 @@ async function loadData({ fit = true, playhead, quiet = false } = {}) {
         state.t = Math.min(state.endMs, Math.max(state.startMs, target));
         applyFilters();
         if (fit) fitToData();
-        showRadar(state.t);
+        settleRadar();
         if (live) $('liveUpdated').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         if (!quiet) {
             hideStatusToast();
@@ -334,61 +343,91 @@ function fitToData() {
 // ============================================================================
 // CLOCK
 // ============================================================================
+//
+// While playing, the playhead advances every animation frame at state.speed
+// minutes of weather per second. Each frame only updates feature states
+// (reports that appeared or aged, warnings that began or ended) and the radar
+// crossfade; text and histogram updates are throttled.
 
-function stepCount() {
-    return Math.max(1, Math.ceil((state.endMs - state.startMs) / stepMs()));
+const MAX_BUFFER_WAIT_MS = 4000; // give up waiting for slow radar after this
+
+/** Radar frames to keep loading ahead (frames are thinned while playing fast) */
+const bufferFrames = () => 8;
+
+/**
+ * Radar frame interval while playing: at most ~1.5 new frames per second, which
+ * IEM's tile server can keep up with (5-min frames at 5 min/s, 20-min at 30 min/s).
+ * Paused or stepping, every 5-minute frame is used.
+ */
+function radarStepMs() {
+    return state.playing ? 5 * MINUTE * Math.max(1, Math.ceil(state.speed / 7.5)) : 5 * MINUTE;
+}
+const FADE_REAL_MS = 450; // new reports fade in over this much real time
+const UI_INTERVAL_MS = 120;
+
+let reportStates = null;
+let alertStates = null;
+let rafId = 0;
+let lastFrameAt = 0;
+let lastUiAt = 0;
+let buffering = false;
+let bufferingSince = 0;
+let holdUntil = 0; // live loop: pause on the newest frame before looping
+
+const weatherMsPerRealMs = () => (state.speed * MINUTE) / 1000;
+const radarOn = () => Boolean(radar && state.showRadar);
+
+/** Push the playhead into feature states, radar and (unless ui is false) the text/histogram */
+function renderTime({ ui = true } = {}) {
+    const t = state.t;
+    if (!t) return; // nothing loaded yet
+    const fadeMs = state.playing ? FADE_REAL_MS * weatherMsPerRealMs() : 0;
+    reportStates?.update(t, state.trailMin * MINUTE, fadeMs);
+    alertStates?.update(t);
+    if (radarOn()) radar.render(t);
+    updatePlayhead();
+    if (ui) {
+        updateReadout();
+        updateTimelineBars();
+        scheduleUrlUpdate();
+    }
 }
 
-function timeForIndex(i) {
-    return Math.min(state.endMs, state.startMs + i * stepMs());
-}
-
-function indexForTime(ms) {
-    return Math.round((ms - state.startMs) / stepMs());
-}
-
-/** Move the playhead (and radar) */
-function setTime(ms, { radarToo = true, userScrub = false } = {}) {
+/** Move the playhead (scrubbing, stepping, loading) */
+function setTime(ms, { userScrub = false } = {}) {
     state.t = Math.min(state.endMs, Math.max(state.startMs, ms));
     if (userScrub && state.mode === 'live') {
         state.follow = state.t >= state.endMs;
         updateLiveBadge();
     }
-    applyTime();
-    if (radarToo) showRadar(state.t);
+    if (radarOn()) radar.bufferAhead(state.t, 2);
+    renderTime();
+    if (!state.playing) settleRadar();
 }
 
-function showRadar(ms) {
-    if (!radar || !state.showRadar) return Promise.resolve(null);
-    const s = stepMs();
-    return radar.show(ms, { aheadMs: [ms + s, ms + 2 * s, ms + 3 * s] });
-}
-
-/** Push the playhead time into the map layers and the readout */
-function applyTime() {
-    const t = state.t;
-    const trail = state.trailMin * MINUTE;
-    if (reportLayer) {
-        reportLayer.setFilter(['<=', ['get', 't'], t]);
-        reportLayer.setPaintProperty('icon-opacity', ['case', ['>=', ['get', 't'], t - trail], 1, 0.45]);
-    }
-    if (map?.getLayer('pb-recent-halo')) {
-        map.setFilter('pb-recent-halo', ['all', ['<=', ['get', 't'], t], ['>=', ['get', 't'], t - trail]]);
-    }
-    if (warningsLayer) {
-        warningsLayer.setFilter(['all', ['<=', ['get', 'b'], t], ['>', ['get', 'e'], t]]);
-    }
-    updateReadout();
-    updateTimelinePosition();
-    scheduleUrlUpdate();
+/** While paused, redraw the radar as the frames for the playhead finish loading */
+let settleId = 0;
+function settleRadar() {
+    cancelAnimationFrame(settleId);
+    if (!radarOn()) return;
+    const until = performance.now() + 8000;
+    const step = (now) => {
+        if (state.playing) return;
+        radar.render(state.t);
+        updateRadarStatus();
+        if (!radar.isReady(state.t) && now < until) settleId = requestAnimationFrame(step);
+    };
+    settleId = requestAnimationFrame(step);
 }
 
 function setPlaying(playing) {
     state.playing = playing;
-    playToken++;
+    cancelAnimationFrame(rafId);
     const icon = $('btnPlay').querySelector('i');
     icon.className = playing ? 'fas fa-pause' : 'fas fa-play';
     $('btnPlay').title = playing ? 'Pause (Space)' : 'Play (Space)';
+    holdUntil = 0;
+    radar?.setFrameStep(radarStepMs());
     if (playing) {
         if (state.mode === 'live') {
             state.follow = false;
@@ -398,44 +437,93 @@ function setPlaying(playing) {
         } else if (state.t >= state.endMs) {
             state.t = state.startMs; // replay from the start
         }
-        playLoop(playToken);
+        // Fill the radar buffer before moving so playback does not stutter
+        if (radarOn()) radar.bufferAhead(state.t, bufferFrames());
+        buffering = radarOn() && !radar.isReady(state.t, 2);
+        bufferingSince = performance.now();
+        lastFrameAt = performance.now();
+        rafId = requestAnimationFrame(tick);
+    } else {
+        buffering = false;
+        renderTime(); // settle fades (fade length is 0 while paused)
+        settleRadar();
     }
+    updateRadarStatus();
 }
 
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+function tick(now) {
+    if (!state.playing) return;
+    // Real-time rate even at low frame rates; cap only long gaps (e.g. a background tab)
+    const dt = Math.min(now - lastFrameAt, 250);
+    lastFrameAt = now;
+    if (radarOn()) radar.bufferAhead(state.t, bufferFrames());
 
-async function playLoop(token) {
-    while (state.playing && token === playToken) {
-        const began = performance.now();
-        let next = state.t + stepMs();
-        if (next > state.endMs) {
-            if (state.mode === 'live') {
-                await sleep(1500); // hold on the newest frame, then loop the last hour
-                if (!state.playing || token !== playToken) return;
-                next = Math.max(state.startMs, state.endMs - LIVE_LOOP_MS);
-            } else if (state.t < state.endMs) {
-                next = state.endMs;
-            } else {
-                setPlaying(false);
-                return;
-            }
-        }
-        // Wait (briefly) for the radar frame so radar and reports stay in step
-        await showRadar(next);
-        if (!state.playing || token !== playToken) return;
-        setTime(next, { radarToo: false });
-        if (state.mode !== 'live' && state.t >= state.endMs) {
-            setPlaying(false);
+    if (holdUntil) {
+        if (now < holdUntil) {
+            rafId = requestAnimationFrame(tick);
             return;
         }
-        await sleep(Math.max(0, 1000 / state.speed - (performance.now() - began)));
+        holdUntil = 0;
+        state.t = Math.max(state.startMs, state.endMs - LIVE_LOOP_MS);
     }
+
+    // Keep moving while radar keeps up (a frame that is late just skips its
+    // crossfade); hold only when the radar would fall a whole frame behind
+    if (buffering) {
+        if (!radarOn() || radar.isReady(state.t, 2) || now - bufferingSince > MAX_BUFFER_WAIT_MS) {
+            buffering = false;
+            updateRadarStatus();
+        } else {
+            renderTime({ ui: false });
+            rafId = requestAnimationFrame(tick);
+            return;
+        }
+    } else if (radarOn() && !radar.isFrameLoaded(state.t)) {
+        buffering = true;
+        bufferingSince = now;
+        updateRadarStatus();
+        rafId = requestAnimationFrame(tick);
+        return;
+    }
+
+    const next = state.t + dt * weatherMsPerRealMs();
+    if (next >= state.endMs) {
+        state.t = state.endMs;
+        if (state.mode === 'live') {
+            holdUntil = now + 1500; // hold on the newest frame, then loop the last hour
+            renderTime();
+            rafId = requestAnimationFrame(tick);
+        } else {
+            setPlaying(false);
+        }
+        return;
+    }
+    state.t = next;
+    const uiDue = now - lastUiAt >= UI_INTERVAL_MS;
+    if (uiDue) lastUiAt = now;
+    renderTime({ ui: uiDue });
+    rafId = requestAnimationFrame(tick);
 }
 
+/** Step buttons / arrow keys: snap to the step grid */
 function stepBy(n) {
     setPlaying(false);
-    const i = indexForTime(state.t) + n;
-    setTime(timeForIndex(Math.max(0, Math.min(stepCount(), i))), { userScrub: true });
+    const step = stepMs();
+    const index = Math.round((state.t - state.startMs) / step) + n;
+    setTime(state.startMs + index * step, { userScrub: true });
+}
+
+function updateRadarStatus() {
+    const el = $('radarStatus');
+    if (!el) return;
+    if (!radarOn()) {
+        el.textContent = 'Radar off';
+    } else if (buffering) {
+        el.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Buffering radar…';
+    } else {
+        const frame = radar.dominantFrame;
+        el.textContent = frame ? `Radar ${formatUtc(frame, false)}` : 'Radar loading…';
+    }
 }
 
 // ============================================================================
@@ -455,11 +543,12 @@ function buildTimeline() {
     }
     bins = { size, counts, rects: [] };
 
-    const scrubber = $('scrubber');
-    scrubber.max = String(stepCount());
+    // Scrubber resolution: one minute
+    $('scrubber').max = String(Math.max(1, Math.round(range / MINUTE)));
     drawHistogram();
     drawAxis();
-    updateTimelinePosition();
+    updatePlayhead();
+    updateTimelineBars();
 }
 
 function drawHistogram() {
@@ -511,11 +600,16 @@ function drawAxis() {
     }
 }
 
-function updateTimelinePosition() {
+/** Playhead marker and scrubber (every animation frame while playing) */
+function updatePlayhead() {
     const range = state.endMs - state.startMs || 1;
     const fraction = (state.t - state.startMs) / range;
     $('playhead').style.left = `${Math.max(0, Math.min(1, fraction)) * 100}%`;
-    $('scrubber').value = String(indexForTime(state.t));
+    $('scrubber').value = String(Math.round((state.t - state.startMs) / MINUTE));
+}
+
+/** Histogram bars before the playhead are drawn as played */
+function updateTimelineBars() {
     bins.rects.forEach((rect, i) => {
         const binEnd = state.startMs + (i + 1) * bins.size;
         rect.setAttribute('class', binEnd <= state.t + 1 ? 'bar-played' : 'bar-future');
@@ -548,10 +642,11 @@ function updateReadout() {
     $('timeUtc').textContent = state.endMs ? formatUtc(state.t) : '--';
     $('timeLocal').textContent = state.endMs ? `${formatLocal(state.t)} local` : '';
     const shown = countUpTo(state.t);
-    const recent = shown - countUpTo(state.t - state.trailMin * MINUTE - 1);
+    const recent = shown - Math.min(shown, countUpTo(state.t - state.trailMin * MINUTE)); // same rule as ReportTimeStates
     const trailLabel = state.trailMin >= 60 ? `${state.trailMin / 60} h` : `${state.trailMin} min`;
     $('reportCount').innerHTML = `${shown.toLocaleString()} of ${reports.length.toLocaleString()} reports · ` +
         `<span class="pb-recent-dot"></span> ${recent.toLocaleString()} in last ${trailLabel}`;
+    updateRadarStatus();
 }
 
 // ============================================================================
@@ -591,8 +686,10 @@ function setMode(mode, { load = true } = {}) {
         const { start, end } = liveRange();
         state.startMs = start;
         state.endMs = end;
-        if (state.stepMin > 15) state.stepMin = 5;
+        state.stepMin = 5;
+        state.speed = 10; // the last-hour loop takes about 6 seconds, like the old live radar
         $('stepSelect').value = String(state.stepMin);
+        $('speedSelect').value = String(state.speed);
         markPresets('livePresets', state.liveHours);
         liveTimer = setInterval(refreshLive, LIVE_REFRESH_MS);
         if (load) loadData({ fit: true });
@@ -670,20 +767,48 @@ function setPlaybackRange(startMs, endMs) {
     }
     state.startMs = startMs;
     state.endMs = endMs;
-    // Default step: fine for short ranges, coarser for long ones
+    // Defaults: a few minutes of real time to play any range; fine steps for short ranges
     const hours = (endMs - startMs) / HOUR;
     state.stepMin = hours <= 12 ? 5 : hours <= 48 ? 15 : 60;
+    state.speed = hours <= 6 ? 5 : hours <= 24 ? 15 : hours <= 48 ? 30 : 120;
     $('stepSelect').value = String(state.stepMin);
+    $('speedSelect').value = String(state.speed);
     setRangeInputs();
     return true;
 }
 
+/**
+ * IEM N0Q reflectivity colors (read from the palette of IEM's n0q GIS composite,
+ * the same colors its tiles use), every 5 dBZ.
+ */
+const N0Q_LEGEND = [
+    [5, '#6376a8'], [10, '#4568a6'], [15, '#60b4d4'], [20, '#43d67e'], [25, '#0eb314'],
+    [30, '#0b840e'], [35, '#327308'], [40, '#ffe200'], [45, '#ffac00'], [50, '#f80000'],
+    [55, '#aa0000'], [60, '#ffeaff'], [65, '#f960fa'], [70, '#a400f7'], [75, '#05eaf0']
+];
+
+function buildRadarLegend() {
+    const first = N0Q_LEGEND[0][0];
+    const span = N0Q_LEGEND[N0Q_LEGEND.length - 1][0] - first;
+    const stops = N0Q_LEGEND.map(([dbz, color]) => `${color} ${((dbz - first) / span) * 100}%`).join(', ');
+    $('radarLegendBar').style.background = `linear-gradient(to right, ${stops})`;
+    const ticks = $('radarLegendTicks');
+    ticks.textContent = '';
+    for (const dbz of [10, 20, 30, 40, 50, 60, 70]) {
+        const label = document.createElement('span');
+        label.style.left = `${((dbz - first) / span) * 100}%`;
+        label.textContent = String(dbz);
+        ticks.appendChild(label);
+    }
+}
+
 function setupControls() {
+    buildRadarLegend();
     $('modePlayback').addEventListener('click', () => {
         if (state.mode === 'playback') return;
         setPlaying(false);
         setMode('playback');
-        applyTime();
+        renderTime();
     });
     $('modeLive').addEventListener('click', () => {
         if (state.mode === 'live') return;
@@ -727,8 +852,17 @@ function setupControls() {
     });
     $('showRadar').addEventListener('change', (e) => {
         state.showRadar = e.target.checked;
+        $('radarFields').hidden = !state.showRadar;
         radar?.setEnabled(state.showRadar);
-        if (state.showRadar) showRadar(state.t);
+        renderTime();
+        settleRadar();
+        updateRadarStatus();
+    });
+    $('radarOpacity').addEventListener('input', (e) => {
+        state.radarOpacity = Number(e.target.value) / 100;
+        $('radarOpacityValue').textContent = `${e.target.value}%`;
+        radar?.setOpacity(state.radarOpacity);
+        if (radarOn()) radar.render(state.t);
     });
     $('showWarnings').addEventListener('change', (e) => {
         state.showWarnings = e.target.checked;
@@ -736,7 +870,7 @@ function setupControls() {
     });
     $('trailSelect').addEventListener('change', (e) => {
         state.trailMin = Number(e.target.value);
-        applyTime();
+        renderTime();
     });
     $('togglePanel').addEventListener('click', () => {
         const panel = $('settingsPanel');
@@ -755,17 +889,16 @@ function setupControls() {
     $('btnGoLive').addEventListener('click', goLive);
     $('stepSelect').addEventListener('change', (e) => {
         state.stepMin = Number(e.target.value);
-        buildTimeline();
-        setTime(state.startMs + indexForTime(state.t) * stepMs());
     });
     $('speedSelect').addEventListener('change', (e) => {
         state.speed = Number(e.target.value);
+        radar?.setFrameStep(radarStepMs());
     });
 
     const scrubber = $('scrubber');
     scrubber.addEventListener('input', () => {
         setPlaying(false);
-        setTime(timeForIndex(Number(scrubber.value)), { userScrub: true });
+        setTime(state.startMs + Number(scrubber.value) * MINUTE, { userScrub: true });
     });
     scrubber.addEventListener('pointermove', (e) => showTrackTooltip(e.clientX));
     scrubber.addEventListener('pointerleave', hideTrackTooltip);
@@ -773,7 +906,7 @@ function setupControls() {
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => { drawHistogram(); drawAxis(); updateTimelinePosition(); }, 150);
+        resizeTimer = setTimeout(() => { drawHistogram(); drawAxis(); updatePlayhead(); updateTimelineBars(); }, 150);
     });
 
     // Keyboard: Space play/pause, arrows step, Home/End, L live
@@ -922,32 +1055,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTheme();
 
     areaOverlay = new AreaOverlay('pb-area');
-    warningsLayer = new AlertLayer(maplibregl, 'pb-warnings');
-    radar = new RadarPlayer({ prefix: 'pb-radar' });
+    // Time is applied through feature state (see js/map/timeStates.js), keyed by feature index
+    warningsLayer = new AlertLayer(maplibregl, 'pb-warnings', {
+        sourceOptions: { promoteId: 'i' },
+        paint: ALERT_TIME_PAINT,
+        acceptsAlert: (alert) => alert.properties.b <= state.t && state.t < alert.properties.e
+    });
+    radar = new RadarPlayer({ prefix: 'pb-radar', opacity: state.radarOpacity });
     reportLayer = new ReportLayer(maplibregl, {
         id: 'pb-reports',
         popupHtml: (report) => createPopupContent(report),
-        featureProperties: (report) => ({ t: report.tms })
+        featureProperties: (report) => ({ t: report.tms }),
+        sourceOptions: { promoteId: 'i' },
+        acceptsReport: (report) => report.tms <= state.t
     });
+    reportLayer.setPaintProperty('icon-opacity', REPORT_ICON_OPACITY);
 
     map.on('load', () => {
-        // Bottom to top: basemap, area outline, warnings, radar, labels, recent halo, reports
+        // Bottom to top: basemap, area outline, warning fill, radar, warning outlines,
+        // basemap labels, recent-report halos, reports
         areaOverlay.addTo(map, LABEL_ANCHOR_LAYER);
         warningsLayer.addTo(map, LABEL_ANCHOR_LAYER);
-        radar.addTo(map, LABEL_ANCHOR_LAYER);
+        radar.addTo(map, 'pb-warnings-line');
         reportLayer.addTo(map);
         map.addLayer({
             id: 'pb-recent-halo',
             type: 'circle',
             source: 'pb-reports',
-            filter: ['==', ['get', 't'], -1],
-            paint: {
-                'circle-radius': 18,
-                'circle-color': 'rgba(245, 158, 11, 0.22)',
-                'circle-stroke-color': '#f59e0b',
-                'circle-stroke-width': 2
-            }
+            paint: RECENT_HALO_PAINT
         }, 'pb-reports');
+        reportStates = new ReportTimeStates(map, 'pb-reports');
+        alertStates = new AlertTimeStates(map, 'pb-warnings');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.lsrPlayback = { state, radar }; // debugging / browser tests
+        }
         map.on('click', (e) => routeFeatureClick(map, e, [reportLayer, warningsLayer]));
 
         if (initial.live) {

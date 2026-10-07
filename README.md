@@ -169,8 +169,9 @@ Open it with **Playback** (current date range, location and types) or **Live** i
 
 - **Timeline**: bars show reports per time bin; drag or click to scrub, hover for counts
 - **Play / pause** `Space`, **step** `←` `→`, **start / end** `Home` `End`, **live** `L`
+- **Speed** is weather time per second (5 min/s – 4 h/s); the playhead moves continuously and new reports fade in
 - **Reports** up to the playhead stay on the map; those within the highlight window (15 min – 3 h) have an amber halo, older ones are dimmed
-- **Radar**: IEM NEXRAD composite for each 5-minute step, preloaded ahead of the playhead
+- **Radar**: IEM NEXRAD composite, crossfaded between frames and loaded ahead of the playhead ("Buffering radar…" while it catches up); every 5-minute frame when paused, fewer frames when playing fast. Opacity slider and dBZ color legend in the settings panel
 - **Warnings in effect**: storm-based warning polygons from the IEM archive, shown while they were valid
 - **Live**: the window (3–24 h) ends at now and refreshes every minute; the LIVE badge follows the latest time, Play loops the last hour
 - The URL keeps the range, filters and playhead, so a link reopens the same moment
@@ -247,7 +248,8 @@ The application is built with a modular architecture using ES6 modules:
 │   ├── map/                # Map-related services
 │   │   ├── basemap.js      # Self-hosted basemap style, light/dark themes, street-detail fallback
 │   │   ├── mapSetup.js     # Map creation and click routing shared by both pages
-│   │   ├── radarPlayer.js  # Archived radar frames synced to the playback clock
+│   │   ├── radarPlayer.js  # Archived radar frames synced to the playback clock (crossfade, buffering)
+│   │   ├── timeStates.js   # Playback styling through MapLibre feature state (only changed features update)
 │   │   ├── boundaryOverlays.js # NWS state / CWA / region polygons
 │   │   ├── iconService.js  # Weather-specific icons, drawn once per style for WebGL
 │   │   ├── overlayLayers.js # Area outline, warnings/watches, radar frames

@@ -442,6 +442,41 @@
     padding: 0.1rem 0.2rem;
 }
 
+/* Radar opacity + reflectivity legend */
+#radarOpacity {
+    width: 100%;
+    accent-color: var(--primary-color);
+}
+
+.pb-legend {
+    margin-top: 0.15rem;
+}
+
+.pb-legend-bar {
+    height: 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
+}
+
+.pb-legend-ticks {
+    position: relative;
+    height: 0.95rem;
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.pb-legend-ticks span {
+    position: absolute;
+    transform: translateX(-50%);
+    top: 0.1rem;
+}
+
+.pb-legend-caption {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+}
+
 /* Recent-report halo legend dot used in the count line */
 .pb-recent-dot {
     display: inline-block;

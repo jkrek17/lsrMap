@@ -47,8 +47,10 @@ export class ReportLayer {
      * @param {Function} [options.onClick]      (report) => void for reports without a popup
      * @param {Function} [options.isClickBlocked] () => boolean, e.g. while drawing bounds
      * @param {Function} [options.featureProperties] (report) => extra feature properties (e.g. time)
+     * @param {object} [options.sourceOptions] extra GeoJSON source options (e.g. { promoteId: 'i' } for feature state)
+     * @param {Function} [options.acceptsReport] (report) => false to ignore clicks on it (e.g. hidden)
      */
-    constructor(maplibregl, { id, popupHtml, onOpen, onClick, isClickBlocked, featureProperties }) {
+    constructor(maplibregl, { id, popupHtml, onOpen, onClick, isClickBlocked, featureProperties, sourceOptions, acceptsReport }) {
         this.maplibregl = maplibregl;
         this.id = id;
         this.popupHtml = popupHtml;
@@ -56,6 +58,8 @@ export class ReportLayer {
         this.onClick = onClick;
         this.isClickBlocked = isClickBlocked || (() => false);
         this.featureProperties = featureProperties || null;
+        this.sourceOptions = sourceOptions || {};
+        this.acceptsReport = acceptsReport || null;
         this.filter = null;
         this.paintOverrides = {};
         this.map = null;
@@ -71,7 +75,8 @@ export class ReportLayer {
         map.addSource(this.id, {
             type: 'geojson',
             data: this.featureCollection(),
-            buffer: 32
+            buffer: 32,
+            ...this.sourceOptions
         });
         map.addLayer({
             id: this.id,
@@ -180,9 +185,15 @@ export class ReportLayer {
         }
     }
 
-    /** Clickable layer ids (see the map click router in app.js) */
+    /** Clickable layer ids (see routeFeatureClick in mapSetup.js) */
     get layerIds() {
         return [this.id];
+    }
+
+    /** Whether a click on this feature should open it (see routeFeatureClick) */
+    acceptsFeature(feature) {
+        const report = this.reports[feature.properties.i];
+        return Boolean(report) && (!this.acceptsReport || this.acceptsReport(report));
     }
 
     /** Handle a click on one of this layer's features */

@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live mode now lives on that page (window ending at now, refreshed every
   minute, LIVE badge, last-hour radar loop). The main map's Live and Playback
   buttons open it with the current filters.
+- Smooth playback: the clock runs every animation frame (speed in weather
+  minutes per second); reports and warnings change through MapLibre feature
+  state, so only the features that change are updated (no tile rebuilds); new
+  reports fade in with a settling halo.
+- Radar: crossfades between frames, loads ahead with a "Buffering radar…"
+  hold, requests tiles only inside the composite's extent, thins frames when
+  playing fast; opacity slider (default 70%), dBZ legend with IEM's N0Q
+  colors, radar frame time in the readout, warning outlines drawn above it.
 
 ### Changed
 - Map creation and click routing are shared (`js/map/mapSetup.js`).

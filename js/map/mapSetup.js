@@ -102,10 +102,13 @@ export function routeFeatureClick(map, e, targets) {
     }
     const tolerance = 3;
     const box = [[e.point.x - tolerance, e.point.y - tolerance], [e.point.x + tolerance, e.point.y + tolerance]];
-    const features = map.queryRenderedFeatures(box, { layers: [...owners.keys()] });
-    if (features.length === 0) {
+    // Topmost first; skip features their layer says are not clickable right now
+    // (e.g. reports not yet reached by the playback clock, drawn fully transparent)
+    const feature = map.queryRenderedFeatures(box, { layers: [...owners.keys()] })
+        .find(f => owners.get(f.layer.id).acceptsFeature?.(f) !== false);
+    if (!feature) {
         return false;
     }
-    owners.get(features[0].layer.id).handleFeature(features[0], e.lngLat);
+    owners.get(feature.layer.id).handleFeature(feature, e.lngLat);
     return true;
 }

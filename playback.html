@@ -89,6 +89,15 @@
                         <label><input type="checkbox" id="showRadar" checked> Radar</label>
                         <label><input type="checkbox" id="showWarnings" checked> Warnings in effect</label>
                     </div>
+                    <div class="pb-field" id="radarFields">
+                        <label class="pb-inline" for="radarOpacity"><span class="pb-label">Radar opacity</span> <span id="radarOpacityValue">70%</span></label>
+                        <input type="range" id="radarOpacity" min="30" max="100" step="5" value="70">
+                        <div class="pb-legend" aria-label="Radar reflectivity color scale (dBZ)">
+                            <div class="pb-legend-bar" id="radarLegendBar"></div>
+                            <div class="pb-legend-ticks" id="radarLegendTicks"></div>
+                            <div class="pb-legend-caption">Reflectivity (dBZ) &middot; NEXRAD composite, IEM</div>
+                        </div>
+                    </div>
                     <label class="pb-field">
                         <span class="pb-label">Highlight reports from the last</span>
                         <select id="trailSelect" class="form-control">
@@ -125,8 +134,9 @@
                     <div class="pb-time" id="timeUtc">--</div>
                     <div class="pb-time-local" id="timeLocal">&nbsp;</div>
                     <div class="pb-count" id="reportCount">0 reports</div>
+                    <div class="pb-count" id="radarStatus" aria-live="polite">&nbsp;</div>
                     <div class="pb-options">
-                        <label title="Time between steps">Step
+                        <label title="Step buttons and arrow keys move by this much">Step
                             <select id="stepSelect">
                                 <option value="5">5 min</option>
                                 <option value="10">10 min</option>
@@ -135,12 +145,15 @@
                                 <option value="60">1 hr</option>
                             </select>
                         </label>
-                        <label title="Playback speed">Speed
+                        <label title="Weather time played per second">Speed
                             <select id="speedSelect">
-                                <option value="1">0.5&times;</option>
-                                <option value="2" selected>1&times;</option>
-                                <option value="4">2&times;</option>
-                                <option value="8">4&times;</option>
+                                <option value="5">5 min/s</option>
+                                <option value="10">10 min/s</option>
+                                <option value="15">15 min/s</option>
+                                <option value="30" selected>30 min/s</option>
+                                <option value="60">1 h/s</option>
+                                <option value="120">2 h/s</option>
+                                <option value="240">4 h/s</option>
                             </select>
                         </label>
                     </div>

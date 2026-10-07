@@ -105,9 +105,15 @@ export class AlertLayer {
      * @param {object} maplibregl  the MapLibre module (for Popup)
      * @param {string} id
      */
-    constructor(maplibregl, id) {
+    constructor(maplibregl, id, { sourceOptions, paint, acceptsAlert } = {}) {
         this.maplibregl = maplibregl;
         this.id = id;
+        // Optional: extra source options (e.g. { promoteId: 'i' } for feature state),
+        // paint overrides per sub-layer ({ fill: {...}, line: {...}, point: {...} }),
+        // and a click filter (alert) => boolean
+        this.sourceOptions = sourceOptions || {};
+        this.paintOverrides = paint || {};
+        this.acceptsAlert = acceptsAlert || null;
         this.map = null;
         this.alerts = [];
         this.visible = true;
@@ -142,20 +148,20 @@ export class AlertLayer {
      */
     addTo(map, areaBeforeId) {
         this.map = map;
-        map.addSource(this.id, { type: 'geojson', data: this.collection() });
+        map.addSource(this.id, { type: 'geojson', data: this.collection(), ...this.sourceOptions });
         map.addLayer({
             id: `${this.id}-fill`,
             type: 'fill',
             source: this.id,
             filter: this.layerFilter('fill'),
-            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.12 }
+            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.12, ...this.paintOverrides.fill }
         }, areaBeforeId);
         map.addLayer({
             id: `${this.id}-line`,
             type: 'line',
             source: this.id,
             filter: this.layerFilter('line'),
-            paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-opacity': 0.5 }
+            paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-opacity': 0.5, ...this.paintOverrides.line }
         }, areaBeforeId);
         map.addLayer({
             id: `${this.id}-point`,
@@ -167,7 +173,7 @@ export class AlertLayer {
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true
             },
-            paint: { 'icon-opacity': 0.85 }
+            paint: { 'icon-opacity': 0.85, ...this.paintOverrides.point }
         });
         // Leave the crosshair alone while the bounds tool is active
         const setCursor = (cursor) => {
@@ -256,9 +262,15 @@ export class AlertLayer {
         }
     }
 
-    /** Clickable layer ids (see the map click router in app.js) */
+    /** Clickable layer ids (see routeFeatureClick in mapSetup.js) */
     get layerIds() {
         return [`${this.id}-point`, `${this.id}-fill`];
+    }
+
+    /** Whether a click on this feature should open it (see routeFeatureClick) */
+    acceptsFeature(feature) {
+        const alert = this.alerts[feature.properties.i];
+        return Boolean(alert) && (!this.acceptsAlert || this.acceptsAlert(alert));
     }
 
     /** Handle a click on one of this layer's features */
