@@ -507,7 +507,7 @@ function tick(now) {
 
 /** Step buttons / arrow keys: snap to the step grid */
 function stepBy(n) {
-    setPlaying(false);
+    if (state.playing) setPlaying(false);
     const step = stepMs();
     const index = Math.round((state.t - state.startMs) / step) + n;
     setTime(state.startMs + index * step, { userScrub: true });
@@ -884,8 +884,8 @@ function setupControls() {
     $('btnPlay').addEventListener('click', () => setPlaying(!state.playing));
     $('btnBack').addEventListener('click', () => stepBy(-1));
     $('btnForward').addEventListener('click', () => stepBy(1));
-    $('btnStart').addEventListener('click', () => { setPlaying(false); setTime(state.startMs, { userScrub: true }); });
-    $('btnEnd').addEventListener('click', () => { setPlaying(false); setTime(state.endMs, { userScrub: true }); });
+    $('btnStart').addEventListener('click', () => { if (state.playing) setPlaying(false); setTime(state.startMs, { userScrub: true }); });
+    $('btnEnd').addEventListener('click', () => { if (state.playing) setPlaying(false); setTime(state.endMs, { userScrub: true }); });
     $('btnGoLive').addEventListener('click', goLive);
     $('stepSelect').addEventListener('change', (e) => {
         state.stepMin = Number(e.target.value);
@@ -897,8 +897,10 @@ function setupControls() {
 
     const scrubber = $('scrubber');
     scrubber.addEventListener('input', () => {
-        setPlaying(false);
-        setTime(state.startMs + Number(scrubber.value) * MINUTE, { userScrub: true });
+        // Read before pausing: pausing redraws the playhead and resets the scrubber
+        const minutes = Number(scrubber.value);
+        if (state.playing) setPlaying(false);
+        setTime(state.startMs + minutes * MINUTE, { userScrub: true });
     });
     scrubber.addEventListener('pointermove', (e) => showTrackTooltip(e.clientX));
     scrubber.addEventListener('pointerleave', hideTrackTooltip);
