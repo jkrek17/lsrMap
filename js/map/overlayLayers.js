@@ -1,5 +1,5 @@
 // ============================================================================
-// OVERLAY LAYERS - Selected area outline, warnings/watches, radar frames
+// OVERLAY LAYERS - Selected area outline, warnings/watches
 // ============================================================================
 
 import { createAlertIcon, ensureIconImage } from './iconService.js';
@@ -105,13 +105,42 @@ export class AlertLayer {
      * @param {object} maplibregl  the MapLibre module (for Popup)
      * @param {string} id
      */
-    constructor(maplibregl, id) {
+    constructor(maplibregl, id, { sourceOptions, paint, acceptsAlert } = {}) {
         this.maplibregl = maplibregl;
         this.id = id;
+        // Optional: extra source options (e.g. { promoteId: 'i' } for feature state),
+        // paint overrides per sub-layer ({ fill: {...}, line: {...}, point: {...} }),
+        // and a click filter (alert) => boolean
+        this.sourceOptions = sourceOptions || {};
+        this.paintOverrides = paint || {};
+        this.acceptsAlert = acceptsAlert || null;
         this.map = null;
         this.alerts = [];
         this.visible = true;
         this.popup = null;
+        this.extraFilter = null;
+    }
+
+    /** Geometry filter of each sub-layer, combined with extraFilter */
+    layerFilter(suffix) {
+        const geom = suffix === 'point'
+            ? ['==', ['geometry-type'], 'Point']
+            : ['==', ['geometry-type'], 'Polygon'];
+        return this.extraFilter ? ['all', geom, this.extraFilter] : geom;
+    }
+
+    /**
+     * Extra filter on all alerts, e.g. a time window over properties set
+     * through setAlerts(... { properties }) (null for none)
+     */
+    setFilter(filter) {
+        this.extraFilter = filter;
+        if (!this.map) return;
+        for (const suffix of ['fill', 'line', 'point']) {
+            if (this.map.getLayer(`${this.id}-${suffix}`)) {
+                this.map.setFilter(`${this.id}-${suffix}`, this.layerFilter(suffix));
+            }
+        }
     }
 
     /**
@@ -119,32 +148,32 @@ export class AlertLayer {
      */
     addTo(map, areaBeforeId) {
         this.map = map;
-        map.addSource(this.id, { type: 'geojson', data: this.collection() });
+        map.addSource(this.id, { type: 'geojson', data: this.collection(), ...this.sourceOptions });
         map.addLayer({
             id: `${this.id}-fill`,
             type: 'fill',
             source: this.id,
-            filter: ['==', ['geometry-type'], 'Polygon'],
-            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.12 }
+            filter: this.layerFilter('fill'),
+            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.12, ...this.paintOverrides.fill }
         }, areaBeforeId);
         map.addLayer({
             id: `${this.id}-line`,
             type: 'line',
             source: this.id,
-            filter: ['==', ['geometry-type'], 'Polygon'],
-            paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-opacity': 0.5 }
+            filter: this.layerFilter('line'),
+            paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-opacity': 0.5, ...this.paintOverrides.line }
         }, areaBeforeId);
         map.addLayer({
             id: `${this.id}-point`,
             type: 'symbol',
             source: this.id,
-            filter: ['==', ['geometry-type'], 'Point'],
+            filter: this.layerFilter('point'),
             layout: {
                 'icon-image': ['get', 'icon'],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true
             },
-            paint: { 'icon-opacity': 0.85 }
+            paint: { 'icon-opacity': 0.85, ...this.paintOverrides.point }
         });
         // Leave the crosshair alone while the bounds tool is active
         const setCursor = (cursor) => {
@@ -165,7 +194,7 @@ export class AlertLayer {
             this.alerts.forEach((a, i) => {
                 const geom = a.geometry;
                 if (!geom) return;
-                const properties = { i, color: a.color, icon: a.icon?.id || '' };
+                const properties = { ...(a.properties || {}), i, color: a.color, icon: a.icon?.id || '' };
                 if (geom.type === 'Point' || geom.type === 'Polygon') {
                     features.push({ type: 'Feature', geometry: geom, properties });
                 } else if (geom.type === 'MultiPolygon') {
@@ -189,7 +218,7 @@ export class AlertLayer {
     }
 
     /**
-     * @param {Array<{geometry, color, emoji, popupHtml}>} alerts
+     * @param {Array<{geometry, color, emoji, popupHtml, properties?}>} alerts
      */
     setAlerts(alerts) {
         this.alerts = alerts.map(a => ({ ...a, icon: createAlertIcon(a.color, a.emoji) }));
@@ -233,9 +262,15 @@ export class AlertLayer {
         }
     }
 
-    /** Clickable layer ids (see the map click router in app.js) */
+    /** Clickable layer ids (see routeFeatureClick in mapSetup.js) */
     get layerIds() {
         return [`${this.id}-point`, `${this.id}-fill`];
+    }
+
+    /** Whether a click on this feature should open it (see routeFeatureClick) */
+    acceptsFeature(feature) {
+        const alert = this.alerts[feature.properties.i];
+        return Boolean(alert) && (!this.acceptsAlert || this.acceptsAlert(alert));
     }
 
     /** Handle a click on one of this layer's features */
@@ -247,61 +282,5 @@ export class AlertLayer {
             .setLngLat(lngLat)
             .setHTML(alert.popupHtml)
             .addTo(this.map);
-    }
-}
-
-/**
- * Stack of radar raster frames. frames[i].setOpacity(o) mirrors the Leaflet
- * tile layer API the animation code uses.
- */
-export class RadarFrames {
-    constructor(prefix = 'radar') {
-        this.prefix = prefix;
-        this.map = null;
-        this.ids = [];
-    }
-
-    /**
-     * @param {object} map
-     * @param {string[]} tileUrls  {z}/{x}/{y} templates, oldest first
-     * @param {string} beforeId
-     * @returns {Array<{setOpacity: Function}>}
-     */
-    add(map, tileUrls, beforeId, attribution) {
-        this.remove();
-        this.map = map;
-        return tileUrls.map((url, index) => {
-            const id = `${this.prefix}-${index}`;
-            map.addSource(id, {
-                type: 'raster',
-                tiles: [url],
-                tileSize: 256,
-                maxzoom: 10,
-                attribution
-            });
-            map.addLayer({
-                id,
-                type: 'raster',
-                source: id,
-                paint: { 'raster-opacity': 0, 'raster-fade-duration': 0 }
-            }, beforeId);
-            this.ids.push(id);
-            return {
-                setOpacity: (opacity) => {
-                    if (this.map?.getLayer(id)) {
-                        this.map.setPaintProperty(id, 'raster-opacity', opacity);
-                    }
-                }
-            };
-        });
-    }
-
-    remove() {
-        if (!this.map) return;
-        for (const id of this.ids) {
-            if (this.map.getLayer(id)) this.map.removeLayer(id);
-            if (this.map.getSource(id)) this.map.removeSource(id);
-        }
-        this.ids = [];
     }
 }

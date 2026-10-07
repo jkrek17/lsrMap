@@ -9,18 +9,12 @@ import { requestManager } from './js/api/requestManager.js';
 import LSRService from './js/api/lsrService.js';
 import { offlineDetector } from './js/utils/offlineDetector.js';
 import { appState } from './js/state/appState.js';
-import * as maplibregl from './lib/maplibre/maplibre-gl.js';
-import { createIcon, getIconForReport, installIconImageHandler } from './js/map/iconService.js';
+import { maplibregl, createMap, routeFeatureClick, getSavedTheme } from './js/map/mapSetup.js';
+import { createIcon, getIconForReport } from './js/map/iconService.js';
 import { createPopupContent } from './js/map/popupService.js';
 import { ReportLayer } from './js/map/reportLayer.js';
-import { AreaOverlay, AlertLayer, RadarFrames } from './js/map/overlayLayers.js';
-import {
-    buildBasemapStyle,
-    resolveBasemapUrl,
-    applyBasemapTheme,
-    setInitialBasemapTheme,
-    LABEL_ANCHOR_LAYER
-} from './js/map/basemap.js';
+import { AreaOverlay, AlertLayer } from './js/map/overlayLayers.js';
+import { applyBasemapTheme, LABEL_ANCHOR_LAYER } from './js/map/basemap.js';
 import { showStatusToast, hideStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
 import PNSService from './js/api/pnsService.js';
@@ -58,20 +52,8 @@ let allWarningsLayer = null; // AlertLayer
 let allWatchesLayer = null; // AlertLayer
 let warningsListenersAttached = false;
 let userArea = null; // AreaOverlay: selected location outline
-let radarFrames = null; // RadarFrames: raster layers for the animation
-let radarLayers = []; // Frame handles ({ setOpacity }) for animation
-let radarLayerGroup = null; // Truthy while radar is shown
-let liveModeActive = false;
-let liveModeInterval = null;
-let liveModeRangeHours = 24;
-let lastUpdateTime = null;
 let lastWarningsToastTime = 0;
 let selectedWFO = null;
-let radarTimestamps = [];
-let radarAnimationIndex = 0;
-let radarAnimationInterval = null;
-let radarAnimationPlaying = false;
-let radarRefreshInterval = null;
 
 // Initialize LSR Service
 let lsrService = null;
@@ -223,6 +205,44 @@ function updateFilterSummary() {
     if (tableLink) {
         tableLink.href = tableOfReportsHref();
     }
+    const playbackLink = document.getElementById('openPlayback');
+    if (playbackLink) {
+        playbackLink.href = playbackHref(false);
+    }
+    const liveLink = document.getElementById('openLive');
+    if (liveLink) {
+        liveLink.href = playbackHref(true);
+    }
+}
+
+/**
+ * Link to the Playback & Live page with the current location and types
+ * (and, for playback, the current date range).
+ */
+function playbackHref(live) {
+    const params = new URLSearchParams();
+    if (live) {
+        params.set('mode', 'live');
+    } else {
+        const startDate = document.getElementById('startDate')?.value;
+        const startHour = normalizeTimeInputValue(document.getElementById('startHour')?.value || '');
+        const endDate = document.getElementById('endDate')?.value;
+        const endHour = normalizeTimeInputValue(document.getElementById('endHour')?.value || '');
+        if (startDate && endDate && startHour && endHour) {
+            params.set('start', `${startDate}T${startHour}`);
+            params.set('end', `${endDate}T${endHour}`);
+        }
+    }
+    const region = document.getElementById('regionSelect')?.value;
+    if (region) {
+        params.set('region', region);
+    }
+    const activeTypes = getActiveWeatherFilters();
+    if (activeTypes.length > 0 && activeTypes.length < CONFIG.WEATHER_TYPES.length) {
+        params.set('types', activeTypes.join(','));
+    }
+    const q = params.toString();
+    return q ? `playback.html?${q}` : 'playback.html';
 }
 
 function tableOfReportsHref() {
@@ -884,9 +904,6 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
     updateFeatureBadges(); // Update feature discoverability badges
     updateFilterSummary();
     updateExportCount(); // Update export count in modal
-    if (liveModeActive) {
-        updateLastUpdateTime();
-    }
     
     // Draw markers (one WebGL symbol layer; no DOM elements per report)
     markersLayer.setReports(reportsToDisplay);
@@ -1536,11 +1553,6 @@ function displayTopReports() {
 }
 
 function clearMap() {
-    // Disable live mode when clearing map
-    if (liveModeActive) {
-        toggleLiveMode();
-    }
-    
     markersLayer.clear();
     userArea.clear();
     allFilteredReports = [];
@@ -1608,7 +1620,7 @@ function centerOnMyLocation() {
 }
 
 // ============================================================================
-// LIVE MODE
+// DATE HELPERS
 // ============================================================================
 
 function getUtcDateString(date) {
@@ -1619,396 +1631,9 @@ function getUtcTimeString(date) {
     return date.toISOString().slice(11, 16).replace(':', '');
 }
 
-function applyLiveModeRange(hours) {
-    clearActiveLsrQueryRange();
-    const startDateEl = document.getElementById('startDate');
-    const startHourEl = document.getElementById('startHour');
-    const endDateEl = document.getElementById('endDate');
-    const endHourEl = document.getElementById('endHour');
-    if (!startDateEl || !startHourEl || !endDateEl || !endHourEl) {
-        return;
-    }
-
-    const now = new Date();
-    const start = new Date(now.getTime() - (hours * 60 * 60 * 1000));
-
-    startDateEl.value = getUtcDateString(start);
-    startHourEl.value = getUtcTimeString(start);
-    endDateEl.value = getUtcDateString(now);
-    endHourEl.value = getUtcTimeString(now);
-}
-
-function setLiveModeRange(hours, shouldFetch = true) {
-    if (!Number.isFinite(hours) || hours <= 0) {
-        return;
-    }
-    liveModeRangeHours = hours;
-    const rangeButtons = document.querySelectorAll('.btn-live-range');
-    rangeButtons.forEach(btn => {
-        const btnHours = Number(btn.dataset.hours);
-        const isActive = btnHours === hours;
-        btn.classList.toggle('active', isActive);
-        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-
-    if (!liveModeActive) {
-        return;
-    }
-
-    applyLiveModeRange(hours);
-    updateFilterSummary();
-    if (shouldFetch) {
-        fetchLSRData();
-    }
-}
-
-function toggleLiveMode() {
-    liveModeActive = !liveModeActive;
-    const toggleBtn = document.getElementById('toggleLiveMode');
-    const liveIndicator = document.getElementById('liveModeIndicator');
-    const liveInfo = document.getElementById('liveModeInfo');
-    
-    if (liveModeActive) {
-        // Enable live mode
-        toggleBtn.classList.add('active');
-        toggleBtn.innerHTML = '<i class="fas fa-satellite-dish"></i> Live ON';
-        if (liveIndicator) liveIndicator.style.display = 'flex';
-        if (liveInfo) liveInfo.style.display = 'block';
-        
-        // Set date range for live mode window
-        setLiveModeRange(liveModeRangeHours, false);
-        
-        // Add radar layer (NWS WMS - will refresh automatically)
-        addRadarLayer();
-        
-        // Enable and fetch warnings
-        const shortFuseToggle = document.getElementById('toggleShortFuseWarnings');
-        if (shortFuseToggle) {
-            shortFuseToggle.checked = true;
-        }
-        const allWarningsToggle = document.getElementById('toggleAllWarnings');
-        if (allWarningsToggle) {
-            allWarningsToggle.checked = false;
-        }
-        const allWatchesToggle = document.getElementById('toggleAllWatches');
-        if (allWatchesToggle) {
-            allWatchesToggle.checked = false;
-        }
-        showWarnings = true;
-        showAllWarningsLayer = false;
-        showAllWatchesLayer = false;
-        if (allWarningsLayer.isVisible()) {
-            allWarningsLayer.hide();
-        }
-        if (allWatchesLayer.isVisible()) {
-            allWatchesLayer.hide();
-        }
-        if (allWarningsLayer) allWarningsLayer.clear();
-        if (allWatchesLayer) allWatchesLayer.clear();
-        fetchWarnings();
-        updateWarningsRefreshListeners();
-        
-        // Start auto-refresh
-        startLiveModeRefresh();
-        
-        showStatusToast('Live mode enabled - Auto-refreshing reports and warnings', 'success');
-    } else {
-        // Disable live mode
-        toggleBtn.classList.remove('active');
-        toggleBtn.innerHTML = '<i class="fas fa-satellite-dish"></i> Live';
-        if (liveIndicator) liveIndicator.style.display = 'none';
-        if (liveInfo) liveInfo.style.display = 'none';
-        
-        // Remove radar layer
-        removeRadarLayer();
-        
-        // Clear warnings
-        showWarnings = false;
-        if (warningsLayer) warningsLayer.clear();
-        if (allWarningsLayer) {
-            allWarningsLayer.clear();
-            if (allWarningsLayer.isVisible()) {
-                allWarningsLayer.hide();
-            }
-        }
-        if (allWatchesLayer) {
-            allWatchesLayer.clear();
-            if (allWatchesLayer.isVisible()) {
-                allWatchesLayer.hide();
-            }
-        }
-        showAllWarningsLayer = false;
-        showAllWatchesLayer = false;
-        const shortFuseToggle = document.getElementById('toggleShortFuseWarnings');
-        if (shortFuseToggle) shortFuseToggle.checked = false;
-        const allWarningsToggle = document.getElementById('toggleAllWarnings');
-        if (allWarningsToggle) allWarningsToggle.checked = false;
-        const allWatchesToggle = document.getElementById('toggleAllWatches');
-        if (allWatchesToggle) allWatchesToggle.checked = false;
-        updateWarningsCount('warningsCount', 0, false);
-        updateWarningsCount('allWarningsCount', 0, false);
-        updateWarningsCount('allWatchesCount', 0, false);
-        updateWarningsRefreshListeners();
-        
-        // Stop auto-refresh
-        stopLiveModeRefresh();
-        
-        showStatusToast('Live mode disabled', 'info');
-    }
-}
-
-function addRadarLayer() {
-    if (!map || radarLayerGroup) return;
-    
-    // Use NWS radar via Iowa Environmental Mesonet
-    // This allows us to animate through historical radar frames
-    try {
-        // Marks radar as active; frames are added once the map style is ready
-        radarLayerGroup = true;
-        
-        // Load timestamps and create raster layers for each frame
-        whenMapReady(() => {
-            if (radarLayerGroup) {
-                loadRadarTimestamps();
-            }
-        });
-        
-        // NWS radar layers initialized successfully
-    } catch (error) {
-        errorHandler.handleError(error, 'Create NWS Radar Layers');
-        showStatusToast('Could not load NWS radar layers', 'error');
-    }
-}
-
-function loadRadarTimestamps() {
-    // IEM NEXRAD updates approximately every 5 minutes
-    // Create timestamps for the last hour (every 5 minutes = 12 frames for smoother animation)
-    const now = new Date();
-    radarTimestamps = [];
-    radarLayers = [];
-    
-    // Round current time DOWN to the nearest 5-minute interval (radar updates at :00, :05, :10, etc.)
-    const currentMinutes = now.getUTCMinutes();
-    const roundedMinutes = Math.floor(currentMinutes / 5) * 5;
-    const roundedNow = new Date(now);
-    roundedNow.setUTCMinutes(roundedMinutes, 0, 0); // Set to rounded minutes, 0 seconds, 0 ms
-    
-    // Generate timestamps going back 1 hour, every 5 minutes (12 frames total)
-    // Start from 5 minutes ago to ensure data is available (there's often a delay)
-    for (let i = 1; i <= 12; i++) {
-        const timestamp = new Date(roundedNow.getTime() - (i * 5 * 60 * 1000));
-        radarTimestamps.push(timestamp);
-    }
-    
-    // Reverse to go from oldest to newest
-    radarTimestamps.reverse();
-    
-    // Create a raster layer for each timestamp using IEM's tile cache
-    // IMPORTANT: Use UTC time - IEM radar tiles use UTC timestamps
-    const tileUrls = radarTimestamps.map((timestamp) => {
-        const year = timestamp.getUTCFullYear().toString();
-        const month = String(timestamp.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(timestamp.getUTCDate()).padStart(2, '0');
-        const hour = String(timestamp.getUTCHours()).padStart(2, '0');
-        const minute = String(timestamp.getUTCMinutes()).padStart(2, '0');
-        
-        // Format: YYYYMMDDHHmm (e.g., "202601141200") - UTC time
-        const timeStr = year + month + day + hour + minute;
-        
-        // IEM radar tile URL format
-        return `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q-${timeStr}/{z}/{x}/{y}.png`;
-    });
-    
-    // All frames start hidden (opacity 0) under the basemap labels, above warning polygons
-    radarLayers = radarFrames.add(
-        map,
-        tileUrls,
-        LABEL_ANCHOR_LAYER,
-        'Radar &copy; <a href="https://mesonet.agron.iastate.edu">Iowa Environmental Mesonet / NWS</a>'
-    );
-    
-    // Start animation if we have layers
-    if (radarLayers.length > 0) {
-        radarAnimationIndex = radarLayers.length - 1; // Start at most recent
-        startRadarAnimation();
-    }
-}
-
-function startRadarAnimation() {
-    if (!radarLayers || radarLayers.length === 0) return;
-    
-    // Stop any existing animation
-    stopRadarAnimation();
-    
-    radarAnimationPlaying = true;
-    
-    // Animate through radar frames by changing opacity
-    // Performance optimization: Only update opacity for layers that need to change
-    let previousIndex = -1;
-    
-    function animateFrame() {
-        if (!liveModeActive || !radarLayers || radarLayers.length === 0) {
-            stopRadarAnimation();
-            return;
-        }
-        
-        // Only hide the previous layer if it's different from current
-        if (previousIndex >= 0 && previousIndex < radarLayers.length && previousIndex !== radarAnimationIndex) {
-            const prevLayer = radarLayers[previousIndex];
-            if (prevLayer && prevLayer.setOpacity) {
-                prevLayer.setOpacity(0);
-            }
-        } else if (previousIndex !== radarAnimationIndex && radarAnimationIndex === 0) {
-            // If we're looping back to start, hide the last layer
-            const lastIndex = radarLayers.length - 1;
-            if (lastIndex >= 0) {
-                const lastLayer = radarLayers[lastIndex];
-                if (lastLayer && lastLayer.setOpacity) {
-                    lastLayer.setOpacity(0);
-                }
-            }
-        }
-        
-        // Show current frame
-        const currentLayer = radarLayers[radarAnimationIndex];
-        if (currentLayer && currentLayer.setOpacity) {
-            currentLayer.setOpacity(0.4); // Lighter opacity for better visibility of underlying map
-        }
-        
-        // Update frame info
-        updateRadarFrameInfo();
-        
-        // Check if we're at the last frame (most recent)
-        const isLastFrame = radarAnimationIndex === radarLayers.length - 1;
-        
-        // Store current index for next iteration
-        previousIndex = radarAnimationIndex;
-        
-        // Move to next frame
-        if (isLastFrame) {
-            // Pause longer on the last frame (1.5 seconds) before looping back
-            setTimeout(() => {
-                if (liveModeActive && radarLayers.length > 0) {
-                    radarAnimationIndex = 0; // Loop back to start
-                    previousIndex = -1; // Reset for loop
-                    animateFrame();
-                }
-            }, 1500); // 1.5 second pause on last frame
-        } else {
-            // Normal progression to next frame - faster animation
-            radarAnimationIndex++;
-            radarAnimationInterval = setTimeout(animateFrame, 500); // 0.5 seconds between frames for faster animation
-        }
-    }
-    
-    // Start the animation
-    animateFrame();
-}
-
-function updateRadarFrameInfo() {
-    const frameInfoEl = document.getElementById('radarFrameInfo');
-    if (frameInfoEl && radarTimestamps.length > 0 && radarAnimationIndex < radarTimestamps.length) {
-        const totalFrames = radarTimestamps.length;
-        const currentFrame = radarAnimationIndex + 1;
-        const timestamp = radarTimestamps[radarAnimationIndex];
-        const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const isLastFrame = radarAnimationIndex === radarTimestamps.length - 1;
-        const status = isLastFrame ? ' (Current - NWS)' : '';
-        frameInfoEl.textContent = `Frame ${currentFrame}/${totalFrames} (${timeStr})${status}`;
-    }
-}
-
-function stopRadarAnimation() {
-    if (radarAnimationInterval) {
-        clearTimeout(radarAnimationInterval);
-        radarAnimationInterval = null;
-    }
-    radarAnimationPlaying = false;
-    
-    // Hide all radar layers when stopped
-    if (radarLayers) {
-        radarLayers.forEach(layer => {
-            if (layer && layer.setOpacity) {
-                layer.setOpacity(0);
-            }
-        });
-    }
-}
-
-function removeRadarLayer() {
-    stopRadarAnimation();
-    if (radarRefreshInterval) {
-        clearInterval(radarRefreshInterval);
-        radarRefreshInterval = null;
-    }
-    if (radarFrames) {
-        radarFrames.remove();
-    }
-    radarLayerGroup = null;
-    radarLayers = [];
-    radarTimestamps = [];
-    radarAnimationIndex = 0;
-}
-
-function startLiveModeRefresh() {
-    // Clear any existing interval
-    stopLiveModeRefresh();
-    
-    // Get refresh interval from config (default 60 seconds)
-    const interval = CONFIG.LIVE_MODE_REFRESH_INTERVAL || 60000;
-    const intervalSeconds = interval / 1000;
-    
-    // Update display
-    const intervalEl = document.getElementById('refreshInterval');
-    if (intervalEl) {
-        intervalEl.textContent = intervalSeconds;
-    }
-    
-    // Fetch immediately
-    applyLiveModeRange(liveModeRangeHours);
-    updateFilterSummary();
-    fetchLSRData();
-    if (showWarnings) {
-        fetchWarnings();
-    }
-    updateLastUpdateTime();
-    
-    // Set up interval
-    liveModeInterval = setInterval(() => {
-        if (liveModeActive) {
-            applyLiveModeRange(liveModeRangeHours);
-            updateFilterSummary();
-            fetchLSRData({ fit: false });
-            if (showWarnings) {
-                fetchWarnings();
-            }
-            updateLastUpdateTime();
-        }
-    }, interval);
-    
-    updateWarningsRefreshListeners();
-}
-
-function stopLiveModeRefresh() {
-    if (liveModeInterval) {
-        clearInterval(liveModeInterval);
-        liveModeInterval = null;
-    }
-    
-    updateWarningsRefreshListeners();
-}
-
 function refreshWarningsOnMove() {
     if (showWarnings || showAllWarningsLayer || showAllWatchesLayer) {
         fetchWarnings();
-    }
-}
-
-function updateLastUpdateTime() {
-    lastUpdateTime = new Date();
-    const timeEl = document.getElementById('lastUpdateTime');
-    if (timeEl) {
-        timeEl.textContent = lastUpdateTime.toLocaleTimeString();
     }
 }
 
@@ -2019,11 +1644,6 @@ function updateLastUpdateTime() {
 let autoRefreshInterval = null;
 
 function toggleAutoRefresh() {
-    // If live mode is active, disable it first
-    if (liveModeActive) {
-        toggleLiveMode();
-    }
-    
     const btn = document.getElementById('autoRefresh');
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
@@ -2065,9 +1685,6 @@ function setDatePreset(preset) {
             endHourEl.value = '1200';
             customDateFields.style.display = 'block';
             actionButtons.style.display = 'none';
-            if (liveModeActive) {
-                toggleLiveMode();
-            }
             setTimeout(() => {
                 fetchLSRData();
                 updateFilterSummary();
@@ -2084,9 +1701,6 @@ function setDatePreset(preset) {
             endHourEl.value = '1200';
             customDateFields.style.display = 'block';
             actionButtons.style.display = 'none';
-            if (liveModeActive) {
-                toggleLiveMode();
-            }
             setTimeout(() => {
                 fetchLSRData();
                 updateFilterSummary();
@@ -2101,12 +1715,10 @@ function setDatePreset(preset) {
             endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
-            if (!liveModeActive) {
-                setTimeout(() => {
-                    fetchLSRData();
-                    updateFilterSummary();
-                }, 100);
-            }
+            setTimeout(() => {
+                fetchLSRData();
+                updateFilterSummary();
+            }, 100);
             break;
         }
         case '12h': {
@@ -2117,9 +1729,6 @@ function setDatePreset(preset) {
             endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
-            if (liveModeActive) {
-                toggleLiveMode();
-            }
             setTimeout(() => {
                 fetchLSRData();
                 updateFilterSummary();
@@ -2134,13 +1743,11 @@ function setDatePreset(preset) {
             endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
-            // Auto-load data (unless live mode is active, it will handle its own refresh)
-            if (!liveModeActive) {
-                setTimeout(() => {
-                    fetchLSRData();
-                    updateFilterSummary();
-                }, 100);
-            }
+            // Auto-load data
+            setTimeout(() => {
+                fetchLSRData();
+                updateFilterSummary();
+            }, 100);
             break;
         }
         case '48h': {
@@ -2151,10 +1758,6 @@ function setDatePreset(preset) {
             endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
-            // Disable live mode if switching to 48h
-            if (liveModeActive) {
-                toggleLiveMode();
-            }
             // Auto-load data
             setTimeout(() => {
                 fetchLSRData();
@@ -2171,10 +1774,6 @@ function setDatePreset(preset) {
             endHourEl.value = getUtcTimeString(today);
             customDateFields.style.display = 'none';
             actionButtons.style.display = 'none';
-            // Disable live mode if switching to week
-            if (liveModeActive) {
-                toggleLiveMode();
-            }
             // Auto-load data
             setTimeout(() => {
                 fetchLSRData();
@@ -2186,10 +1785,6 @@ function setDatePreset(preset) {
             // Show custom date fields and action buttons
             customDateFields.style.display = 'block';
             actionButtons.style.display = 'block';
-            // Disable live mode if switching to custom
-            if (liveModeActive) {
-                toggleLiveMode();
-            }
             break;
     }
 
@@ -2558,8 +2153,7 @@ function generateShareableURL() {
     }
     
     // Weather types
-    const activeTypes = Array.from(document.querySelectorAll('#weatherTypeFilters input:checked'))
-        .map(cb => cb.value);
+    const activeTypes = getActiveWeatherFilters();
     if (activeTypes.length > 0 && activeTypes.length < CONFIG.WEATHER_TYPES.length) {
         params.set('types', activeTypes.join(','));
     }
@@ -2826,53 +2420,15 @@ offlineDetector.addListener((isOnline) => {
 // MAP SETUP
 // ============================================================================
 
-let mapReady = false;
-const mapReadyCallbacks = [];
-
-/** Run fn once the map style has loaded and the app layers exist */
-function whenMapReady(fn) {
-    if (mapReady) {
-        fn();
-    } else {
-        mapReadyCallbacks.push(fn);
-    }
-}
-
 /**
- * Create the map, the report/alert/area layers and the PMTiles protocol.
- * @param {{url: string, detail: string}} basemapSource from resolveBasemapUrl
+ * Create the map (self-hosted basemap) and the report/alert/area layers.
  */
-function initializeMap(basemapSource) {
-    const theme = getInitialTheme();
-    setInitialBasemapTheme(theme);
-
-    // Vendored as .js (not .mjs) so any web server sends a JavaScript MIME type
-    maplibregl.setWorkerUrl(new URL('./lib/maplibre/maplibre-gl-worker.js', import.meta.url).href);
-    const protocol = new pmtiles.Protocol();
-    maplibregl.addProtocol('pmtiles', protocol.tile);
-
-    map = new maplibregl.Map({
-        container: 'map',
-        style: buildBasemapStyle(theme, basemapSource.url),
+async function initializeMap() {
+    ({ map } = await createMap('map', {
+        theme: getSavedTheme(),
         center: [CONFIG.MAP_INITIAL.lon, CONFIG.MAP_INITIAL.lat],
-        zoom: CONFIG.MAP_INITIAL.zoom,
-        maxZoom: 18,
-        attributionControl: false,
-        // Flat 2D map, as before
-        dragRotate: false,
-        pitchWithRotate: false,
-        touchPitch: false
-    });
-    map.touchZoomRotate.disableRotation();
-    map.keyboard.disableRotation();
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-    map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
-    // Bottom-left: the bottom-right corner holds the Reset View / My Location / Clear Map buttons
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
-    installIconImageHandler(map);
-    if (basemapSource.detail === 'streets') {
-        document.getElementById('map')?.setAttribute('data-basemap', 'streets');
-    }
+        zoom: CONFIG.MAP_INITIAL.zoom
+    }));
 
     const isClickBlocked = () => boundsClickMode;
     markersLayer = new ReportLayer(maplibregl, {
@@ -2906,29 +2462,16 @@ function initializeMap(basemapSource) {
     allWatchesLayer = new AlertLayer(maplibregl, 'all-watches');
     allWatchesLayer.hide();
     userArea = new AreaOverlay('user-area');
-    radarFrames = new RadarFrames('radar');
 
     map.on('load', () => {
         // Draw order (bottom to top): basemap, area outline, watches, warnings,
-        // radar (added later, also under the labels), basemap labels, LSR, PNS
+        // basemap labels, LSR, PNS
         userArea.addTo(map, LABEL_ANCHOR_LAYER);
         allWatchesLayer.addTo(map, LABEL_ANCHOR_LAYER);
         allWarningsLayer.addTo(map, LABEL_ANCHOR_LAYER);
         warningsLayer.addTo(map, LABEL_ANCHOR_LAYER);
         markersLayer.addTo(map);
         pnsLayer.addTo(map);
-        mapReady = true;
-        mapReadyCallbacks.splice(0).forEach(fn => fn());
-    });
-
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        window.lsrMap = map; // debugging / browser tests
-    }
-
-    map.on('error', (e) => {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.warn('[Map]', e.error?.message || e);
-        }
     });
 }
 
@@ -2941,23 +2484,7 @@ function handleMapFeatureClick(e) {
         handleMapClick(e);
         return;
     }
-    const owners = new Map();
-    for (const target of [markersLayer, pnsLayer, warningsLayer, allWarningsLayer, allWatchesLayer]) {
-        for (const id of target?.layerIds || []) {
-            if (map.getLayer(id)) {
-                owners.set(id, target);
-            }
-        }
-    }
-    if (owners.size === 0) {
-        return;
-    }
-    const tolerance = 3;
-    const box = [[e.point.x - tolerance, e.point.y - tolerance], [e.point.x + tolerance, e.point.y + tolerance]];
-    const features = map.queryRenderedFeatures(box, { layers: [...owners.keys()] });
-    if (features.length > 0) {
-        owners.get(features[0].layer.id).handleFeature(features[0], e.lngLat);
-    }
+    routeFeatureClick(map, e, [markersLayer, pnsLayer, warningsLayer, allWarningsLayer, allWatchesLayer]);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2971,7 +2498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Initialize map first (MapLibre GL / WebGL, self-hosted vector basemap)
-    initializeMap(await resolveBasemapUrl(CONFIG.BASEMAP));
+    await initializeMap();
     
     // Initialize dark mode (after map is created so it can restyle the basemap)
     initializeDarkMode();
@@ -3043,11 +2570,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    // Live mode toggle
-    const toggleLiveModeBtn = document.getElementById('toggleLiveMode');
-    if (toggleLiveModeBtn) {
-        toggleLiveModeBtn.addEventListener('click', toggleLiveMode);
-    }
 
     const toggleShortFuseWarnings = document.getElementById('toggleShortFuseWarnings');
     if (toggleShortFuseWarnings) {
@@ -3111,13 +2633,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    document.querySelectorAll('.btn-live-range').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const hours = Number(btn.dataset.hours);
-            setLiveModeRange(hours);
-        });
-    });
-    
     // Status toast close
     const closeStatusToastBtn = document.getElementById('closeStatusToast');
     if (closeStatusToastBtn) {
@@ -3644,26 +3159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 // DARK MODE
 // ============================================================================
 
-/**
- * Theme to start with: saved preference, or system preference for 'auto'
- */
-function getInitialTheme() {
-    let savedTheme = 'light';
-    try {
-        savedTheme = localStorage.getItem('lsr-theme') || 'light';
-    } catch (e) {
-        // Storage unavailable (private mode); use the default
-    }
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
-}
-
 function initializeDarkMode() {
     const darkModeToggle = document.getElementById('darkModeToggle');
     const darkModeIcon = document.getElementById('darkModeIcon');
     const html = document.documentElement;
     
-    const currentTheme = getInitialTheme();
+    const currentTheme = getSavedTheme();
     
     function setTheme(theme) {
         const darkModeLabel = darkModeToggle?.querySelector('.header-action-label');

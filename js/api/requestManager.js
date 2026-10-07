@@ -25,6 +25,7 @@ class RequestManager {
             // Trusted external APIs
             /^https:\/\/mesonet\.agron\.iastate\.edu\/geojson\/lsr\.php(\?.*)?$/, // Iowa State Mesonet
             /^https:\/\/mesonet\.agron\.iastate\.edu\/api\/1\/vtec\/county_zone\.geojson(\?.*)?$/, // IEM active warnings/watches
+            /^https:\/\/mesonet\.agron\.iastate\.edu\/api\/1\/vtec\/sbw_interval\.geojson(\?.*)?$/, // IEM storm-based warning archive
             /^https:\/\/api\.weather\.gov\/products(\/types\/PNS|\/[A-Za-z0-9-]+)?$/ // NWS Weather API
         ];
     }

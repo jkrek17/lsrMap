@@ -9,6 +9,7 @@ Yes! You can drop these files onto your server root and everything will work. He
 ```
 your-server-root/
 ├── index.html          # Main application file
+├── playback.html       # Playback & Live page (+ playback.js, playback.css)
 ├── app.js              # Main JavaScript (ES6 modules)
 ├── config.js           # Configuration
 ├── styles.css          # Styles

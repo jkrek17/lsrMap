@@ -46,14 +46,22 @@ export class ReportLayer {
      * @param {Function} [options.onOpen]       (report, popupElement) => void after the popup opens
      * @param {Function} [options.onClick]      (report) => void for reports without a popup
      * @param {Function} [options.isClickBlocked] () => boolean, e.g. while drawing bounds
+     * @param {Function} [options.featureProperties] (report) => extra feature properties (e.g. time)
+     * @param {object} [options.sourceOptions] extra GeoJSON source options (e.g. { promoteId: 'i' } for feature state)
+     * @param {Function} [options.acceptsReport] (report) => false to ignore clicks on it (e.g. hidden)
      */
-    constructor(maplibregl, { id, popupHtml, onOpen, onClick, isClickBlocked }) {
+    constructor(maplibregl, { id, popupHtml, onOpen, onClick, isClickBlocked, featureProperties, sourceOptions, acceptsReport }) {
         this.maplibregl = maplibregl;
         this.id = id;
         this.popupHtml = popupHtml;
         this.onOpen = onOpen;
         this.onClick = onClick;
         this.isClickBlocked = isClickBlocked || (() => false);
+        this.featureProperties = featureProperties || null;
+        this.sourceOptions = sourceOptions || {};
+        this.acceptsReport = acceptsReport || null;
+        this.filter = null;
+        this.paintOverrides = {};
         this.map = null;
         this.reports = [];
         this.popup = null;
@@ -67,7 +75,8 @@ export class ReportLayer {
         map.addSource(this.id, {
             type: 'geojson',
             data: this.featureCollection(),
-            buffer: 32
+            buffer: 32,
+            ...this.sourceOptions
         });
         map.addLayer({
             id: this.id,
@@ -78,7 +87,9 @@ export class ReportLayer {
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'symbol-sort-key': ['get', 'sort']
-            }
+            },
+            paint: { ...this.paintOverrides },
+            ...(this.filter ? { filter: this.filter } : {})
         }, beforeId);
 
         map.on('mouseenter', this.id, () => {
@@ -101,7 +112,12 @@ export class ReportLayer {
             features.push({
                 type: 'Feature',
                 geometry: { type: 'Point', coordinates: [r.lon, r.lat] },
-                properties: { i, icon: r.icon.id, sort: sortKey(r) }
+                properties: {
+                    ...(this.featureProperties ? this.featureProperties(r) : {}),
+                    i,
+                    icon: r.icon.id,
+                    sort: sortKey(r)
+                }
             });
         }
         return { type: 'FeatureCollection', features };
@@ -117,6 +133,22 @@ export class ReportLayer {
         const source = this.map.getSource(this.id);
         if (source) {
             source.setData(this.featureCollection());
+        }
+    }
+
+    /** Layer filter expression (null for none); kept across addTo */
+    setFilter(filter) {
+        this.filter = filter;
+        if (this.map?.getLayer(this.id)) {
+            this.map.setFilter(this.id, filter);
+        }
+    }
+
+    /** Paint property on the icon layer (e.g. icon-opacity); kept across addTo */
+    setPaintProperty(name, value) {
+        this.paintOverrides[name] = value;
+        if (this.map?.getLayer(this.id)) {
+            this.map.setPaintProperty(this.id, name, value);
         }
     }
 
@@ -153,9 +185,15 @@ export class ReportLayer {
         }
     }
 
-    /** Clickable layer ids (see the map click router in app.js) */
+    /** Clickable layer ids (see routeFeatureClick in mapSetup.js) */
     get layerIds() {
         return [this.id];
+    }
+
+    /** Whether a click on this feature should open it (see routeFeatureClick) */
+    acceptsFeature(feature) {
+        const report = this.reports[feature.properties.i];
+        return Boolean(report) && (!this.acceptsReport || this.acceptsReport(report));
     }
 
     /** Handle a click on one of this layer's features */
