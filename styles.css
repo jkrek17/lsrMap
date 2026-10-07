@@ -60,13 +60,49 @@
     color: white;
 }
 
-[data-theme="dark"] .leaflet-popup-content-wrapper {
+[data-theme="dark"] .maplibregl-popup-content {
     background: var(--card-bg);
     color: var(--text-primary);
 }
 
-[data-theme="dark"] .leaflet-popup-tip {
+[data-theme="dark"] .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+[data-theme="dark"] .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+[data-theme="dark"] .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+    border-top-color: var(--card-bg);
+}
+
+[data-theme="dark"] .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+[data-theme="dark"] .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+[data-theme="dark"] .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+    border-bottom-color: var(--card-bg);
+}
+
+[data-theme="dark"] .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: var(--card-bg);
+}
+
+[data-theme="dark"] .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: var(--card-bg);
+}
+
+/* Map controls and attribution in dark mode */
+[data-theme="dark"] .maplibregl-ctrl-group,
+[data-theme="dark"] .maplibregl-ctrl-attrib,
+[data-theme="dark"] .maplibregl-ctrl-scale {
     background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .maplibregl-ctrl-group button + button {
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1);
+}
+
+[data-theme="dark"] .maplibregl-ctrl-attrib a {
+    color: var(--text-secondary);
 }
 
 /* Dark mode popup header styles */
@@ -1941,32 +1977,23 @@ label[for="wfoSelect"] {
     }
 }
 
-/* Custom Weather Icons */
-.custom-weather-icon {
-    background: transparent !important;
-    border: none !important;
-}
-
-/* Leaflet Popup Customization */
-.leaflet-popup-content-wrapper {
+/* Map Popup Customization (MapLibre) */
+.maplibregl-popup-content {
     border-radius: 0.75rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 0;
     overflow: hidden;
     border: 1px solid var(--border-color);
-}
-
-.leaflet-popup-content {
-    margin: 0;
     font-size: 0.875rem;
     min-width: 280px;
     max-width: 350px;
 }
 
 /* Warning Popup Styles */
-.warning-popup-container .leaflet-popup-content-wrapper {
+.warning-popup-container .maplibregl-popup-content {
     border-radius: 8px;
     padding: 0;
+    max-width: 400px;
 }
 
 .warning-popup {
@@ -2035,11 +2062,6 @@ label[for="wfoSelect"] {
     border-radius: 4px;
 }
 
-.warning-marker {
-    background: transparent !important;
-    border: none !important;
-}
-
 .live-mode-warnings {
     font-size: 12px;
     color: #64748b;
@@ -2051,11 +2073,7 @@ label[for="wfoSelect"] {
     color: #ef4444;
 }
 
-.custom-popup .leaflet-popup-content-wrapper {
-    padding: 0;
-}
-
-.custom-popup .leaflet-popup-content {
+.custom-popup .maplibregl-popup-content {
     padding: 0;
 }
 
@@ -2201,7 +2219,7 @@ label[for="wfoSelect"] {
 
 
 /* Popup close button styling */
-.leaflet-popup-close-button {
+.maplibregl-popup-close-button {
     color: var(--text-secondary) !important;
     font-size: 1.5rem !important;
     font-weight: 300 !important;
@@ -2213,46 +2231,14 @@ label[for="wfoSelect"] {
     border-radius: 0.375rem !important;
 }
 
-.leaflet-popup-close-button:hover {
+.maplibregl-popup-close-button:hover {
     background: var(--bg-color) !important;
     color: var(--text-primary) !important;
-}
-
-/* Popup tip styling */
-.leaflet-popup-tip {
-    background: var(--card-bg) !important;
-    border: 1px solid var(--border-color) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* ==========================================
    PNS (Public Information Statement) Styles
    ========================================== */
-
-/* PNS Marker on Map */
-.pns-marker {
-    background: transparent;
-}
-
-.pns-marker-inner {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-    border: 2px solid white;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.pns-marker:hover .pns-marker-inner {
-    transform: scale(1.15);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
-}
 
 /* PNS Modal */
 .pns-modal-content {

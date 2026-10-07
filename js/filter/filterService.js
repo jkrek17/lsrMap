@@ -5,11 +5,11 @@
 class FilterService {
     /**
      * Filter and display PNS markers with performance optimizations
-     * @param {L.LayerGroup} pnsLayer - PNS layer group
+     * @param {ReportLayer} pnsLayer - PNS report layer (js/map/reportLayer.js)
      * @param {boolean} showPNS - Whether PNS is enabled
      * @param {Array} allPNSReports - All PNS reports
      * @param {Array} allFilteredReports - All LSR reports
-     * @param {L.Map} map - Leaflet map instance
+     * @param {maplibregl.Map} map - Map instance
      * @param {Object} CONFIG - Configuration object
      * @param {Function} getZoomBasedLimit - Function to get zoom-based limit
      * @param {Function} updateReportCountWithPNS - Function to update count
@@ -28,14 +28,12 @@ class FilterService {
         activeFiltersOverride
     ) {
         if (!pnsLayer || !showPNS) {
+            if (pnsLayer) pnsLayer.clear();
             // Update counts even when PNS is disabled
             if (updateReportCountWithPNS) updateReportCountWithPNS();
             if (updateStatisticsWithPNS) updateStatisticsWithPNS();
             return;
         }
-        
-        // Clear existing markers
-        pnsLayer.clearLayers();
         
         // Get current zoom and bounds for performance filtering
         const currentZoom = map ? map.getZoom() : 4;
@@ -70,13 +68,13 @@ class FilterService {
             }
             
             // Filter by viewport if enabled
-            if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+            if (viewportBounds && !viewportBounds.contains([report.lon, report.lat])) {
                 continue;
             }
             
             // Add marker to queue
-            if (report.marker) {
-                markersToAdd.push(report.marker);
+            if (report.icon) {
+                markersToAdd.push(report);
             }
         }
         
@@ -99,27 +97,7 @@ class FilterService {
             markersToDisplay = markersToAdd.slice(0, remainingMarkerSlots);
         }
         
-        // Add markers in batches for performance
-        if (markersToDisplay.length > 0) {
-            let index = 0;
-            const batchSize = CONFIG.BATCH_SIZE || 200;
-            
-            function addBatch() {
-                const endIndex = Math.min(index + batchSize, markersToDisplay.length);
-                
-                for (let i = index; i < endIndex; i++) {
-                    markersToDisplay[i].addTo(pnsLayer);
-                }
-                
-                index = endIndex;
-                
-                if (index < markersToDisplay.length) {
-                    requestAnimationFrame(addBatch);
-                }
-            }
-            
-            addBatch();
-        }
+        pnsLayer.setReports(markersToDisplay);
         
         // Update counts and statistics after filtering
         if (updateReportCountWithPNS) updateReportCountWithPNS();
@@ -131,7 +109,7 @@ class FilterService {
      * @param {boolean} showPNS - Whether PNS is enabled
      * @param {Array} allPNSReports - All PNS reports
      * @param {Array} allFilteredReports - All LSR reports
-     * @param {L.Map} map - Leaflet map instance
+     * @param {maplibregl.Map} map - Map instance
      * @param {Object} CONFIG - Configuration object
      * @param {Function} getZoomBasedLimit - Function to get zoom-based limit
      * @returns {Array} Filtered PNS reports
@@ -179,7 +157,7 @@ class FilterService {
             }
             
             // Filter by viewport if enabled
-            if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+            if (viewportBounds && !viewportBounds.contains([report.lon, report.lat])) {
                 return false;
             }
             

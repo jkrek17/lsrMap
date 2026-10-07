@@ -9,7 +9,7 @@ class ReportCountService {
      * @param {number|null} totalCount - Total count (optional)
      * @param {number} hiddenCount - Number of hidden markers
      * @param {Function} getZoomBasedLimit - Function to get zoom-based limit
-     * @param {L.Map} map - Leaflet map instance
+     * @param {maplibregl.Map} map - Map instance
      * @param {Object} CONFIG - Configuration object
      */
     updateReportCount(count, totalCount = null, hiddenCount = 0, getZoomBasedLimit, map, CONFIG) {
@@ -36,7 +36,7 @@ class ReportCountService {
             // Show persistent performance banner
             if (performanceBanner && performanceBannerText) {
                 const reason = zoomLimit !== undefined 
-                    ? `Zoom level ${currentZoom} limit: ${zoomLimit.toLocaleString()} markers`
+                    ? `Zoom level ${Math.floor(currentZoom)} limit: ${zoomLimit.toLocaleString()} markers`
                     : `Maximum limit: ${CONFIG.MAX_MARKERS.toLocaleString()} markers`;
                 
                 performanceBannerText.innerHTML = `

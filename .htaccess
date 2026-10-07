@@ -1,6 +1,6 @@
 <IfModule mod_headers.c>
-    # CSP: Local assets plus external services (Esri basemap tiles, Weather API, Iowa State LSR data)
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://server.arcgisonline.com https://*.arcgisonline.com https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;"
+    # CSP: Local assets (self-hosted basemap) plus external data services (Weather API, Iowa State LSR data and radar)
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;"
 </IfModule>
 
 # Ensure correct MIME types are served
@@ -9,6 +9,9 @@
     AddType application/javascript .js
     AddType application/json .json
     AddType application/vnd.geo+json .geojson
+    # Self-hosted basemap: PMTiles archives (read with HTTP range requests) and font glyphs
+    AddType application/octet-stream .pmtiles
+    AddType application/x-protobuf .pbf
 </IfModule>
 
 # Fix ERR_CONTENT_LENGTH_MISMATCH errors
@@ -20,6 +23,9 @@
     SetEnvIfNoCase Request_URI "\.css$" no-gzip dont-vary
     SetEnvIfNoCase Request_URI "\.json$" no-gzip dont-vary
     SetEnvIfNoCase Request_URI "\.geojson$" no-gzip dont-vary
+    # Never compress PMTiles: range requests must return the exact bytes (tiles are already gzipped)
+    SetEnvIfNoCase Request_URI "\.pmtiles$" no-gzip dont-vary
+    SetEnvIfNoCase Request_URI "\.pbf$" no-gzip dont-vary
 </IfModule>
 
 # Alternative: If you want compression but need to fix the header issue

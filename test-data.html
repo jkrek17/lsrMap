@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Data Fetch Diagnostic</title>
     <!-- Use the EXACT same CSP as index.html to test it -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://server.arcgisonline.com https://*.arcgisonline.com https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://mesonet.agron.iastate.edu; font-src 'self'; connect-src 'self' https://api.weather.gov https://mesonet.agron.iastate.edu https://mapservices.weather.noaa.gov;">
     <style>
         body { font-family: monospace; padding: 20px; background: #f0f0f0; }
         .log { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 5px; border-radius: 4px; }
@@ -18,7 +18,7 @@
     <h1>Data Fetch Diagnostic</h1>
     
     <!-- Load Libraries to test them -->
-    <script src="lib/leaflet/leaflet.js"></script>
+    <script src="lib/pmtiles/pmtiles.js"></script>
     <script src="config.js"></script>
 
     <div id="status">Initializing...</div>
@@ -60,11 +60,27 @@
 
         // 1.5 Check if Libraries are loaded
         log('Checking Libraries...');
-        if (typeof L !== 'undefined') {
-            pass('Leaflet (L) is loaded.');
+        if (typeof pmtiles !== 'undefined') {
+            pass('PMTiles reader is loaded.');
         } else {
-            fail('Leaflet (L) is NOT loaded. Check if lib/leaflet/leaflet.js exists and is accessible.');
+            fail('PMTiles reader is NOT loaded. Check if lib/pmtiles/pmtiles.js exists and is accessible.');
         }
+
+        import('./lib/maplibre/maplibre-gl.js')
+            .then(m => pass(`MapLibre GL ${m.getVersion ? m.getVersion() : ''} loaded as an ES module.`))
+            .catch(e => fail(`MapLibre GL failed to load (${e.message}). Check lib/maplibre/ and the server's MIME type for .js.`));
+
+        // The self-hosted basemap is read with HTTP range requests; the server must answer 206
+        fetch('basemap/us-core.pmtiles', { headers: { Range: 'bytes=0-15' } })
+            .then(async r => {
+                const magic = new TextDecoder().decode(new Uint8Array(await r.arrayBuffer()).slice(0, 7));
+                if (r.status === 206 && magic === 'PMTiles') {
+                    pass('Basemap file basemap/us-core.pmtiles answers range requests (HTTP 206).');
+                } else {
+                    fail(`Basemap range request returned HTTP ${r.status} (need 206). The server must support Range requests and must not compress .pmtiles.`);
+                }
+            })
+            .catch(e => fail(`Basemap file not reachable: ${e.message}`));
 
         if (typeof CONFIG !== 'undefined') {
             pass('CONFIG is loaded.');

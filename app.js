@@ -9,8 +9,18 @@ import { requestManager } from './js/api/requestManager.js';
 import LSRService from './js/api/lsrService.js';
 import { offlineDetector } from './js/utils/offlineDetector.js';
 import { appState } from './js/state/appState.js';
-import { createIcon, getIconForReport } from './js/map/iconService.js';
-import { addMarkersInBatches } from './js/map/markerService.js';
+import * as maplibregl from './lib/maplibre/maplibre-gl.js';
+import { createIcon, getIconForReport, installIconImageHandler } from './js/map/iconService.js';
+import { createPopupContent } from './js/map/popupService.js';
+import { ReportLayer } from './js/map/reportLayer.js';
+import { AreaOverlay, AlertLayer, RadarFrames } from './js/map/overlayLayers.js';
+import {
+    buildBasemapStyle,
+    resolveBasemapUrl,
+    applyBasemapTheme,
+    setInitialBasemapTheme,
+    LABEL_ANCHOR_LAYER
+} from './js/map/basemap.js';
 import { showStatusToast, hideStatusToast } from './js/ui/toastService.js';
 import WarningsService from './js/api/warningsService.js';
 import PNSService from './js/api/pnsService.js';
@@ -21,9 +31,10 @@ import { normalizeLSRReports as normalizeLSRReportsCore } from './js/lsr/normali
 import {
     loadBoundaryGeoJson,
     boundariesReady,
-    createStateBoundaryLayer,
-    createWfoBoundaryLayer,
-    createNwsAdminRegionLayer,
+    boundsOfFeatures,
+    getStateBoundaryFeatures,
+    getWfoBoundaryFeatures,
+    getNwsAdminRegionFeatures,
     isNwsAdminRegionWithGeoJson,
     getClipFeaturesForSelection,
     pointInClipFeatures
@@ -33,24 +44,23 @@ import {
 // MAP INITIALIZATION
 // ============================================================================
 
-// Map will be initialized in DOMContentLoaded
+// Map (MapLibre GL, WebGL) will be initialized in DOMContentLoaded
 let map = null;
-let baseTileLayer = null; // Base map tile layer
-let markersLayer = null;
-let pnsLayer = null; // Layer for Public Information Statements
+let markersLayer = null; // ReportLayer: LSR icons
+let pnsLayer = null; // ReportLayer: Public Information Statements
 let showPNS = false; // Toggle for PNS display
-let warningsLayer = null; // Layer for NWS warnings/alerts
+let warningsLayer = null; // AlertLayer: short-fuse warnings
 let showWarnings = false; // Toggle for warnings display
 let showAllWarningsLayer = false;
 let showAllWatchesLayer = false;
 let warningsService = null; // Warnings service instance
-let allWarningsLayer = null;
-let allWatchesLayer = null;
+let allWarningsLayer = null; // AlertLayer
+let allWatchesLayer = null; // AlertLayer
 let warningsListenersAttached = false;
-let userArea = null;
-let radarLayer = null; // Legacy - keeping for compatibility
-let radarLayers = []; // Array of tile layers for animation
-let radarLayerGroup = null; // Layer group to hold all radar layers
+let userArea = null; // AreaOverlay: selected location outline
+let radarFrames = null; // RadarFrames: raster layers for the animation
+let radarLayers = []; // Frame handles ({ setOpacity }) for animation
+let radarLayerGroup = null; // Truthy while radar is shown
 let liveModeActive = false;
 let liveModeInterval = null;
 let liveModeRangeHours = 24;
@@ -340,22 +350,57 @@ function shiftCustomDateRange(days) {
     fetchLSRData();
 }
 
-function boundsFromLatLngBounds(lb) {
-    return {
-        south: lb.getSouth(),
-        north: lb.getNorth(),
-        east: lb.getEast(),
-        west: lb.getWest()
-    };
+/**
+ * Fit the map to {south, north, east, west}
+ */
+function fitMapToBounds(b, options = {}) {
+    if (!map || !b) {
+        return;
+    }
+    map.fitBounds([[b.west, b.south], [b.east, b.north]], {
+        padding: 50,
+        maxZoom: 10,
+        duration: 600,
+        ...options
+    });
+}
+
+/**
+ * Center the map (MapLibre zoom levels: one less than the old Leaflet levels)
+ */
+function setMapView(lat, lon, zoom) {
+    if (!map) {
+        return;
+    }
+    map.easeTo({ center: [lon, lat], zoom, duration: 600 });
+}
+
+function resetMapView() {
+    setMapView(CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon, CONFIG.MAP_INITIAL.zoom);
 }
 
 function addRectOverlay(south, north, east, west, fit) {
-    const bounds = [[south, west], [north, east]];
-    L.rectangle(bounds, { color: '#dc2626', fill: false, weight: 2, dashArray: '5, 5' }).addTo(userArea);
+    userArea.addRectangle(south, north, east, west);
+    const bounds = { south, north, east, west };
     if (fit) {
-        map.fitBounds(bounds, { padding: [50, 50] });
+        fitMapToBounds(bounds);
     }
-    return { south, north, east, west };
+    return bounds;
+}
+
+/**
+ * Show boundary polygons as the selected area; returns their bounds, or null if none
+ */
+function addBoundaryOverlay(features, fit) {
+    const bounds = boundsOfFeatures(features);
+    if (!bounds) {
+        return null;
+    }
+    userArea.addFeatures(features);
+    if (fit) {
+        fitMapToBounds(bounds);
+    }
+    return bounds;
 }
 
 /**
@@ -364,21 +409,21 @@ function addRectOverlay(south, north, east, west, fit) {
 function getLsrFilterBoundsSync(selectedRegion, wfoCode) {
     if (boundariesReady()) {
         if (wfoCode) {
-            const wfoLayer = createWfoBoundaryLayer(wfoCode);
-            if (wfoLayer) {
-                return boundsFromLatLngBounds(wfoLayer.getBounds());
+            const wfoBounds = boundsOfFeatures(getWfoBoundaryFeatures(wfoCode));
+            if (wfoBounds) {
+                return wfoBounds;
             }
         }
         if (selectedRegion && CONFIG.STATES[selectedRegion]) {
-            const stLayer = createStateBoundaryLayer(selectedRegion);
-            if (stLayer) {
-                return boundsFromLatLngBounds(stLayer.getBounds());
+            const stBounds = boundsOfFeatures(getStateBoundaryFeatures(selectedRegion));
+            if (stBounds) {
+                return stBounds;
             }
         }
         if (selectedRegion && CONFIG.REGIONS[selectedRegion] && isNwsAdminRegionWithGeoJson(selectedRegion)) {
-            const regLayer = createNwsAdminRegionLayer(selectedRegion);
-            if (regLayer) {
-                return boundsFromLatLngBounds(regLayer.getBounds());
+            const regBounds = boundsOfFeatures(getNwsAdminRegionFeatures(selectedRegion));
+            if (regBounds) {
+                return regBounds;
             }
         }
     }
@@ -426,7 +471,7 @@ function getLsrFilterBoundsSync(selectedRegion, wfoCode) {
  */
 async function applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, options = {}) {
     const fitMap = options.fitMap !== false;
-    userArea.clearLayers();
+    userArea.clear();
 
     try {
         await loadBoundaryGeoJson();
@@ -440,13 +485,9 @@ async function applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, options
     locationClipFeatures = getClipFeaturesForSelection(selectedRegion, wfoCode);
 
     if (wfoCode) {
-        const layer = geoReady ? createWfoBoundaryLayer(wfoCode) : null;
-        if (layer) {
-            layer.addTo(userArea);
-            if (fitMap) {
-                map.fitBounds(layer.getBounds(), { padding: [50, 50] });
-            }
-            return boundsFromLatLngBounds(layer.getBounds());
+        const wfoBounds = geoReady ? addBoundaryOverlay(getWfoBoundaryFeatures(wfoCode), fitMap) : null;
+        if (wfoBounds) {
+            return wfoBounds;
         }
         const wfoKey = wfoCode.startsWith('K') ? wfoCode : `K${wfoCode}`;
         const coords = pnsService?.wfoCoords?.[wfoCode] || pnsService?.wfoCoords?.[wfoKey];
@@ -465,7 +506,7 @@ async function applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, options
             return addRectOverlay(b[0], b[1], b[2], b[3], fitMap);
         }
         if (fitMap) {
-            map.setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
+            resetMapView();
         }
         return {
             south: CONFIG.DEFAULT_BOUNDS.south,
@@ -476,41 +517,35 @@ async function applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, options
     }
 
     if (selectedRegion && CONFIG.STATES[selectedRegion]) {
-        const layer = geoReady ? createStateBoundaryLayer(selectedRegion) : null;
-        if (layer) {
-            layer.addTo(userArea);
-            if (fitMap) {
-                map.fitBounds(layer.getBounds(), { padding: [50, 50] });
-            }
-            return boundsFromLatLngBounds(layer.getBounds());
+        const stBounds = geoReady ? addBoundaryOverlay(getStateBoundaryFeatures(selectedRegion), fitMap) : null;
+        if (stBounds) {
+            return stBounds;
         }
         const b = CONFIG.STATES[selectedRegion].bounds;
         return addRectOverlay(b[0], b[1], b[2], b[3], fitMap);
     }
 
     if (selectedRegion && CONFIG.REGIONS[selectedRegion]) {
-        const layer = geoReady && isNwsAdminRegionWithGeoJson(selectedRegion)
-            ? createNwsAdminRegionLayer(selectedRegion)
+        const regBounds = geoReady && isNwsAdminRegionWithGeoJson(selectedRegion)
+            ? addBoundaryOverlay(getNwsAdminRegionFeatures(selectedRegion), fitMap)
             : null;
-        if (layer) {
-            layer.addTo(userArea);
-            if (fitMap) {
-                map.fitBounds(layer.getBounds(), { padding: [50, 50] });
-            }
-            return boundsFromLatLngBounds(layer.getBounds());
+        if (regBounds) {
+            return regBounds;
         }
         const b = CONFIG.REGIONS[selectedRegion].bounds;
         return addRectOverlay(b[0], b[1], b[2], b[3], fitMap);
     }
 
     if (fitMap) {
-        map.setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
+        resetMapView();
     }
     return getLsrFilterBoundsSync('', '');
 }
 
 // Fetch NWS Local Storm Reports data
-async function fetchLSRData() {
+// options.fit: zoom the map to the loaded reports (false for automatic refreshes)
+async function fetchLSRData(options = {}) {
+    const fitToReports = options.fit !== false;
     // Ensure CONFIG is available
     if (typeof CONFIG === 'undefined') {
         showStatusToast('Configuration error. Please refresh the page.', 'error');
@@ -558,13 +593,13 @@ async function fetchLSRData() {
     if (btnText) btnText.style.display = 'none';
     if (btnLoading) btnLoading.style.display = 'inline-flex';
     
-    markersLayer.clearLayers();
+    markersLayer.clear();
 
     const regionSelect = document.getElementById('regionSelect');
     const selectedRegion = regionSelect?.value || '';
     const wfoFromSelect = document.getElementById('wfoSelect')?.value || '';
     const wfoCode = wfoFromSelect || selectedWFO || '';
-    const { south, north, east, west } = await applyLocationOverlayAndGetBounds(selectedRegion, wfoCode);
+    const { south, north, east, west } = await applyLocationOverlayAndGetBounds(selectedRegion, wfoCode, { fitMap: fitToReports });
 
     // Fetch LSR data
     try {
@@ -585,7 +620,7 @@ async function fetchLSRData() {
         if (btnLoading) btnLoading.style.display = 'none';
         
         if (data && data.features) {
-            displayReports(data, south, north, east, west);
+            displayReports(data, south, north, east, west, null, { fit: fitToReports });
             
             // Fetch PNS data if enabled, and wait for it to complete
             const lsrCount = data.features.length;
@@ -613,7 +648,7 @@ async function fetchLSRData() {
         clearActiveLsrQueryRange();
         updateFilterSummary();
         const handledError = errorHandler.handleError(error, 'Fetch LSR Data');
-        const retryAction = () => fetchLSRData();
+        const retryAction = () => fetchLSRData(options);
         showStatusToast(handledError.message, 'error', retryAction);
         updateReportCount(0);
     }
@@ -650,7 +685,8 @@ function normalizeLSRReports(geoJsonData) {
     return normalized;
 }
 
-function displayReports(geoJsonData, south, north, east, west, activeFiltersOverride) {
+// options.fit: zoom the map to the displayed reports (only after a user-initiated fetch)
+function displayReports(geoJsonData, south, north, east, west, activeFiltersOverride, options = {}) {
     // Ensure CONFIG is available
     if (typeof CONFIG === 'undefined' || typeof REPORT_TYPE_MAP === 'undefined') {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -658,8 +694,6 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         }
         return;
     }
-    
-    markersLayer.clearLayers();
     
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isNewData = geoJsonData !== lastGeoJsonData;
@@ -748,7 +782,7 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         }
         
         // Filter by viewport if enabled and zoomed in
-        if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+        if (viewportBounds && !viewportBounds.contains([report.lon, report.lat])) {
             if (missingCounts) {
                 missingCounts.viewport++;
                 addMissingSample('viewport', report);
@@ -854,18 +888,11 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
         updateLastUpdateTime();
     }
     
-    // Add markers
-    addMarkersInBatches(reportsToDisplay, markersLayer, CONFIG.BATCH_SIZE, null, updateMagnitudeLegendForReport);
+    // Draw markers (one WebGL symbol layer; no DOM elements per report)
+    markersLayer.setReports(reportsToDisplay);
     
-    if (reportsToDisplay.length > 0) {
-        setTimeout(() => {
-            if (markersLayer && markersLayer.getBounds && markersLayer.getBounds().isValid()) {
-                // Only auto-fit if not using viewport filtering or at low zoom
-                if (!viewportBounds || currentZoom < CONFIG.MIN_ZOOM_FOR_VIEWPORT) {
-                    map.fitBounds(markersLayer.getBounds(), { padding: [50, 50] });
-                }
-            }
-        }, 100);
+    if (options.fit && reportsToDisplay.length > 0) {
+        fitMapToBounds(markersLayer.getBounds());
     }
 }
 
@@ -873,13 +900,14 @@ function displayReports(geoJsonData, south, north, east, west, activeFiltersOver
  * Get marker limit based on current zoom level
  */
 function getZoomBasedLimit(zoom) {
-    // Check exact zoom level
-    if (CONFIG.ZOOM_BASED_LIMITS[zoom] !== undefined) {
-        return CONFIG.ZOOM_BASED_LIMITS[zoom];
+    // MapLibre zoom is fractional; limits are keyed by whole levels
+    const level = Math.floor(zoom);
+    if (CONFIG.ZOOM_BASED_LIMITS[level] !== undefined) {
+        return CONFIG.ZOOM_BASED_LIMITS[level];
     }
     
     // Find closest lower zoom level limit
-    for (let z = zoom - 1; z >= 3; z--) {
+    for (let z = level - 1; z >= 0; z--) {
         if (CONFIG.ZOOM_BASED_LIMITS[z] !== undefined) {
             return CONFIG.ZOOM_BASED_LIMITS[z];
         }
@@ -913,6 +941,7 @@ function renderAlertsToLayer(alerts, layer) {
     if (!layer) {
         return;
     }
+    const mapAlerts = [];
     alerts.forEach(alert => {
         const props = alert.properties || {};
         const significanceMap = {
@@ -960,63 +989,10 @@ function renderAlertsToLayer(alerts, layer) {
             </div>
         `;
         
-        // Handle different geometry types
-        const geom = alert.geometry;
-        if (!geom) return;
-        
-        if (geom.type === 'Point') {
-            const [lon, lat] = geom.coordinates;
-            const marker = L.marker([lat, lon], {
-                pane: 'warningsPane',
-                icon: L.divIcon({
-                    className: 'warning-marker',
-                    html: `<div style="
-                        background-color: ${color};
-                        color: white;
-                        border-radius: 50%;
-                        width: 24px;
-                        height: 24px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                        opacity: 0.85;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                    ">${icon}</div>`,
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
-                })
-            });
-            marker.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
-            marker.addTo(layer);
-        } else if (geom.type === 'Polygon') {
-            const coords = geom.coordinates[0].map(([lon, lat]) => [lat, lon]);
-            const polygon = L.polygon(coords, {
-                pane: 'warningsPane',
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.12,
-                weight: 2,
-                opacity: 0.5
-            });
-            polygon.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
-            polygon.addTo(layer);
-        } else if (geom.type === 'MultiPolygon') {
-            geom.coordinates.forEach(polygonCoords => {
-                const coords = polygonCoords[0].map(([lon, lat]) => [lat, lon]);
-                const polygon = L.polygon(coords, {
-                    pane: 'warningsPane',
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.12,
-                    weight: 2,
-                    opacity: 0.5
-                });
-                polygon.bindPopup(popupContent, { maxWidth: 400, className: 'warning-popup-container' });
-                polygon.addTo(layer);
-            });
-        }
+        if (!alert.geometry) return;
+        mapAlerts.push({ geometry: alert.geometry, color, emoji: icon, popupHtml: popupContent });
     });
+    layer.setAlerts(mapAlerts);
 }
 
 function updateWarningsRefreshListeners() {
@@ -1050,6 +1026,14 @@ function showWarningsLoadingToast() {
     lastWarningsToastTime = now;
     const label = parts.length > 1 ? parts.join(', ') : parts[0];
     showStatusToast(`Loading ${label}...`, 'loading');
+}
+
+/** Hide the "Loading ... warnings" toast once warnings have loaded (if it is still showing) */
+function hideWarningsLoadingToast() {
+    const message = document.getElementById('statusToastMessage')?.textContent || '';
+    if (message.startsWith('Loading') && /warnings|watches/.test(message)) {
+        hideStatusToast();
+    }
 }
 
 function getWfoDisplayName(code) {
@@ -1168,10 +1152,11 @@ async function fetchWarnings() {
         });
 
         // Clear existing warnings
-        warningsLayer.clearLayers();
-        if (allWarningsLayer) allWarningsLayer.clearLayers();
-        if (allWatchesLayer) allWatchesLayer.clearLayers();
+        warningsLayer.clear();
+        if (allWarningsLayer) allWarningsLayer.clear();
+        if (allWatchesLayer) allWatchesLayer.clear();
         
+        hideWarningsLoadingToast();
         if (alerts.length === 0) {
             updateWarningsCount('warningsCount', 0, showWarnings);
             updateWarningsCount('allWarningsCount', 0, showAllWarningsLayer);
@@ -1201,6 +1186,7 @@ async function fetchWarnings() {
         }
         
     } catch (error) {
+        hideWarningsLoadingToast();
         errorHandler.handleError(error, 'Fetch Warnings');
     }
 }
@@ -1227,7 +1213,7 @@ async function fetchPNSData(silent = false) {
     if (!showPNS) {
         // If PNS is disabled, clear layer and update counts
         if (pnsLayer) {
-            pnsLayer.clearLayers();
+            pnsLayer.clear();
         }
         updateReportCountWithPNS();
         updateStatisticsWithPNS();
@@ -1369,7 +1355,7 @@ function updateReportCountWithPNS() {
             }
             
             // Filter by viewport if enabled
-            if (viewportBounds && !viewportBounds.contains([report.lat, report.lon])) {
+            if (viewportBounds && !viewportBounds.contains([report.lon, report.lat])) {
                 return false;
             }
             
@@ -1473,22 +1459,14 @@ function openPnsModal(pnsData) {
 
 // Global function to open PNS modal from popup button (called from popup HTML)
 window.openPnsModalFromMarker = function(productId) {
-    if (!pnsLayer) return;
-    
-    // Find the marker with this product ID
-    let foundPnsData = null;
-    pnsLayer.eachLayer(layer => {
-        if (layer instanceof L.Marker && layer.pnsData && layer.pnsData.productId === productId) {
-            foundPnsData = layer.pnsData;
-        }
-    });
+    // Find the PNS report with this product ID
+    const found = allPNSReports.find(r => r.pnsData && r.pnsData.productId === productId);
+    const foundPnsData = found ? found.pnsData : null;
     
     if (foundPnsData) {
         openPnsModal(foundPnsData);
     }
 };
-
-// addMarkersInBatches is now imported from markerService module
 
 function updateReportCount(count, totalCount = null, hiddenCount = 0) {
     if (!reportCountService) {
@@ -1563,8 +1541,8 @@ function clearMap() {
         toggleLiveMode();
     }
     
-    markersLayer.clearLayers();
-    userArea.clearLayers();
+    markersLayer.clear();
+    userArea.clear();
     allFilteredReports = [];
     topReportsByType = {};
     updateReportCount(0);
@@ -1583,10 +1561,7 @@ function resetView() {
         return;
     }
     
-    map.setView(
-        [CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon],
-        CONFIG.MAP_INITIAL.zoom
-    );
+    resetMapView();
     showStatusToast('Map reset to default view', 'success');
 }
 
@@ -1610,7 +1585,7 @@ function centerOnMyLocation() {
     navigator.geolocation.getCurrentPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
-            map.setView([latitude, longitude], 10);
+            setMapView(latitude, longitude, 9);
             showStatusToast('Map centered on your location', 'success');
         },
         (error) => {
@@ -1722,14 +1697,14 @@ function toggleLiveMode() {
         showWarnings = true;
         showAllWarningsLayer = false;
         showAllWatchesLayer = false;
-        if (map.hasLayer(allWarningsLayer)) {
-            map.removeLayer(allWarningsLayer);
+        if (allWarningsLayer.isVisible()) {
+            allWarningsLayer.hide();
         }
-        if (map.hasLayer(allWatchesLayer)) {
-            map.removeLayer(allWatchesLayer);
+        if (allWatchesLayer.isVisible()) {
+            allWatchesLayer.hide();
         }
-        if (allWarningsLayer) allWarningsLayer.clearLayers();
-        if (allWatchesLayer) allWatchesLayer.clearLayers();
+        if (allWarningsLayer) allWarningsLayer.clear();
+        if (allWatchesLayer) allWatchesLayer.clear();
         fetchWarnings();
         updateWarningsRefreshListeners();
         
@@ -1749,17 +1724,17 @@ function toggleLiveMode() {
         
         // Clear warnings
         showWarnings = false;
-        if (warningsLayer) warningsLayer.clearLayers();
+        if (warningsLayer) warningsLayer.clear();
         if (allWarningsLayer) {
-            allWarningsLayer.clearLayers();
-            if (map.hasLayer(allWarningsLayer)) {
-                map.removeLayer(allWarningsLayer);
+            allWarningsLayer.clear();
+            if (allWarningsLayer.isVisible()) {
+                allWarningsLayer.hide();
             }
         }
         if (allWatchesLayer) {
-            allWatchesLayer.clearLayers();
-            if (map.hasLayer(allWatchesLayer)) {
-                map.removeLayer(allWatchesLayer);
+            allWatchesLayer.clear();
+            if (allWatchesLayer.isVisible()) {
+                allWatchesLayer.hide();
             }
         }
         showAllWarningsLayer = false;
@@ -1788,11 +1763,15 @@ function addRadarLayer() {
     // Use NWS radar via Iowa Environmental Mesonet
     // This allows us to animate through historical radar frames
     try {
-        // Create a layer group to hold all radar tile layers
-        radarLayerGroup = L.layerGroup();
+        // Marks radar as active; frames are added once the map style is ready
+        radarLayerGroup = true;
         
-        // Load timestamps and create tile layers for each frame
-        loadRadarTimestamps();
+        // Load timestamps and create raster layers for each frame
+        whenMapReady(() => {
+            if (radarLayerGroup) {
+                loadRadarTimestamps();
+            }
+        });
         
         // NWS radar layers initialized successfully
     } catch (error) {
@@ -1824,9 +1803,9 @@ function loadRadarTimestamps() {
     // Reverse to go from oldest to newest
     radarTimestamps.reverse();
     
-    // Create a tile layer for each timestamp using IEM's tile cache
+    // Create a raster layer for each timestamp using IEM's tile cache
     // IMPORTANT: Use UTC time - IEM radar tiles use UTC timestamps
-    radarTimestamps.forEach((timestamp, index) => {
+    const tileUrls = radarTimestamps.map((timestamp) => {
         const year = timestamp.getUTCFullYear().toString();
         const month = String(timestamp.getUTCMonth() + 1).padStart(2, '0');
         const day = String(timestamp.getUTCDate()).padStart(2, '0');
@@ -1837,22 +1816,16 @@ function loadRadarTimestamps() {
         const timeStr = year + month + day + hour + minute;
         
         // IEM radar tile URL format
-        const tileUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q-${timeStr}/{z}/{x}/{y}.png`;
-        
-        // Create tile layer for this timestamp
-        const layer = L.tileLayer(tileUrl, {
-            pane: 'radarPane',
-            opacity: 0, // Start hidden
-            attribution: 'Radar data &copy; <a href="https://mesonet.agron.iastate.edu">Iowa Environmental Mesonet / NWS</a>',
-            maxZoom: 10
-        });
-        
-        radarLayers[index] = layer;
-        radarLayerGroup.addLayer(layer);
+        return `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q-${timeStr}/{z}/{x}/{y}.png`;
     });
     
-    // Add the layer group to the map
-    radarLayerGroup.addTo(map);
+    // All frames start hidden (opacity 0) under the basemap labels, above warning polygons
+    radarLayers = radarFrames.add(
+        map,
+        tileUrls,
+        LABEL_ANCHOR_LAYER,
+        'Radar &copy; <a href="https://mesonet.agron.iastate.edu">Iowa Environmental Mesonet / NWS</a>'
+    );
     
     // Start animation if we have layers
     if (radarLayers.length > 0) {
@@ -1968,14 +1941,10 @@ function removeRadarLayer() {
         clearInterval(radarRefreshInterval);
         radarRefreshInterval = null;
     }
-    if (radarLayerGroup && map) {
-        map.removeLayer(radarLayerGroup);
-        radarLayerGroup = null;
+    if (radarFrames) {
+        radarFrames.remove();
     }
-    if (radarLayer && map) {
-        map.removeLayer(radarLayer);
-        radarLayer = null;
-    }
+    radarLayerGroup = null;
     radarLayers = [];
     radarTimestamps = [];
     radarAnimationIndex = 0;
@@ -2009,7 +1978,7 @@ function startLiveModeRefresh() {
         if (liveModeActive) {
             applyLiveModeRange(liveModeRangeHours);
             updateFilterSummary();
-            fetchLSRData();
+            fetchLSRData({ fit: false });
             if (showWarnings) {
                 fetchWarnings();
             }
@@ -2062,7 +2031,7 @@ function toggleAutoRefresh() {
         btn.classList.remove('active');
         btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto Refresh';
     } else {
-        autoRefreshInterval = setInterval(fetchLSRData, CONFIG.AUTO_REFRESH_INTERVAL);
+        autoRefreshInterval = setInterval(() => fetchLSRData({ fit: false }), CONFIG.AUTO_REFRESH_INTERVAL);
         btn.classList.add('active');
         btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto Refresh ON';
         fetchLSRData();
@@ -2267,7 +2236,7 @@ let boundsCorners = [];
 function enableBoundsClickMode() {
     boundsClickMode = true;
     boundsCorners = [];
-    map.getContainer().style.cursor = 'crosshair';
+    map.getCanvas().style.cursor = 'crosshair';
     
     // Show instruction
     showStatusToast('Click two corners on the map to set bounds', 'info');
@@ -2275,25 +2244,18 @@ function enableBoundsClickMode() {
 
 function disableBoundsClickMode() {
     boundsClickMode = false;
-    map.getContainer().style.cursor = '';
+    map.getCanvas().style.cursor = '';
 }
 
 function handleMapClick(e) {
     if (!boundsClickMode) return;
     
-    boundsCorners.push([e.latlng.lat, e.latlng.lng]);
+    boundsCorners.push([e.lngLat.lat, e.lngLat.lng]);
     
     if (boundsCorners.length === 1) {
         // First click - show marker
-        userArea.clearLayers();
-        L.marker(e.latlng, {
-            icon: L.divIcon({
-                className: 'bounds-marker',
-                html: '<div style="background: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-            })
-        }).addTo(userArea);
+        userArea.clear();
+        userArea.addPoint(e.lngLat.lat, e.lngLat.lng);
     } else if (boundsCorners.length >= 2) {
         // Second click - set custom bounds
         const lat1 = boundsCorners[0][0];
@@ -2307,10 +2269,8 @@ function handleMapClick(e) {
         const east = Math.max(lon1, lon2);
         
         // Draw rectangle
-        userArea.clearLayers();
-        const bounds = [[south, west], [north, east]];
-        L.rectangle(bounds, {color: "red", fill: false, weight: 2, dashArray: '5, 5'}).addTo(userArea);
-        map.fitBounds(bounds, { padding: [50, 50] });
+        userArea.clear();
+        addRectOverlay(south, north, east, west, true);
         
         disableBoundsClickMode();
         
@@ -2329,11 +2289,11 @@ function clearBounds() {
     }
     selectedWFO = null;
     locationClipFeatures = null;
-    userArea.clearLayers();
+    userArea.clear();
     disableBoundsClickMode();
     
     // Reset map to default view
-    map.setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
+    resetMapView();
 }
 
 // ============================================================================
@@ -2862,7 +2822,145 @@ offlineDetector.addListener((isOnline) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+// ============================================================================
+// MAP SETUP
+// ============================================================================
+
+let mapReady = false;
+const mapReadyCallbacks = [];
+
+/** Run fn once the map style has loaded and the app layers exist */
+function whenMapReady(fn) {
+    if (mapReady) {
+        fn();
+    } else {
+        mapReadyCallbacks.push(fn);
+    }
+}
+
+/**
+ * Create the map, the report/alert/area layers and the PMTiles protocol.
+ * @param {{url: string, detail: string}} basemapSource from resolveBasemapUrl
+ */
+function initializeMap(basemapSource) {
+    const theme = getInitialTheme();
+    setInitialBasemapTheme(theme);
+
+    // Vendored as .js (not .mjs) so any web server sends a JavaScript MIME type
+    maplibregl.setWorkerUrl(new URL('./lib/maplibre/maplibre-gl-worker.js', import.meta.url).href);
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol('pmtiles', protocol.tile);
+
+    map = new maplibregl.Map({
+        container: 'map',
+        style: buildBasemapStyle(theme, basemapSource.url),
+        center: [CONFIG.MAP_INITIAL.lon, CONFIG.MAP_INITIAL.lat],
+        zoom: CONFIG.MAP_INITIAL.zoom,
+        maxZoom: 18,
+        attributionControl: false,
+        // Flat 2D map, as before
+        dragRotate: false,
+        pitchWithRotate: false,
+        touchPitch: false
+    });
+    map.touchZoomRotate.disableRotation();
+    map.keyboard.disableRotation();
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+    map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
+    // Bottom-left: the bottom-right corner holds the Reset View / My Location / Clear Map buttons
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+    installIconImageHandler(map);
+    if (basemapSource.detail === 'streets') {
+        document.getElementById('map')?.setAttribute('data-basemap', 'streets');
+    }
+
+    const isClickBlocked = () => boundsClickMode;
+    markersLayer = new ReportLayer(maplibregl, {
+        id: 'lsr-reports',
+        popupHtml: (report) => createPopupContent(report),
+        onOpen: (report) => updateMagnitudeLegendForReport(report),
+        isClickBlocked
+    });
+    pnsLayer = new ReportLayer(maplibregl, {
+        id: 'pns-reports',
+        popupHtml: (report) => report.popupHtml,
+        onOpen: (report, popupElement) => {
+            if (report.reportData) {
+                updateMagnitudeLegendForReport(report.reportData);
+            }
+            const button = popupElement?.querySelector('.pns-view-full-btn');
+            if (button) {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPnsModal(report.pnsData);
+                });
+            }
+        },
+        // Office markers (no metadata) open the full statement directly
+        onClick: (report) => openPnsModal(report.pnsData),
+        isClickBlocked
+    });
+    warningsLayer = new AlertLayer(maplibregl, 'warnings');
+    allWarningsLayer = new AlertLayer(maplibregl, 'all-warnings');
+    allWarningsLayer.hide();
+    allWatchesLayer = new AlertLayer(maplibregl, 'all-watches');
+    allWatchesLayer.hide();
+    userArea = new AreaOverlay('user-area');
+    radarFrames = new RadarFrames('radar');
+
+    map.on('load', () => {
+        // Draw order (bottom to top): basemap, area outline, watches, warnings,
+        // radar (added later, also under the labels), basemap labels, LSR, PNS
+        userArea.addTo(map, LABEL_ANCHOR_LAYER);
+        allWatchesLayer.addTo(map, LABEL_ANCHOR_LAYER);
+        allWarningsLayer.addTo(map, LABEL_ANCHOR_LAYER);
+        warningsLayer.addTo(map, LABEL_ANCHOR_LAYER);
+        markersLayer.addTo(map);
+        pnsLayer.addTo(map);
+        mapReady = true;
+        mapReadyCallbacks.splice(0).forEach(fn => fn());
+    });
+
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        window.lsrMap = map; // debugging / browser tests
+    }
+
+    map.on('error', (e) => {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.warn('[Map]', e.error?.message || e);
+        }
+    });
+}
+
+/**
+ * Click routing: bounds-drawing mode first, otherwise open the popup of the
+ * topmost report or alert under the cursor (one popup per click).
+ */
+function handleMapFeatureClick(e) {
+    if (boundsClickMode) {
+        handleMapClick(e);
+        return;
+    }
+    const owners = new Map();
+    for (const target of [markersLayer, pnsLayer, warningsLayer, allWarningsLayer, allWatchesLayer]) {
+        for (const id of target?.layerIds || []) {
+            if (map.getLayer(id)) {
+                owners.set(id, target);
+            }
+        }
+    }
+    if (owners.size === 0) {
+        return;
+    }
+    const tolerance = 3;
+    const box = [[e.point.x - tolerance, e.point.y - tolerance], [e.point.x + tolerance, e.point.y + tolerance]];
+    const features = map.queryRenderedFeatures(box, { layers: [...owners.keys()] });
+    if (features.length > 0) {
+        owners.get(features[0].layer.id).handleFeature(features[0], e.lngLat);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
     // Ensure CONFIG is loaded (it should be from script tag, but check anyway)
     if (typeof CONFIG === 'undefined') {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -2872,32 +2970,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // Override Leaflet's data: URI with an actual file to avoid CSP img-src violations
-    // when a parent server CSP uses "img-src *" (which doesn't match data: URIs)
-    L.Util.emptyImageUrl = 'lib/leaflet/images/empty.gif';
-
-    // Initialize map first
-    map = L.map('map').setView([CONFIG.MAP_INITIAL.lat, CONFIG.MAP_INITIAL.lon], CONFIG.MAP_INITIAL.zoom);
-
-    // Custom panes to control overlay stacking
-    map.createPane('warningsPane');
-    map.getPane('warningsPane').style.zIndex = 450;
-    map.createPane('radarPane');
-    map.getPane('radarPane').style.zIndex = 550;
-    map.getPane('radarPane').style.pointerEvents = 'none';
+    // Initialize map first (MapLibre GL / WebGL, self-hosted vector basemap)
+    initializeMap(await resolveBasemapUrl(CONFIG.BASEMAP));
     
-    // Add base tile layer immediately
-    updateMapTileLayer();
-    
-    // Initialize dark mode (after map is created so it can update tiles)
+    // Initialize dark mode (after map is created so it can restyle the basemap)
     initializeDarkMode();
-    
-    markersLayer = L.layerGroup().addTo(map);
-    pnsLayer = L.layerGroup().addTo(map);
-    warningsLayer = L.layerGroup().addTo(map);
-    allWarningsLayer = L.layerGroup();
-    allWatchesLayer = L.layerGroup();
-    userArea = L.layerGroup().addTo(map);
 
     loadBoundaryGeoJson().catch(() => {});
     
@@ -2913,9 +2990,6 @@ document.addEventListener('DOMContentLoaded', () => {
     filterService = new FilterService();
 
     buildWfoSelectOptions();
-
-    // Initialize radar layer (will be added when live mode is enabled)
-    radarLayer = null;
 
     initializeUI();
     
@@ -2963,7 +3037,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchPNSData();
             } else {
                 if (pnsLayer) {
-                    pnsLayer.clearLayers();
+                    pnsLayer.clear();
                 }
             }
         });
@@ -2983,14 +3057,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAllWarningsLayer = false;
                 const allWarningsToggle = document.getElementById('toggleAllWarnings');
                 if (allWarningsToggle) allWarningsToggle.checked = false;
-                if (map.hasLayer(allWarningsLayer)) {
-                    map.removeLayer(allWarningsLayer);
-                    allWarningsLayer.clearLayers();
+                if (allWarningsLayer.isVisible()) {
+                    allWarningsLayer.hide();
+                    allWarningsLayer.clear();
                     updateWarningsCount('allWarningsCount', 0, false);
                 }
             }
             if (!showWarnings && warningsLayer) {
-                warningsLayer.clearLayers();
+                warningsLayer.clear();
                 updateWarningsCount('warningsCount', 0, false);
             }
             fetchWarnings();
@@ -3003,17 +3077,17 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleAllWarnings.addEventListener('change', (e) => {
             showAllWarningsLayer = e.target.checked;
             if (showAllWarningsLayer) {
-                allWarningsLayer.addTo(map);
+                allWarningsLayer.show();
                 showWarnings = false;
                 const shortFuseToggle = document.getElementById('toggleShortFuseWarnings');
                 if (shortFuseToggle) shortFuseToggle.checked = false;
                 if (warningsLayer) {
-                    warningsLayer.clearLayers();
+                    warningsLayer.clear();
                     updateWarningsCount('warningsCount', 0, false);
                 }
-            } else if (map.hasLayer(allWarningsLayer)) {
-                map.removeLayer(allWarningsLayer);
-                allWarningsLayer.clearLayers();
+            } else if (allWarningsLayer.isVisible()) {
+                allWarningsLayer.hide();
+                allWarningsLayer.clear();
                 updateWarningsCount('allWarningsCount', 0, false);
             }
             fetchWarnings();
@@ -3026,10 +3100,10 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleAllWatches.addEventListener('change', (e) => {
             showAllWatchesLayer = e.target.checked;
             if (showAllWatchesLayer) {
-                allWatchesLayer.addTo(map);
-            } else if (map.hasLayer(allWatchesLayer)) {
-                map.removeLayer(allWatchesLayer);
-                allWatchesLayer.clearLayers();
+                allWatchesLayer.show();
+            } else if (allWatchesLayer.isVisible()) {
+                allWatchesLayer.hide();
+                allWatchesLayer.clear();
                 updateWarningsCount('allWatchesCount', 0, false);
             }
             fetchWarnings();
@@ -3107,12 +3181,8 @@ document.addEventListener('DOMContentLoaded', () => {
         enableBoundsClickMode();
     });
     
-    // Handle map clicks when in bounds mode
-    map.on('click', (e) => {
-        if (boundsClickMode) {
-            handleMapClick(e);
-        }
-    });
+    // Map clicks: bounds mode, otherwise the topmost report/alert under the cursor
+    map.on('click', handleMapFeatureClick);
     
     // Refresh markers when zoom/pan changes (for zoom-based limits and viewport filtering)
     let zoomMoveTimeout;
@@ -3137,8 +3207,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300); // Debounce for 300ms
     };
     
-    // Always listen to zoom changes to update marker limits
-    map.on('zoomend', refreshMarkersOnZoomMove);
+    // Marker limits / viewport filtering are optional with WebGL rendering; only
+    // re-filter on zoom or pan when one of them is configured
+    const zoomLimitsConfigured = Object.keys(CONFIG.ZOOM_BASED_LIMITS || {}).length > 0;
+    if (zoomLimitsConfigured || CONFIG.VIEWPORT_ONLY) {
+        map.on('zoomend', refreshMarkersOnZoomMove);
+    }
     
     // Only listen to move events when viewport filtering is enabled
     if (CONFIG.VIEWPORT_ONLY) {
@@ -3570,17 +3644,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // DARK MODE
 // ============================================================================
 
+/**
+ * Theme to start with: saved preference, or system preference for 'auto'
+ */
+function getInitialTheme() {
+    let savedTheme = 'light';
+    try {
+        savedTheme = localStorage.getItem('lsr-theme') || 'light';
+    } catch (e) {
+        // Storage unavailable (private mode); use the default
+    }
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
+}
+
 function initializeDarkMode() {
     const darkModeToggle = document.getElementById('darkModeToggle');
     const darkModeIcon = document.getElementById('darkModeIcon');
     const html = document.documentElement;
     
-    // Check for saved theme preference or default to light mode
-    const savedTheme = localStorage.getItem('lsr-theme') || 'light';
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Use saved preference, or system preference if no saved preference
-    const currentTheme = savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
+    const currentTheme = getInitialTheme();
     
     function setTheme(theme) {
         const darkModeLabel = darkModeToggle?.querySelector('.header-action-label');
@@ -3610,9 +3693,10 @@ function initializeDarkMode() {
             }
             localStorage.setItem('lsr-theme', 'light');
         }
+        applyBasemapTheme(map, theme === 'dark' ? 'dark' : 'light');
     }
     
-    // Set initial theme (this will also initialize the map tile layer)
+    // Set initial theme (this also styles the basemap)
     setTheme(currentTheme);
     
     // Toggle theme on button click
@@ -3631,25 +3715,6 @@ function initializeDarkMode() {
             setTheme(e.matches ? 'dark' : 'light');
         }
     });
-}
-
-// Update map tile layer based on current theme
-function updateMapTileLayer() {
-    if (!map) return;
-    
-    // Use same map tiles for both light and dark mode (no switching)
-    // Only create if it doesn't exist
-    if (!baseTileLayer) {
-        baseTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, HERE, Garmin, USGS, OpenStreetMap contributors, and the GIS user community',
-            maxZoom: 19
-        });
-    }
-    
-    // Always ensure the layer is added to the map
-    if (!map.hasLayer(baseTileLayer)) {
-        baseTileLayer.addTo(map);
-    }
 }
 
 // ============================================================================

@@ -19,7 +19,7 @@
 #   or a release from https://github.com/protomaps/go-pmtiles/releases (binary: pmtiles)
 #
 # Usage:  tools/basemap/build.sh            # everything
-#         MAXZOOM=8 tools/basemap/build.sh  # sharper core (about 54 MB instead of 20 MB)
+#         MAXZOOM=8 tools/basemap/build.sh  # sharper core (about 75 MB instead of 27 MB; GitHub max is 100 MB)
 #         BUILD=20261006 tools/basemap/build.sh  # pin a Protomaps build (YYYYMMDD)
 # ============================================================================
 set -euo pipefail
@@ -56,16 +56,12 @@ cd "$WORK"
 census() {
     [ -f "$1.zip" ] || curl -sSfO "https://www2.census.gov/geo/tiger/GENZ$CENSUS_YEAR/shp/$1.zip"
 }
-census "cb_${CENSUS_YEAR}_us_state_20m"
 census "cb_${CENSUS_YEAR}_us_county_500k"
 
-# Extract region: all states and territories, buffered so coastal water and the
-# border areas of Canada/Mexico are included.
-$MAPSHAPER -i "cb_${CENSUS_YEAR}_us_state_20m.zip" -proj wgs84 -dissolve -buffer 60km \
-    -simplify 5% -clean -o format=geojson region.json
-node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('region.json'));fs.writeFileSync('region-geom.json',JSON.stringify((d.features||d.geometries)[0].geometry||(d.features||d.geometries)[0]))"
-
-"$PMTILES" extract "$SRC" "$OUT/us-core.pmtiles" --region=region-geom.json --maxzoom="$MAXZOOM"
+# Extract region (tools/basemap/region.json): boxes around CONUS, Alaska, Hawaii and
+# Puerto Rico, so nearby ocean and the border areas of Canada/Mexico are included.
+# Open-ocean tiles are nearly empty and deduplicated, so the boxes cost little.
+"$PMTILES" extract "$SRC" "$OUT/us-core.pmtiles" --region="$ROOT/tools/basemap/region.json" --maxzoom="$MAXZOOM"
 
 $MAPSHAPER -i "cb_${CENSUS_YEAR}_us_county_500k.zip" -proj wgs84 -simplify 12% keep-shapes \
     -innerlines -o format=geojson precision=0.0001 "$OUT/counties-lines.geojson"
