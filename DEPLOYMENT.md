@@ -124,6 +124,28 @@ If deploying to a subdirectory (e.g., `/lsr/` or `/weather/`):
 - No hardcoded URLs
 - Works in any directory structure
 
+## Public Test Site (GitHub Pages)
+
+`.github/workflows/publish-test-site.yml` publishes a static copy of the app to
+the `lsr/` folder of [jkrek17/web](https://github.com/jkrek17/web) on every push to
+`main` or the current test branch:
+
+- https://jkrek17.github.io/web/lsr/ — `main`
+- https://jkrek17.github.io/web/lsr/next/ — the branch in `NEXT_BRANCH` (the WebGL refactor)
+
+The tab title is prefixed with `[test: main]` or `[test: next]`. `api/` and `data/`
+are left out because Pages cannot run PHP (`USE_SERVER_CACHE` is already `false`).
+
+One-time setup: add a repository secret `WEB_TOKEN` (Settings > Secrets and
+variables > Actions) holding a fine-grained token scoped to `jkrek17/web` with
+Contents: read and write. Until it is set the workflow skips quietly. Run it by
+hand from Actions > "Publish test site" > Run workflow.
+
+`jkrek17/web` is rebuilt by `jkrek17/awips-tools`, which keeps `lsr/` through
+`KEEP_FOLDERS` in its `site_publish.yml`. If the two publishes ever race and
+`lsr/` comes back stale, re-run "Publish test site". Pages caches files for up
+to 10 minutes, so hard-refresh after a publish.
+
 ## Testing After Deployment
 
 1. **Open the application** in a browser

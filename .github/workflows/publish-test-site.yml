@@ -1,0 +1,116 @@
+# Publishes a public test copy of the map into the lsr/ folder of the public
+# site repository (jkrek17/web, served by GitHub Pages at
+# https://jkrek17.github.io/web/lsr/):
+#
+#   lsr/        the main branch
+#   lsr/next/   the branch named in NEXT_BRANCH (skipped if it does not exist)
+#
+# The site repository is rebuilt by jkrek17/awips-tools, which copies lsr/
+# forward on every publish (KEEP_FOLDERS in its site_publish.yml). This
+# workflow only replaces lsr/ and leaves the rest of the site alone. It never
+# force-pushes; if the site repository moved underneath it, it starts over
+# from a fresh clone.
+#
+# Only the static app is published: the PHP cache (api/, data/) does not run
+# on Pages, and CONFIG.USE_SERVER_CACHE is false, so the page fetches straight
+# from IEM and api.weather.gov.
+#
+# Needs the secret WEB_TOKEN: a fine-grained personal access token scoped to
+# jkrek17/web with Contents: read and write (the same kind awips-tools uses).
+# Skips quietly when it is not set.
+
+name: Publish test site
+
+on:
+  push:
+    branches: [main, claude/youthful-goodall-uzeyml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-test-site
+  cancel-in-progress: false
+
+env:
+  SITE_REPO: jkrek17/web
+  SITE_FOLDER: lsr
+  NEXT_BRANCH: claude/youthful-goodall-uzeyml
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check configuration
+        id: cfg
+        env:
+          TOKEN: ${{ secrets.WEB_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::WEB_TOKEN not set; nothing to publish."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.ready == 'true'
+
+      - name: Assemble the site
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          site="$RUNNER_TEMP/site"
+          rm -rf "$site"
+
+          # export REF DEST LABEL: the static app at REF, labelled in the tab title
+          export_ref() {
+            mkdir -p "$2"
+            git archive "$1" | tar -x -C "$2"
+            rm -rf "$2/api" "$2/data" "$2/.github" "$2"/*.md "$2"/*.php \
+                   "$2/.htaccess" "$2/.gitignore" "$2/.gitattributes"
+            sed -i -E "s|<title>|<title>[test: $3] |" "$2/index.html"
+            echo "$3: $(git rev-parse --short "$1")"
+          }
+
+          git fetch -q --depth 1 origin main
+          export_ref FETCH_HEAD "$site" main
+
+          if git fetch -q --depth 1 origin "$NEXT_BRANCH" 2>/dev/null; then
+            export_ref FETCH_HEAD "$site/next" next
+          else
+            echo "No branch $NEXT_BRANCH; publishing main only."
+          fi
+          du -sh "$site"
+
+      - name: Push to the site repository
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          TOKEN: ${{ secrets.WEB_TOKEN }}
+        run: |
+          url="https://x-access-token:${TOKEN}@github.com/${SITE_REPO}.git"
+          for attempt in 1 2 3; do
+            work="$RUNNER_TEMP/web"
+            rm -rf "$work"
+            # Sparse and blobless, so only lsr/ is downloaded, not the rest of the site.
+            git clone -q --depth 1 --filter=blob:none --sparse "$url" "$work"
+            git -C "$work" sparse-checkout set --no-cone "/$SITE_FOLDER/"
+            rm -rf "$work/$SITE_FOLDER"
+            cp -r "$RUNNER_TEMP/site" "$work/$SITE_FOLDER"
+            git -C "$work" add -A "$SITE_FOLDER"
+            if git -C "$work" diff --cached --quiet; then
+              echo "No changes to publish."
+              exit 0
+            fi
+            git -C "$work" -c user.name="lsr-publish" -c user.email="lsr-publish@users.noreply.github.com" \
+              commit -q -m "Publish lsr/ from ${GITHUB_REPOSITORY}@${GITHUB_SHA::8}"
+            if git -C "$work" push -q origin HEAD:main; then
+              echo "Published to https://jkrek17.github.io/web/$SITE_FOLDER/"
+              exit 0
+            fi
+            echo "Push rejected (site moved); retrying from a fresh clone."
+            sleep $((attempt * 10))
+          done
+          echo "::error::Could not push after 3 attempts."
+          exit 1
